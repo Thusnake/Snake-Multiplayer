@@ -12,26 +12,32 @@ import javax.microedition.khronos.opengles.GL10;
 public class Menu {
   private SimpleTimer screenTransformX, screenTransformY;
   private float screenWidth, screenHeight;
+  private GameRenderer renderer;
   private final GL10 gl;
   private final GLText glText;
   private final MenuItem[] menuItemsMain, menuItemsConnect, menuItemsBoard, menuItemsPlayers,
-      menuItemsPlayersOptions, menuItemsBack;
+      menuItemsPlayersOptions;
   private final MenuItem menuStateItem;
   public enum MenuState {MAIN, CONNECT, BOARD, PLAYERS, PLAYERSOPTIONS};
   private String[] menuItemStateNames = {"", "Connect", "Board", "Players", ""};
   private MenuState menuState, menuStatePrevious;
   private int playersOptionsIndex, expandedItemIndex = -1;
   private SimpleTimer menuAnimationTimer = new SimpleTimer(0.0, 1.0);
+  // Menu variables
+  public int horizontalSquares, verticalSquares, speed;
+  public boolean stageBorders;
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
+    this.renderer = renderer;
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
 
     this.screenTransformX = new SimpleTimer(0.0);
     this.screenTransformY = new SimpleTimer(0.0);
     this.menuState = MenuState.MAIN;
-    this.menuStateItem = new MenuItem(renderer, menuItemStateNames[0], 0, 0);
+    this.menuStateItem = new MenuItem(renderer, menuItemStateNames[0], 0, 0,
+        MenuItem.Alignment.RIGHT);
 
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
@@ -42,42 +48,39 @@ public class Menu {
     for (int i = 0; i < menuItemsMainText.length; i++)
       this.menuItemsMain[i] = new MenuItem(renderer, menuItemsMainText[i], 10,
           screenHeight - glText.getCharHeight() * (i + 1) * 0.65f
-              - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2);
+              - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
+          MenuItem.Alignment.LEFT);
 
     this.menuItemsConnect = new MenuItem[4];
     this.menuItemsConnect[0] = new MenuItem(renderer, "Host", 10 + screenWidth,
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f);
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[1] = new MenuItem(renderer, "Join", 10 + screenWidth,
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2);
-    this.menuItemsConnect[2] = new MenuItem(renderer, "Bluetooth",
-        screenWidth * 2 - 10 - glText.getLength("Bluetooth"),
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f);
-    this.menuItemsConnect[3] = new MenuItem(renderer, "Wi-Fi",
-        screenWidth * 2 - 10 - glText.getLength("Wi-Fi"),
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2);
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuItem.Alignment.LEFT);
+    this.menuItemsConnect[2] = new MenuItem(renderer, "Bluetooth", screenWidth * 2 - 10,
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.RIGHT);
+    this.menuItemsConnect[3] = new MenuItem(renderer, "Wi-Fi", screenWidth * 2 - 10,
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuItem.Alignment.RIGHT);
 
     String[] menuItemsBoardText = {"Hor Squares", "Ver Squares", "Speed", "Stage Borders"};
     this.menuItemsBoard = new MenuItem[menuItemsBoardText.length];
     for (int i = 0; i < menuItemsBoardText.length; i++)
       this.menuItemsBoard[i] = new MenuItem(renderer, menuItemsBoardText[i], 10 + screenWidth,
-          screenHeight - glText.getCharHeight() * (i * 5/4 + 1) * 0.65f - screenHeight / 5);
+          screenHeight - glText.getCharHeight() * (i * 5/4 + 1) * 0.65f - screenHeight / 5,
+          MenuItem.Alignment.LEFT);
 
     this.menuItemsPlayers = new MenuItem[4];
     for (int i = 0; i < 4; i++)
       this.menuItemsPlayers[i] = new MenuItem(renderer, "Player " + (i + 1),
-          10 + screenWidth, screenHeight * 4/5 - glText.getCharHeight() * (i * 5/4 + 1) * 0.65f);
+          10 + screenWidth, screenHeight * 4/5 - glText.getCharHeight() * (i * 5/4 + 1) * 0.65f,
+          MenuItem.Alignment.LEFT);
 
     String[] menuItemsPlayersOptionsText = {"Type", ""};
     this.menuItemsPlayersOptions = new MenuItem[menuItemsPlayersOptionsText.length];
     for (int i = 0; i < menuItemsPlayersOptionsText.length; i++)
       this.menuItemsPlayersOptions[i] = new MenuItem(renderer, menuItemsPlayersOptionsText[i],
           10 + screenWidth * 2,
-          screenHeight * 4/5 - (screenWidth-110)/9 - glText.getCharHeight() * (i + 1) * 0.65f);
-
-    this.menuItemsBack = new MenuItem[2];
-    for (int i = 0; i < menuItemsBack.length; i++)
-      this.menuItemsBack[i] = new MenuItem(renderer, "< back", 10 + screenWidth * (i + 1),
-          screenHeight - 10 - glText.getCharHeight() * 0.65f);
+          screenHeight * 4/5 - (screenWidth-110)/9 - glText.getCharHeight() * (i + 1) * 0.65f,
+          MenuItem.Alignment.LEFT);
 
     // Set functionality for each menuItem.
     this.menuItemsMain[0].setAction(action -> renderer.startGame());
@@ -89,6 +92,23 @@ public class Menu {
     this.menuItemsBoard[1].setAction(action -> renderer.getMenu().expandItem(1));
     this.menuItemsBoard[2].setAction(action -> renderer.getMenu().expandItem(2));
     this.menuItemsBoard[3].setAction(action -> renderer.getMenu().expandItem(3));
+
+    // TODO get these values from the options strings
+    this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, 20, screenWidth * 2 - 10,
+        this.menuItemsBoard[0].getY(), MenuItem.Alignment.RIGHT));
+    this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, 20, screenWidth * 2 - 10,
+        this.menuItemsBoard[1].getY(), MenuItem.Alignment.RIGHT));
+    this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, 12, screenWidth * 2 - 10,
+        this.menuItemsBoard[2].getY(), MenuItem.Alignment.RIGHT));
+    this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, false, screenWidth * 2 - 10,
+        this.menuItemsBoard[3].getY(), MenuItem.Alignment.RIGHT));
+
+    this.menuItemsBoard[0].getValue().setBoundaries(1, 100);
+    this.menuItemsBoard[1].getValue().setBoundaries(1, 100);
+    this.menuItemsBoard[2].getValue().setBoundaries(1, 100);
+
+    for (int index = 0; index < this.menuItemsBoard.length; index++)
+      this.menuItemsBoard[index].getValue().setAction(action -> renderer.getMenu().syncValues());
 
     this.menuItemsPlayers[0].setAction(action -> renderer.setMenuStateToPlayerOptions(0));
     this.menuItemsPlayers[1].setAction(action -> renderer.setMenuStateToPlayerOptions(1));
@@ -123,8 +143,8 @@ public class Menu {
 
     if (menuState == MenuState.BOARD || menuStatePrevious == MenuState.BOARD) {
       for (MenuItem menuItem : menuItemsBoard) {
-        menuItem.draw();
         menuItem.move(dt);
+        menuItem.draw();
       }
       // TODO To have all board menu items have descriptions, use the strings xml file and find a way to implement it.
     }
@@ -187,29 +207,60 @@ public class Menu {
     }
   }
   public void expandItem(int expandIndex) {
-    if (expandIndex < this.getCurrentMenuItems().length && this.menuState == MenuState.BOARD) {
-      if (expandIndex == this.expandedItemIndex) {
-        // If the item pressed has already been expanded, then retract it and all other items.
-        for (int itemIndex = 0; itemIndex < this.getCurrentMenuItems().length; itemIndex++) {
-          this.getCurrentMenuItems()[itemIndex].setDestinationYFromOrigin(0);
-        }
-        this.expandedItemIndex = -1;
-      } else {
-        // Do not push items before it.
-        for (int itemIndex = 0; itemIndex < expandIndex; itemIndex++) {
-          this.getCurrentMenuItems()[itemIndex].setDestinationYFromOrigin(0);
-        }
-        // Expand the item itself by half its height.
-        MenuItem item = this.getCurrentMenuItems()[expandIndex];
-        item.setDestinationYFromOrigin(-item.getHeight() / 2);
-        // Push all following items down by the expanded item's height.
-        for (int itemIndex = expandIndex + 1; itemIndex < this.getCurrentMenuItems().length;
-             itemIndex++) {
-          this.getCurrentMenuItems()[itemIndex].setDestinationYFromOrigin(-item.getHeight());
-        }
+    if (expandIndex < this.getCurrentMenuItems().length
+        && this.getCurrentMenuItems()[expandIndex].getValue() != null) {
+      MenuItem[] items = this.getCurrentMenuItems();
+      // If it has an integer value - expand it.
+      if (items[expandIndex].getValue().getType() == MenuValue.Type.INTEGER) {
+        if (expandIndex == this.expandedItemIndex) {
+          // If the item pressed has already been expanded, then retract it and all other items.
+          for (int itemIndex = 0; itemIndex < items.length; itemIndex++) {
+            items[itemIndex].setDestinationYFromOrigin(0);
+            if (items[itemIndex].getValue() != null) {
+              items[itemIndex].getValue().setExpanded(false);
+              items[itemIndex].getValue().setDestinationYFromOrigin(0);
+            }
+          }
+          this.expandedItemIndex = -1;
+        } else {
+          if (this.expandedItemIndex >= 0 && this.expandedItemIndex < items.length
+              && items[this.expandedItemIndex].getValue() != null)
+            items[this.expandedItemIndex].getValue().setExpanded(false);
+          // Do not push items before it.
+          for (int itemIndex = 0; itemIndex < expandIndex; itemIndex++) {
+            items[itemIndex].setDestinationYFromOrigin(0);
+            if (items[itemIndex].getValue() != null)
+              items[itemIndex].getValue().setDestinationYFromOrigin(0);
+          }
+          // Expand the item itself by half its height.
+          items[expandIndex].setDestinationYFromOrigin(-items[expandIndex].getHeight() / 2);
+          // Push all following items down by the expanded item's height.
+          for (int itemIndex = expandIndex + 1; itemIndex < items.length; itemIndex++) {
+            items[itemIndex].setDestinationYFromOrigin(-items[expandIndex].getHeight());
+            if (items[itemIndex].getValue() != null)
+              items[itemIndex].getValue()
+                              .setDestinationYFromOrigin(-items[expandIndex].getHeight());
+          }
 
-        this.expandedItemIndex = expandIndex;
+          if (items[expandIndex].getValue() != null)
+            items[expandIndex].getValue().setExpanded(true);
+          this.expandedItemIndex = expandIndex;
+        }
+      // If it has a boolean value - just invert the value.
+      } else if (items[expandIndex].getValue().getType() == MenuValue.Type.BOOLEAN) {
+        items[expandIndex].getValue().setValue(!items[expandIndex].getValue().getValueBoolean());
+      // If it has a string value - open the keyboard layout to type.
+      } else {
+        // TODO
       }
+    }
+  }
+  public void syncValues() {
+    if (this.menuState == MenuState.BOARD) {
+      this.horizontalSquares = menuItemsBoard[0].getValue().getValueInteger();
+      this.verticalSquares = menuItemsBoard[1].getValue().getValueInteger();
+      this.speed = menuItemsBoard[2].getValue().getValueInteger();
+      this.stageBorders = menuItemsBoard[3].getValue().getValueBoolean();
     }
   }
   public void setPlayerOptionsIndex(int index) { this.playersOptionsIndex = index; }

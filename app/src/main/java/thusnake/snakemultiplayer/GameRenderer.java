@@ -23,6 +23,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private Menu menu;
   private Game game;
   private long previousTime = System.nanoTime();
+  private boolean pointerIsDown = false;
+  private double pointerDownTime = 0;
 
   public GameRenderer(Context context) {
     super();
@@ -49,6 +51,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     long deltaTimeLong = currentTime - previousTime;
     this.previousTime = currentTime;
     double dt = deltaTimeLong / 1000000000.0;
+
+    if (this.pointerIsDown) this.pointerDownTime += dt;
 
     gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
     gl.glMatrixMode(GL10.GL_MODELVIEW);
@@ -98,8 +102,18 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public void startGame() {
     game = new Game(this, screenWidth, screenHeight);
   }
-
   public void quitGame() {
     game = null;
   }
+
+  public void setPointerDown() {
+    this.pointerIsDown = true;
+  }
+
+  public void setPointerUp() {
+    this.pointerIsDown = false;
+    this.pointerDownTime = 0;
+  }
+
+  public double getPointerDownTime() { return this.pointerDownTime; }
 }

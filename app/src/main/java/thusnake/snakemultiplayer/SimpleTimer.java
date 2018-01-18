@@ -25,8 +25,9 @@ public class SimpleTimer {
   }
 
   public double getTime() {
-    return time;
+    return this.time;
   }
+  public double getInitialTime() { return this.initialTime; }
 
   public boolean countDown(double time) {
     try {
@@ -46,13 +47,12 @@ public class SimpleTimer {
     return true;
   }
 
-  public boolean count(double time) {
-    try {
-      this.time += time * countDirection;
-    } catch (Exception exception) {
-      return false;
+  public void count(double time) {
+    this.time += time * countDirection;
+    if (this.countDirection > 0 && this.time > this.endTime
+        || this.countDirection < 0 && this.time < this.endTime) {
+      this.time = this.endTime;
     }
-    return true;
   }
 
   public void countEaseOut(double time, double easeMultiplier, double inertia) {

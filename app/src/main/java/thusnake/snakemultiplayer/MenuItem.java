@@ -10,22 +10,23 @@ import javax.microedition.khronos.opengles.GL10;
 
 // Holds a single menu item, which functions as a button.
 public class MenuItem {
+  public enum Alignment {LEFT, RIGHT, CENTER}
   private final String text;
+  private final Alignment align;
   private float width, height, initialX, initialY;
   private SimpleTimer x, y;
-  private int value;
   private float[] colors = new float[4];
   private GameRenderer renderer;
   private GL10 gl;
   private GLText glText;
   private boolean visible;
   private MenuAction action;
+  private MenuValue value;
 
   // Constructor.
-  public MenuItem(GameRenderer renderer, String text, float x, float y) {
+  public MenuItem(GameRenderer renderer, String text, float x, float y, Alignment align) {
     this.text = text;
-    this.x = new SimpleTimer(x);
-    this.y = new SimpleTimer(y);
+    this.align = align;
     this.initialX = x;
     this.initialY = y;
 
@@ -34,6 +35,9 @@ public class MenuItem {
     this.glText = renderer.getGlText();
     this.width = glText.getLength(text);
     this.height = glText.getHeight() * 0.65f;
+    if (align == Alignment.LEFT) this.x = new SimpleTimer(x);
+    else this.x = new SimpleTimer(x - this.width);
+    this.y = new SimpleTimer(y);
 
     for (int i = 0; i < 4; i++) this.colors[i] = 1f;
   }
@@ -41,29 +45,37 @@ public class MenuItem {
   // Simply draws the text representation of the button. Has to be called inside a block of
   // GLText.
   public void draw() {
-    gl.glColor4f(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
+    glText.end();
+    glText.begin(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
     glText.draw(this.text, (float) this.x.getTime(), (float) this.y.getTime());
+    if (this.value != null) this.value.draw();
   }
 
   public void move(double dt) {
     if (!this.x.isDone()) this.x.countEaseOut(dt, 8, this.height * 2);
     if (!this.y.isDone()) this.y.countEaseOut(dt, 8, this.height * 2);
+    if (this.value != null) this.value.move(dt);
   }
 
   public void setColors(float r, float g, float b, float a) {
+    this.setColors(r,g,b);
+    this.setOpacity(a);
+  }
+  public void setColors(float r, float g, float b) {
     this.colors[0] = r;
     this.colors[1] = g;
     this.colors[2] = b;
+  }
+  public void setOpacity(float a) {
     this.colors[3] = a;
   }
 
   public void setAction(MenuAction action) {
     this.action = action;
   }
+  public void setValue(MenuValue value) { this.value = value; }
 
-  public void performAction() {
-    this.action.perform(this.renderer);
-  }
+  public void performAction() { if (this.action != null) this.action.perform(this.renderer); }
 
   // Returns true if the given coordinates are in the button.
   public boolean isClicked(float x, float y) {
@@ -79,6 +91,9 @@ public class MenuItem {
   public float getY() { return (float) this.y.getTime(); }
   public float getWidth() { return this.width; }
   public float getHeight() { return this.height; }
+  public GameRenderer getRenderer() { return this.renderer; }
+  public MenuValue getValue() { return this.value; }
+
   public void setDestinationX(double destinationX) { this.x.setEndTimeFromNow(destinationX); }
   public void setDestinationY(double destinationY) { this.y.setEndTimeFromNow(destinationY); }
   public void setDestinationXFromOrigin(double offsetX) {

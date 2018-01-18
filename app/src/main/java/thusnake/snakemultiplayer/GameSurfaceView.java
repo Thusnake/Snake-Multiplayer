@@ -14,7 +14,7 @@ public class GameSurfaceView extends GLSurfaceView {
   private final GameRenderer gameRenderer;
   private Context context;
   private GLText glText;
-  private boolean pointerHeld = false;
+  private double pointerDownDuration = 0;
 
   public GameSurfaceView(Context context) {
     super(context);
@@ -37,18 +37,28 @@ public class GameSurfaceView extends GLSurfaceView {
       rawY[i] = e.getY(i);
     }
 
+    switch(e.getActionMasked()) {
+      case MotionEvent.ACTION_DOWN:
+        gameRenderer.setPointerDown();
+        break;
+      case MotionEvent.ACTION_UP:
+        gameRenderer.setPointerUp();
+        break;
+    }
+
     if (this.gameRenderer.isInGame()) {
-      switch (e.getAction()) {
+      switch (e.getActionMasked()) {
         case MotionEvent.ACTION_DOWN:
           // Handle touching down on a cornerLayout button.
-          for (int pointerIndex = 0; pointerIndex < pointerX.length; pointerIndex++) {
-            for (Player player : gameRenderer.getGame().getPlayers())
-              if (player.isAlive() &&
-                  player.getCornerLayout().changeDirectionBasedOnCoordinates(pointerX[pointerIndex],
-                      pointerY[pointerIndex]))
-                // We have found what this pointer changes so break out of the loop.
-                break;
-          }
+          for (Player player : gameRenderer.getGame().getPlayers())
+            if (player.isAlive() && player.getCornerLayout()
+                                    .changeDirectionBasedOnCoordinates(pointerX[0], pointerY[0]))
+          break;
+        case MotionEvent.ACTION_POINTER_DOWN:
+          for (Player player : gameRenderer.getGame().getPlayers())
+            if (player.isAlive() && player.getCornerLayout()
+                                    .changeDirectionBasedOnCoordinates(pointerX[e.getActionIndex()],
+                                                                      pointerY[e.getActionIndex()]))
           break;
         case MotionEvent.ACTION_MOVE:
           // Handle moving onto a cornerLayout button.
@@ -79,6 +89,22 @@ public class GameSurfaceView extends GLSurfaceView {
           break;
       }
     } else {
+      // Handle the plus/minus buttons.
+      for (MenuItem menuItem : gameRenderer.getMenu().getCurrentMenuItems())
+        if (menuItem.getValue() != null && menuItem.getValue().isExpanded())
+          switch(e.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+              menuItem.getValue().handleButtonsDown(pointerX[0], pointerY[0]);
+              break;
+            case MotionEvent.ACTION_MOVE:
+              menuItem.getValue().handleButtonsMove(pointerX[0], pointerY[0]);
+              break;
+            case MotionEvent.ACTION_UP:
+              menuItem.getValue().handleButtonsUp();
+          }
+
+
+
       switch(e.getAction()) {
         case MotionEvent.ACTION_DOWN:
           break;
