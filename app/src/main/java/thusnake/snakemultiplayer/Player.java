@@ -14,7 +14,7 @@ public class Player {
   private int number, score;
   private final String name;
   private final ControlType controlType;
-  public static enum ControlType {CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI};
+  public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI};
   private final CornerLayout cornerLayout;
   private BodyPart[] bodyParts = new BodyPart[0];
   private int bodyLength = 0;

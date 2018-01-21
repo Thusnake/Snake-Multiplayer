@@ -26,6 +26,7 @@ public class Menu {
   // Menu variables
   public int horizontalSquares, verticalSquares, speed;
   public boolean stageBorders;
+  public Player.ControlType[] playerControlType = new Player.ControlType[4];
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -48,6 +49,10 @@ public class Menu {
     this.verticalSquares = 20;
     this.speed = 12;
     this.stageBorders = true;
+    this.playerControlType[0] = Player.ControlType.CORNER;
+    this.playerControlType[1] = Player.ControlType.OFF;
+    this.playerControlType[2] = Player.ControlType.OFF;
+    this.playerControlType[3] = Player.ControlType.OFF;
 
     // Create menuItem instances for each button.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -78,7 +83,7 @@ public class Menu {
     this.menuItemsPlayers = new MenuItem[4];
     for (int i = 0; i < 4; i++)
       this.menuItemsPlayers[i] = new MenuItem(renderer, "Player " + (i + 1),
-          10 + screenWidth, screenHeight * 4/5 - glText.getCharHeight() * (i * 5/4 + 1) * 0.65f,
+          10 + screenWidth, screenHeight * 4/5f - glText.getCharHeight() * (i * 5/4f + 1) * 0.65f,
           MenuItem.Alignment.LEFT);
 
     String[] menuItemsPlayersOptionsText = {"Type", ""};
@@ -210,6 +215,8 @@ public class Menu {
       case PLAYERS:
         this.menuStateItem.setText("Players");
         screen = 1;
+        for (int index = 0; index < this.menuItemsPlayers.length; index++)
+          menuItemsPlayers[index].setDescription(this.playerControlType[index].toString());
         break;
       case PLAYERSOPTIONS:
         // TODO This should display the currently chosen player's name

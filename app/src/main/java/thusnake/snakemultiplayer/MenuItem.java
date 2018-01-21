@@ -23,6 +23,7 @@ public class MenuItem {
   private boolean visible;
   private MenuAction action;
   private MenuValue value;
+  private String description;
 
   // Constructor.
   public MenuItem(GameRenderer renderer, String text, float x, float y, Alignment align) {
@@ -51,6 +52,17 @@ public class MenuItem {
     glText.end();
     glText.begin(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
     glText.draw(this.text, (float) this.x.getTime(), (float) this.y.getTime());
+    if (this.description != null) {
+      glText.end();
+      gl.glPushMatrix();
+      gl.glScalef(0.25f, 0.25f, 1f);
+      glText.begin(0.66f, 0.66f, 0.66f, 1f);
+      glText.draw(this.description, (float) this.x.getTime() * 4,
+          (float) this.y.getTime() * 4);
+      glText.end();
+      gl.glPopMatrix();
+      glText.begin();
+    }
     if (this.value != null) this.value.draw();
   }
 
@@ -78,6 +90,10 @@ public class MenuItem {
       this.x.countDown(glText.getLength(text) - glText.getLength(this.text));
     this.width = glText.getLength(text);
     this.text = text;
+  }
+  public void setDescription(String text) {
+    // TODO maybe have a way for descriptions to also be right-aligned.
+    this.description = text;
   }
 
   public void setAction(MenuAction action) {
