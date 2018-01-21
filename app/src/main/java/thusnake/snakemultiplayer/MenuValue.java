@@ -90,7 +90,8 @@ public class MenuValue {
       }
 
       if (this.align == MenuItem.Alignment.RIGHT)
-        this.x.countDown(glText.getLength("" + newValue) - glText.getLength(this.getValueToString()));
+        this.x.countDown(glText.getLength(this.getValueToString(newValue))
+            - glText.getLength(this.getValueToString()));
       this.valueInteger = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -98,7 +99,8 @@ public class MenuValue {
   public void setValue(boolean newValue) {
     if (this.type == Type.BOOLEAN) {
       if (this.align == MenuItem.Alignment.RIGHT)
-        this.x.countDown(glText.getLength("" + newValue) - glText.getLength(this.getValueToString()));
+        this.x.countDown(glText.getLength(this.getValueToString(newValue))
+            - glText.getLength(this.getValueToString()));
       this.valueBoolean = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -153,11 +155,13 @@ public class MenuValue {
   public String getValueToString() {
     switch (this.type) {
       case INTEGER: return "" + this.valueInteger;
-      case BOOLEAN: return "" + this.valueBoolean;
+      case BOOLEAN: return (this.valueBoolean) ? "y" : "n";
       case STRING: return this.valueString;
       default: return "";
     }
   }
+  public String getValueToString(int value) { return "" + value; }
+  public String getValueToString(boolean value) { return (value) ? "y" : "n"; }
 
   // Integer-specific methods.
   public void increaseValueMinutely(double amount) {
