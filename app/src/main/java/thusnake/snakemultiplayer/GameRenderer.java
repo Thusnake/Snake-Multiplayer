@@ -91,7 +91,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public Menu getMenu() { return this.menu; }
   public Game getGame() { return this.game; }
   public int[] getPairedDevices() { return new int[] {}; } // TODO: Make it actually return the connected devices.
-  public void setMenuState(Menu.MenuState state) { menu.setState(state); }
+  public void setMenuState(MenuItem origin, Menu.MenuState state) { menu.setState(origin, state); }
   public void setMenuStateToPlayerOptions(int playerIndex) {
     menu.setState(Menu.MenuState.PLAYERSOPTIONS);
     menu.setPlayerOptionsIndex(playerIndex);

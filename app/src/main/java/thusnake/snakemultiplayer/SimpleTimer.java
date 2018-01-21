@@ -76,6 +76,8 @@ public class SimpleTimer {
     return true;
   }
 
+  public void setTime(double time) { this.time = time; }
+
   public void setEndTime(double time) {
     this.endTime = time;
     this.countDirection = (endTime - initialTime > 0) ? 1 : -1;

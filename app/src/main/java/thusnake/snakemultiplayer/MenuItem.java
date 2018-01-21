@@ -11,10 +11,11 @@ import javax.microedition.khronos.opengles.GL10;
 // Holds a single menu item, which functions as a button.
 public class MenuItem {
   public enum Alignment {LEFT, RIGHT, CENTER}
-  private final String text;
+  private String text;
   private final Alignment align;
   private float width, height, initialX, initialY;
   private SimpleTimer x, y;
+  private double easeOutMultiplier, easeOutInertia;
   private float[] colors = new float[4];
   private GameRenderer renderer;
   private GL10 gl;
@@ -35,6 +36,8 @@ public class MenuItem {
     this.glText = renderer.getGlText();
     this.width = glText.getLength(text);
     this.height = glText.getHeight() * 0.65f;
+    this.easeOutMultiplier = 8;
+    this.easeOutInertia = this.height * 2;
     if (align == Alignment.LEFT) this.x = new SimpleTimer(x);
     else this.x = new SimpleTimer(x - this.width);
     this.y = new SimpleTimer(y);
@@ -70,12 +73,19 @@ public class MenuItem {
     this.colors[3] = a;
   }
 
+  public void setText(String text) {
+    if (this.align == Alignment.RIGHT)
+      this.x.countDown(glText.getLength(text) - glText.getLength(this.text));
+    this.width = glText.getLength(text);
+    this.text = text;
+  }
+
   public void setAction(MenuAction action) {
     this.action = action;
   }
   public void setValue(MenuValue value) { this.value = value; }
 
-  public void performAction() { if (this.action != null) this.action.perform(this.renderer); }
+  public void performAction() { if (this.action != null) this.action.perform(this.renderer, this); }
 
   // Returns true if the given coordinates are in the button.
   public boolean isClicked(float x, float y) {
@@ -94,13 +104,22 @@ public class MenuItem {
   public GameRenderer getRenderer() { return this.renderer; }
   public MenuValue getValue() { return this.value; }
 
-  public void setDestinationX(double destinationX) { this.x.setEndTimeFromNow(destinationX); }
+  public void setX(double x) { this.x.setTime(x); }
+  public void setY(double y) { this.y.setTime(y); }
+  public void setDestinationX(double destinationX) {
+    if (this.align == Alignment.RIGHT) this.x.setEndTimeFromNow(destinationX - this.width);
+    else this.x.setEndTimeFromNow(destinationX);
+  }
   public void setDestinationY(double destinationY) { this.y.setEndTimeFromNow(destinationY); }
   public void setDestinationXFromOrigin(double offsetX) {
     this.x.setEndTimeFromNow(this.initialX + offsetX);
   }
   public void setDestinationYFromOrigin(double offsetY) {
     this.y.setEndTimeFromNow(this.initialY + offsetY);
+  }
+  public void setEaseOutVariables(double multiplier, double inertia) {
+    this.easeOutMultiplier = multiplier;
+    this.easeOutInertia = inertia;
   }
 }
 

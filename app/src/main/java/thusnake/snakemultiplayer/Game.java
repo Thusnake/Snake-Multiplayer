@@ -14,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 // An instance of this class would be a single game of snake.
 class Game {
-  private boolean gameOver = false, onlineSession;
+  private boolean gameOver = false, onlineSession, screenBorders;
   private SimpleTimer beginTimer = new SimpleTimer(0.0, 3.0);
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
@@ -22,7 +22,7 @@ class Game {
   private enum GameMode {SINGLEPLAYER, MULTIPLAYER};
   private GameMode gameMode;
   private int winner;
-  private double speed = 12; // TODO Have it actually get the speed from the menu settings.
+  private double speed;
   private double screenTransformX = 0.0, screenTransformY = 0.0;
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
@@ -52,9 +52,11 @@ class Game {
     this.scoresEditor = scores.edit();
 
     // Get the options from the menu.
-    // TODO Have it actually take this information from the menu.
-    this.horizontalSquares = 20;
-    this.verticalSquares = 20;
+    System.out.println(renderer.getMenu().horizontalSquares);
+    this.horizontalSquares = renderer.getMenu().horizontalSquares;
+    this.verticalSquares = renderer.getMenu().verticalSquares;
+    this.speed = renderer.getMenu().speed;
+    this.screenBorders = renderer.getMenu().stageBorders;
 
     // TODO Calculate board offset.
     this.boardOffsetY = 10.0;

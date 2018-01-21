@@ -38,9 +38,16 @@ public class Menu {
     this.menuState = MenuState.MAIN;
     this.menuStateItem = new MenuItem(renderer, menuItemStateNames[0], 0, 0,
         MenuItem.Alignment.RIGHT);
+    this.menuStateItem.setEaseOutVariables(16, this.menuStateItem.getHeight() * 2);
 
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
+
+    // TODO get these values from the options strings
+    this.horizontalSquares = 20;
+    this.verticalSquares = 20;
+    this.speed = 12;
+    this.stageBorders = true;
 
     // Create menuItem instances for each button.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -83,37 +90,37 @@ public class Menu {
           MenuItem.Alignment.LEFT);
 
     // Set functionality for each menuItem.
-    this.menuItemsMain[0].setAction(action -> renderer.startGame());
-    this.menuItemsMain[1].setAction(action -> renderer.setMenuState(MenuState.CONNECT));
-    this.menuItemsMain[2].setAction(action -> renderer.setMenuState(MenuState.BOARD));
-    this.menuItemsMain[3].setAction(action -> renderer.setMenuState(MenuState.PLAYERS));
+    this.menuItemsMain[0].setAction((action, origin) -> renderer.startGame());
+    this.menuItemsMain[1].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.CONNECT));
+    this.menuItemsMain[2].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.BOARD));
+    this.menuItemsMain[3].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.PLAYERS));
 
-    this.menuItemsBoard[0].setAction(action -> renderer.getMenu().expandItem(0));
-    this.menuItemsBoard[1].setAction(action -> renderer.getMenu().expandItem(1));
-    this.menuItemsBoard[2].setAction(action -> renderer.getMenu().expandItem(2));
-    this.menuItemsBoard[3].setAction(action -> renderer.getMenu().expandItem(3));
+    this.menuItemsBoard[0].setAction((action, origin) -> renderer.getMenu().expandItem(0));
+    this.menuItemsBoard[1].setAction((action, origin) -> renderer.getMenu().expandItem(1));
+    this.menuItemsBoard[2].setAction((action, origin) -> renderer.getMenu().expandItem(2));
+    this.menuItemsBoard[3].setAction((action, origin) -> renderer.getMenu().expandItem(3));
 
-    // TODO get these values from the options strings
-    this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, 20, screenWidth * 2 - 10,
+    this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, this.horizontalSquares,
+        screenWidth * 2 - 10,
         this.menuItemsBoard[0].getY(), MenuItem.Alignment.RIGHT));
-    this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, 20, screenWidth * 2 - 10,
+    this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, this.verticalSquares,
+        screenWidth * 2 - 10,
         this.menuItemsBoard[1].getY(), MenuItem.Alignment.RIGHT));
-    this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, 12, screenWidth * 2 - 10,
+    this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, this.speed,
+        screenWidth * 2 - 10,
         this.menuItemsBoard[2].getY(), MenuItem.Alignment.RIGHT));
-    this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, false, screenWidth * 2 - 10,
+    this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, this.stageBorders,
+        screenWidth * 2 - 10,
         this.menuItemsBoard[3].getY(), MenuItem.Alignment.RIGHT));
 
     this.menuItemsBoard[0].getValue().setBoundaries(1, 100);
     this.menuItemsBoard[1].getValue().setBoundaries(1, 100);
     this.menuItemsBoard[2].getValue().setBoundaries(1, 100);
 
-    for (int index = 0; index < this.menuItemsBoard.length; index++)
-      this.menuItemsBoard[index].getValue().setAction(action -> renderer.getMenu().syncValues());
-
-    this.menuItemsPlayers[0].setAction(action -> renderer.setMenuStateToPlayerOptions(0));
-    this.menuItemsPlayers[1].setAction(action -> renderer.setMenuStateToPlayerOptions(1));
-    this.menuItemsPlayers[2].setAction(action -> renderer.setMenuStateToPlayerOptions(2));
-    this.menuItemsPlayers[3].setAction(action -> renderer.setMenuStateToPlayerOptions(3));
+    this.menuItemsPlayers[0].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(0));
+    this.menuItemsPlayers[1].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(1));
+    this.menuItemsPlayers[2].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(2));
+    this.menuItemsPlayers[3].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(3));
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
@@ -127,7 +134,6 @@ public class Menu {
 
     //this.gl.glEnable(GL10.GL_BLEND);
     //this.gl.glBlendFunc(GL10.GL_SRC_ALPHA,GL10.GL_ONE_MINUS_SRC_ALPHA);
-
 
     // Handle timers.
     if (!this.menuAnimationTimer.isDone()) this.menuAnimationTimer.countEaseOut(dt, 3, 0);
@@ -157,6 +163,9 @@ public class Menu {
       for (MenuItem menuItem : menuItemsPlayersOptions) menuItem.draw();
     }
 
+    this.menuStateItem.move(dt);
+    this.menuStateItem.draw();
+
     glText.end();
   }
 
@@ -177,25 +186,54 @@ public class Menu {
         return null;
     }
   }
+
   public void setState(MenuState state) {
     if (this.expandedItemIndex != -1) this.expandItem(this.expandedItemIndex);
     this.menuStatePrevious = this.menuState;
     this.menuState = state;
+    // Reset all items' opacity in case we've used an animation to transition out of that screen.
+    for (MenuItem item : this.getCurrentMenuItems()) item.setOpacity(1);
+    int screen;
     switch (state) {
       case MAIN:
-        this.screenTransformX.setEndTimeFromNow(0); break;
+        this.menuStateItem.setText("");
+        screen = 0;
+        break;
       case CONNECT:
-        this.screenTransformX.setEndTimeFromNow(-this.screenWidth); break;
+        this.menuStateItem.setText("Connect");
+        screen = 1;
+        break;
       case BOARD:
-        this.screenTransformX.setEndTimeFromNow(-this.screenWidth); break;
+        this.menuStateItem.setText("Board");
+        screen = 1;
+        break;
       case PLAYERS:
-        this.screenTransformX.setEndTimeFromNow(-this.screenWidth); break;
+        this.menuStateItem.setText("Players");
+        screen = 1;
+        break;
       case PLAYERSOPTIONS:
-        this.screenTransformX.setEndTimeFromNow(-this.screenWidth * 2); break;
+        // TODO This should display the currently chosen player's name
+        this.menuStateItem.setText("");
+        screen = 2;
+        break;
       default:
-        this.screenTransformX.setEndTimeFromNow(0); break;
+        this.menuStateItem.setText("");
+        screen = 0;
+        break;
     }
+
+    this.screenTransformX.setEndTimeFromNow(-this.screenWidth * screen);
+    this.menuStateItem.setDestinationX(this.screenWidth * (screen + 1) - 10);
+    this.menuStateItem.setDestinationY(this.screenHeight - 10 - glText.getCharHeight()*0.65);
   }
+
+  public void setState(MenuItem origin, MenuState state) {
+    this.menuStateItem.setX(origin.getX());
+    this.menuStateItem.setY(origin.getY());
+    origin.setOpacity(0);
+    this.setState(state);
+  }
+
   public void goBack() {
     switch (this.menuState) {
       case MAIN: break;
@@ -206,6 +244,7 @@ public class Menu {
       default: break;
     }
   }
+
   public void expandItem(int expandIndex) {
     if (expandIndex < this.getCurrentMenuItems().length
         && this.getCurrentMenuItems()[expandIndex].getValue() != null) {

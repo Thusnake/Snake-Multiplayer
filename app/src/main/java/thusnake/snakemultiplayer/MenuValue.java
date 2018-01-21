@@ -83,25 +83,32 @@ public class MenuValue {
 
   // Setters for all types.
   public void setValue(int newValue) {
-    if (this.minimumValueInteger != this.maximumValueInteger) {
-      if (newValue < this.minimumValueInteger) newValue = this.minimumValueInteger;
-      else if (newValue > this.maximumValueInteger) newValue = this.maximumValueInteger;
-    }
+    if (this.type == Type.INTEGER) {
+      if (this.minimumValueInteger != this.maximumValueInteger) {
+        if (newValue < this.minimumValueInteger) newValue = this.minimumValueInteger;
+        else if (newValue > this.maximumValueInteger) newValue = this.maximumValueInteger;
+      }
 
-    if (this.align == MenuItem.Alignment.RIGHT)
-      this.x.countDown(glText.getLength("" + newValue) - glText.getLength(this.getValueToString()));
-    if (this.type == Type.INTEGER) this.valueInteger = newValue;
+      if (this.align == MenuItem.Alignment.RIGHT)
+        this.x.countDown(glText.getLength("" + newValue) - glText.getLength(this.getValueToString()));
+      this.valueInteger = newValue;
+      this.renderer.getMenu().syncValues();
+    }
   }
   public void setValue(boolean newValue) {
-    if (this.align == MenuItem.Alignment.RIGHT)
-      this.x.countDown(glText.getLength("" + newValue) - glText.getLength(this.getValueToString()));
-    if (this.type == Type.BOOLEAN) this.valueBoolean = newValue;
+    if (this.type == Type.BOOLEAN) {
+      if (this.align == MenuItem.Alignment.RIGHT)
+        this.x.countDown(glText.getLength("" + newValue) - glText.getLength(this.getValueToString()));
+      this.valueBoolean = newValue;
+      this.renderer.getMenu().syncValues();
+    }
   }
   public void setValue(String newValue) {
     if (this.type == Type.STRING) {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.x.countDown(glText.getLength(newValue) - glText.getLength(this.getValueToString()));
       this.valueString = newValue;
+      this.renderer.getMenu().syncValues();
     }
   }
 
@@ -151,10 +158,6 @@ public class MenuValue {
       default: return "";
     }
   }
-
-  // Action setter and executor.
-  public void setAction(MenuAction action) { this.action = action; }
-  public void performAction() { if (this.action != null) this.action.perform(this.renderer); }
 
   // Integer-specific methods.
   public void increaseValueMinutely(double amount) {
