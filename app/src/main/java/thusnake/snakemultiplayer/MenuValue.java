@@ -17,7 +17,7 @@ public class MenuValue {
   private final MenuItem.Alignment align;
   public enum Type {INTEGER, BOOLEAN, STRING}
   private Type type;
-  private boolean expanded;
+  private boolean expanded, visible = true;
   private MenuItem plusButton, minusButton;
   private SimpleTimer plusMinusOpacity = new SimpleTimer(0.0, 1.0);
   private GameRenderer renderer;
@@ -92,6 +92,7 @@ public class MenuValue {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.x.countDown(glText.getLength(this.getValueToString(newValue))
             - glText.getLength(this.getValueToString()));
+      this.width = glText.getLength(this.getValueToString(newValue));
       this.valueInteger = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -101,6 +102,7 @@ public class MenuValue {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.x.countDown(glText.getLength(this.getValueToString(newValue))
             - glText.getLength(this.getValueToString()));
+      this.width = glText.getLength(this.getValueToString(newValue));
       this.valueBoolean = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -109,17 +111,20 @@ public class MenuValue {
     if (this.type == Type.STRING) {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.x.countDown(glText.getLength(newValue) - glText.getLength(this.getValueToString()));
+      this.width = glText.getLength(newValue);
       this.valueString = newValue;
       this.renderer.getMenu().syncValues();
     }
   }
 
   public void draw() {
-    gl.glColor4f(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
-    glText.draw(this.getValueToString(), (float) this.x.getTime(), (float) this.y.getTime());
-    if (this.type == Type.INTEGER && this.expanded) {
-      minusButton.draw();
-      plusButton.draw();
+    if (this.visible) {
+      gl.glColor4f(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
+      glText.draw(this.getValueToString(), (float) this.x.getTime(), (float) this.y.getTime());
+      if (this.type == Type.INTEGER && this.expanded) {
+        minusButton.draw();
+        plusButton.draw();
+      }
     }
   }
 
@@ -239,8 +244,15 @@ public class MenuValue {
 
   // Other getters.
   public boolean isExpanded() { return this.expanded; }
+  public boolean isClicked(float x, float y) {
+    return (this.visible && x > this.x.getTime() && x < this.x.getTime() + this.width
+      && renderer.getScreenHeight() - y > this.y.getTime()
+      && renderer.getScreenHeight() - y < this.y.getTime() + this.height);
+  }
   public MenuItem getPlusButton() { return this.plusButton; }
   public MenuItem getMinusButton() { return this.minusButton; }
   public Type getType() { return this.type; }
+
+  public void setVisible(boolean visible) { this.visible = visible; }
 
 }

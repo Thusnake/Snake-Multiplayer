@@ -107,7 +107,8 @@ public class MenuItem {
   public boolean isClicked(float x, float y) {
     return (x > this.x.getTime() && x < this.x.getTime() + this.width
         && renderer.getScreenHeight() - y > this.y.getTime()
-        && renderer.getScreenHeight() - y < this.y.getTime() + this.height);
+        && renderer.getScreenHeight() - y < this.y.getTime() + this.height
+        || this.value != null && this.value.isClicked(x, y));
   }
 
   public boolean isVisible() {

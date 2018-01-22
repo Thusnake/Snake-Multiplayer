@@ -27,6 +27,8 @@ public class Menu {
   public int horizontalSquares, verticalSquares, speed;
   public boolean stageBorders;
   public Player.ControlType[] playerControlType = new Player.ControlType[4];
+  public CornerLayout.Corner[] playerControlCorner = new CornerLayout.Corner[4];
+  public String[] playerName = new String[4];
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -53,6 +55,14 @@ public class Menu {
     this.playerControlType[1] = Player.ControlType.OFF;
     this.playerControlType[2] = Player.ControlType.OFF;
     this.playerControlType[3] = Player.ControlType.OFF;
+    this.playerName[0] = "Player 1";
+    this.playerName[1] = "Player 2";
+    this.playerName[2] = "Player 3";
+    this.playerName[3] = "Player 4";
+    this.playerControlCorner[0] = CornerLayout.Corner.LOWER_LEFT;
+    this.playerControlCorner[1] = CornerLayout.Corner.LOWER_RIGHT;
+    this.playerControlCorner[2] = CornerLayout.Corner.UPPER_LEFT;
+    this.playerControlCorner[3] = CornerLayout.Corner.UPPER_RIGHT;
 
     // Create menuItem instances for each button.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -126,6 +136,14 @@ public class Menu {
     this.menuItemsPlayers[1].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(1));
     this.menuItemsPlayers[2].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(2));
     this.menuItemsPlayers[3].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(3));
+
+    this.menuItemsPlayersOptions[0].setAction((action, origin) -> renderer.getMenu().cyclePlayerControlTypes());
+    this.menuItemsPlayersOptions[1].setAction((action, origin) -> renderer.getMenu().cyclePlayerControlCorners());
+
+    this.menuItemsPlayersOptions[0].setValue(new MenuValue(this.renderer, "",
+        screenWidth * 3 - 10, this.menuItemsPlayersOptions[0].getY(), MenuItem.Alignment.RIGHT));
+    this.menuItemsPlayersOptions[1].setValue(new MenuValue(this.renderer, "LOWER LEFT",
+        screenWidth * 3 - 10, this.menuItemsPlayersOptions[1].getY(), MenuItem.Alignment.RIGHT));
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
@@ -215,13 +233,18 @@ public class Menu {
       case PLAYERS:
         this.menuStateItem.setText("Players");
         screen = 1;
+        // Update the descriptions.
         for (int index = 0; index < this.menuItemsPlayers.length; index++)
           menuItemsPlayers[index].setDescription(this.playerControlType[index].toString());
         break;
       case PLAYERSOPTIONS:
-        // TODO This should display the currently chosen player's name
-        this.menuStateItem.setText("");
+        this.menuStateItem.setText(this.playerName[this.playersOptionsIndex]);
         screen = 2;
+        // Update the chosen player's options values.
+        this.menuItemsPlayersOptions[0].getValue()
+            .setValue(this.playerControlType[this.playersOptionsIndex].toString());
+        this.menuItemsPlayersOptions[1].getValue()
+            .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
         break;
       default:
         this.menuStateItem.setText("");
@@ -301,6 +324,8 @@ public class Menu {
       }
     }
   }
+
+  // This will be called after every change of a menuValue's value.
   public void syncValues() {
     if (this.menuState == MenuState.BOARD) {
       this.horizontalSquares = menuItemsBoard[0].getValue().getValueInteger();
@@ -309,6 +334,60 @@ public class Menu {
       this.stageBorders = menuItemsBoard[3].getValue().getValueBoolean();
     }
   }
+
+  public void cyclePlayerControlTypes() {
+    // TODO Make it so that you can only turn on/off the last player in the stack.
+    // TODO Have some buttons to make this easier to do.
+    switch (this.playerControlType[this.playersOptionsIndex]) {
+      case OFF:
+        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.CORNER;
+        break;
+      case CORNER:
+        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.SWIPE;
+        break;
+      case SWIPE:
+        // TODO the next one would be keyboard and then gamepad, but they're not implemented
+        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.OFF;
+        break;
+      case KEYBOARD:
+        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.OFF;
+        break;
+      case GAMEPAD:
+        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.OFF;
+        break;
+      // The following ones you should not be able to easily switch off.
+      case BLUETOOTH:
+        break;
+      case WIFI:
+        break;
+    }
+    // Update the display value.
+    this.menuItemsPlayersOptions[0].getValue()
+        .setValue(this.playerControlType[this.playersOptionsIndex].toString());
+    this.menuItemsPlayersOptions[1].getValue()
+        .setVisible(this.playerControlType[this.playersOptionsIndex] == Player.ControlType.CORNER);
+  }
+
+  public void cyclePlayerControlCorners() {
+    switch(this.playerControlCorner[this.playersOptionsIndex]) {
+      case LOWER_LEFT:
+        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.LOWER_RIGHT;
+        break;
+      case LOWER_RIGHT:
+        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.UPPER_LEFT;
+        break;
+      case UPPER_LEFT:
+        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.UPPER_RIGHT;
+        break;
+      case UPPER_RIGHT:
+        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.LOWER_LEFT;
+        break;
+    }
+    // Update the display value.
+    this.menuItemsPlayersOptions[1].getValue()
+        .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
+  }
+
   public void setPlayerOptionsIndex(int index) { this.playersOptionsIndex = index; }
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }

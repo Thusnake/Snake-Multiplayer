@@ -80,16 +80,21 @@ class Game {
     this.gameOver = false;
     this.winner = -1;
 
-    // TODO Until the below is done, we're gonna assume we're always playing singleplayer.
-    this.gameMode = GameMode.SINGLEPLAYER;
+    int playersToCreate = 0;
+    for (Player.ControlType controlType : this.renderer.getMenu().playerControlType)
+      if (controlType != Player.ControlType.OFF) playersToCreate++;
+    if (playersToCreate == 0) this.renderer.quitGame();
+    else if (playersToCreate == 1) this.gameMode = GameMode.SINGLEPLAYER;
+    else this.gameMode = GameMode.MULTIPLAYER;
 
     // Create the players
     if (gameMode == GameMode.SINGLEPLAYER) {
       players = new Player[1];
-      players[0] = new Player(this, "Player 1");
+      players[0] = new Player(this, 1);
     } else {
-      players = new Player[4];
-      // TODO Decide how you're gonna count the players after the menu is done.
+      this.players = new Player[playersToCreate];
+      for (int index = 0; index < this.players.length; index++)
+        players[index] = new Player(this, index);
     }
 
     // Create the board mesh, the apple(s) and other objects.

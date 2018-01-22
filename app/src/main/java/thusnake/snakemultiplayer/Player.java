@@ -24,8 +24,9 @@ public class Player {
   private final Mesh boardSquares;
 
   // Constructor for a corner layout player.
-  public Player(Game game, String name) {
+  public Player(Game game, int number) {
     this.game = game;
+    this.number = number;
     this.vibrator = (Vibrator) game.getRenderer().getContext()
         .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
@@ -34,19 +35,29 @@ public class Player {
     this.alive = true;
     this.drawable = true;
     this.flashing = false;
-    this.name = name;
+    this.name = game.getRenderer().getMenu().playerName[number];
     this.colors[0] = 1;
     this.colors[1] = 1;
     this.colors[2] = 1;
     this.colors[3] = 1;
     this.score = 0;
-    this.controlType = ControlType.CORNER;
-    // TODO make the cornerlayout position dependant on control corner / player number.
-    this.cornerLayout = new CornerLayout(this, CornerLayout.Corner.LOWER_LEFT);
-    // TODO make the first body part's position dependant on control corner / player number.
-    expandBody(0, 0);
+    this.controlType = game.getRenderer().getMenu().playerControlType[number];
+    this.cornerLayout =
+        new CornerLayout(this, game.getRenderer().getMenu().playerControlCorner[number]);
+    if (this.controlType == ControlType.CORNER)
+      switch (game.getRenderer().getMenu().playerControlCorner[number]) {
+        case LOWER_LEFT:
+          this.expandBody(0, 0); break;
+        case LOWER_RIGHT:
+          this.expandBody(game.getRenderer().getMenu().horizontalSquares, 0); break;
+        case UPPER_LEFT:
+          this.expandBody(0, game.getRenderer().getMenu().verticalSquares); break;
+        case UPPER_RIGHT:
+          this.expandBody(game.getRenderer().getMenu().horizontalSquares,
+                          game.getRenderer().getMenu().verticalSquares); break;
+      }
     for (int index = 1; index < 4; index++) {
-      expandBody(Direction.DOWN);
+      this.expandBody(Direction.DOWN);
     }
   }
 
@@ -140,14 +151,14 @@ public class Player {
   }
 
   public void die() {
-    // Check if anybody else should die from you before declaring death.
+    this.vibrator.vibrate(100);
+    this.alive = false;
+    // Check if anybody else should die from you.
     for (Player player : game.getPlayers())
       if (player != this && player.isAlive())
         for (BodyPart bodyPart : this.bodyParts)
           if (player.getX() == bodyPart.getX() && player.getY() == bodyPart.getY())
             player.die();
-    this.vibrator.vibrate(100);
-    this.alive = false;
   }
 
   public void increaseScore(int amount) {
