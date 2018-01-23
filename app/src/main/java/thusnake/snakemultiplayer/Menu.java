@@ -17,6 +17,7 @@ public class Menu {
   private final GLText glText;
   private final MenuItem[] menuItemsMain, menuItemsConnect, menuItemsBoard, menuItemsPlayers,
       menuItemsPlayersOptions;
+  private final MenuDrawable[] colorSelectionSquare;
   private final MenuItem menuStateItem;
   public enum MenuState {MAIN, CONNECT, BOARD, PLAYERS, PLAYERSOPTIONS};
   private String[] menuItemStateNames = {"", "Connect", "Board", "Players", ""};
@@ -145,6 +146,17 @@ public class Menu {
     this.menuItemsPlayersOptions[1].setValue(new MenuValue(this.renderer, "LOWER LEFT",
         screenWidth * 3 - 10, this.menuItemsPlayersOptions[1].getY(), MenuItem.Alignment.RIGHT));
 
+    // Create the graphics.
+    this.colorSelectionSquare = new MenuDrawable[8];
+    float squareSize = (screenWidth - 10 - 10*this.colorSelectionSquare.length)
+                        / (float) this.colorSelectionSquare.length;
+    for (int index = 0; index < this.colorSelectionSquare.length; index++) {
+      this.colorSelectionSquare[index] = new MenuDrawable(this.renderer,
+          screenWidth*2 + 10*(index+1) + squareSize*index,
+          screenHeight - glText.getCharHeight()*0.65f - squareSize, squareSize, squareSize);
+      this.colorSelectionSquare[index].setColor(this.getColorFromIndex(index));
+    }
+
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
@@ -184,6 +196,7 @@ public class Menu {
 
     if (menuState == MenuState.PLAYERSOPTIONS || menuStatePrevious == MenuState.PLAYERSOPTIONS) {
       for (MenuItem menuItem : menuItemsPlayersOptions) menuItem.draw();
+      for (MenuDrawable square : colorSelectionSquare) square.draw();
     }
 
     this.menuStateItem.move(dt);
@@ -193,6 +206,7 @@ public class Menu {
   }
 
   public MenuState getState() { return this.menuState; }
+  public MenuState getPreviousState() { return this.menuStatePrevious; }
   public MenuItem[] getCurrentMenuItems() {
     switch(menuState) {
       case MAIN:
@@ -265,14 +279,15 @@ public class Menu {
   }
 
   public void goBack() {
-    switch (this.menuState) {
-      case MAIN: break;
-      case CONNECT: this.setState(MenuState.MAIN); break;
-      case BOARD: this.setState(MenuState.MAIN); break;
-      case PLAYERS: this.setState(MenuState.MAIN); break;
-      case PLAYERSOPTIONS: this.setState(MenuState.PLAYERS); break;
-      default: break;
-    }
+    if (this.screenTransformX.isDone())
+      switch (this.menuState) {
+        case MAIN: break;
+        case CONNECT: this.setState(MenuState.MAIN); break;
+        case BOARD: this.setState(MenuState.MAIN); break;
+        case PLAYERS: this.setState(MenuState.MAIN); break;
+        case PLAYERSOPTIONS: this.setState(MenuState.PLAYERS); break;
+        default: break;
+      }
   }
 
   public void expandItem(int expandIndex) {
@@ -388,7 +403,22 @@ public class Menu {
         .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
   }
 
+  public float[] getColorFromIndex(int index) {
+    switch(index) {
+      case 0: return new float[] {1f, 1f, 1f, 1f};
+      case 1: return new float[] {1f, 0f, 0f, 1f};
+      case 2: return new float[] {1f, 0.5f, 0f, 1f};
+      case 3: return new float[] {1f, 1f, 0f, 1f};
+      case 4: return new float[] {0f, 1f, 0f, 1f};
+      case 5: return new float[] {0f, 1f, 1f, 1f};
+      case 6: return new float[] {0f, 0f, 1f, 1f};
+      case 7: return new float[] {1f, 0f, 1f, 1f};
+      default: return new float[] {1f, 1f, 1f, 1f};
+    }
+  }
+
   public void setPlayerOptionsIndex(int index) { this.playersOptionsIndex = index; }
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
+  public MenuDrawable[] getColorSelectionSquares() { return this.colorSelectionSquare; }
 }

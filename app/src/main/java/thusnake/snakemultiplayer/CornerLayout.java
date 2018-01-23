@@ -15,6 +15,7 @@ public class CornerLayout {
   private final float x, y, width;
   private final Player player;
   private final GL10 gl;
+  private boolean textureLoaded = false;
 
   public CornerLayout(Player player, Corner corner) {
     this.player = player;
@@ -49,6 +50,13 @@ public class CornerLayout {
     this.drawableLayout.loadGLTexture(this.gl, player.getGame().getRenderer().getContext(),
         R.drawable.androidcontrols);
   }
+
+  public void loadGLTexture(Context context) {
+    this.drawableLayout.loadGLTexture(this.gl, context, R.drawable.androidcontrols);
+    this.textureLoaded = true;
+  }
+
+  public boolean textureIsLoaded() { return this.textureLoaded; }
 
   public void draw() {
     this.drawableLayout.draw(this.gl);

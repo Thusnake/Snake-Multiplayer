@@ -52,7 +52,6 @@ class Game {
     this.scoresEditor = scores.edit();
 
     // Get the options from the menu.
-    System.out.println(renderer.getMenu().horizontalSquares);
     this.horizontalSquares = renderer.getMenu().horizontalSquares;
     this.verticalSquares = renderer.getMenu().verticalSquares;
     this.speed = renderer.getMenu().speed;
@@ -90,7 +89,7 @@ class Game {
     // Create the players
     if (gameMode == GameMode.SINGLEPLAYER) {
       players = new Player[1];
-      players[0] = new Player(this, 1);
+      players[0] = new Player(this, 0);
     } else {
       this.players = new Player[playersToCreate];
       for (int index = 0; index < this.players.length; index++)
@@ -110,7 +109,6 @@ class Game {
     this.boardLines[0] = new Square(0, screenHeight/3f, screenWidth, 4);
     this.boardLines[1] = new Square(0, screenHeight*2f/3f, screenWidth, 4);
 
-
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
@@ -121,12 +119,6 @@ class Game {
 
   // Runs a single frame of the snake game.
   public void run(double dt) {
-    // TODO Find a way to remove these, they are necessary here to be able to minimize the game and
-    // open it back up without the textures all fucking up, but for some reason not necessary in the
-    // menu.
-    this.gl.glEnable(GL10.GL_BLEND);
-    this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-
     // Check if the game is over.
     if ((gameMode == GameMode.MULTIPLAYER && this.getAlivePlayers() <= 1)
         || (gameMode == GameMode.SINGLEPLAYER && this.getAlivePlayers() == 0)
@@ -205,13 +197,14 @@ class Game {
     boardSquares.draw(gl);
 
     // Draw the display controllers.
-    // TODO Check if these can be removed.
-    gl.glEnable(GL10.GL_TEXTURE_2D);
-    gl.glEnable(GL10.GL_BLEND);
     for (Player player : players) {
       if (player.getControlType() == Player.ControlType.CORNER) {
         gl.glColor4f(player.getColors()[0], player.getColors()[1],
                      player.getColors()[2], player.getColors()[3]);
+        // For some unknown reason I can not load the texture inside the constructor properly.
+        // This is my band-aid fix.
+        if (!player.getCornerLayout().textureIsLoaded())
+          player.getCornerLayout().loadGLTexture(this.context);
         player.getCornerLayout().draw(gl);
       }
     }
@@ -229,13 +222,13 @@ class Game {
       glText.draw(countdownText, (float)(screenWidth - glText.getLength(countdownText)) / 2f,
           (float)(screenHeight - glText.getCharHeight()) / 2f);
       glText.end();
-      GLES11.glPopMatrix();
+      gl.glPopMatrix();
     }
 
     // Draw text for when the game is over.
     if (gameOver) {
       gameOverTimer.countUp(dt);
-      GLES11.glColor4f(0f, 0f, 0f, Math.min((float) gameOverTimer.getTime() * 0.375f, 0.75f));
+      gl.glColor4f(0f, 0f, 0f, Math.min((float) gameOverTimer.getTime() * 0.375f, 0.75f));
       boardFade.draw(gl);
 
       glText.begin(1f, 1f, 1f, 1f);
@@ -259,10 +252,8 @@ class Game {
               (float) screenHeight / 2f + glText.getCharHeight() * 0.077f);
         } else {
           glText.end();
-          glText.begin((float) players[winner].getColors()[0],
-              (float) players[winner].getColors()[1],
-              (float) players[winner].getColors()[2],
-              (float) players[winner].getColors()[3]);
+          glText.begin(players[winner].getColors()[0], players[winner].getColors()[1],
+              players[winner].getColors()[2], players[winner].getColors()[3]);
           glText.drawC(players[winner].getName() + " wins!", (float) screenWidth / 2f,
               (float) screenHeight / 2f + glText.getCharHeight() * 0.077f);
           glText.end();

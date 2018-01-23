@@ -6,6 +6,10 @@ import android.view.MotionEvent;
 
 import com.android.texample.GLText;
 
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
+
 /**
  * Created by Nick on 22/12/2017.
  */
@@ -38,7 +42,7 @@ public class GameSurfaceView extends GLSurfaceView {
     }
 
     switch(e.getActionMasked()) {
-      case MotionEvent.ACTION_DOWN:
+      case ACTION_DOWN:
         gameRenderer.setPointerDown();
         break;
       case MotionEvent.ACTION_UP:
@@ -48,7 +52,7 @@ public class GameSurfaceView extends GLSurfaceView {
 
     if (this.gameRenderer.isInGame()) {
       switch (e.getActionMasked()) {
-        case MotionEvent.ACTION_DOWN:
+        case ACTION_DOWN:
           // Handle touching down on a cornerLayout button.
           for (Player player : gameRenderer.getGame().getPlayers())
             if (player.isAlive() && player.getCornerLayout()
@@ -60,7 +64,7 @@ public class GameSurfaceView extends GLSurfaceView {
                                     .changeDirectionBasedOnCoordinates(pointerX[e.getActionIndex()],
                                                                       pointerY[e.getActionIndex()]))
           break;
-        case MotionEvent.ACTION_MOVE:
+        case ACTION_MOVE:
           // Handle moving onto a cornerLayout button.
           for (int pointerIndex = 0; pointerIndex < pointerX.length; pointerIndex++) {
             for (Player player : gameRenderer.getGame().getPlayers())
@@ -93,22 +97,36 @@ public class GameSurfaceView extends GLSurfaceView {
       for (MenuItem menuItem : gameRenderer.getMenu().getCurrentMenuItems())
         if (menuItem.getValue() != null && menuItem.getValue().isExpanded())
           switch(e.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
+            case ACTION_DOWN:
               menuItem.getValue().handleButtonsDown(pointerX[0], pointerY[0]);
               break;
-            case MotionEvent.ACTION_MOVE:
+            case ACTION_MOVE:
               menuItem.getValue().handleButtonsMove(pointerX[0], pointerY[0]);
               break;
             case MotionEvent.ACTION_UP:
               menuItem.getValue().handleButtonsUp();
           }
 
-
+      // Handle player menu color squares.
+      if (gameRenderer.getMenu().getState() == Menu.MenuState.PLAYERSOPTIONS
+          || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS)
+        for (MenuDrawable square : gameRenderer.getMenu().getColorSelectionSquares())
+          if (square.isClicked(pointerX[0], pointerY[0]))
+            switch(e.getActionMasked()) {
+              case ACTION_DOWN:
+                square.setScale(e.getPressure(0)); break;
+              case ACTION_MOVE:
+                square.setScale(e.getPressure(0)); break;
+              case ACTION_UP:
+                square.setScale(1); break;
+            }
+          else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
+            square.setScale(1);
 
       switch(e.getAction()) {
-        case MotionEvent.ACTION_DOWN:
+        case ACTION_DOWN:
           break;
-        case MotionEvent.ACTION_MOVE:
+        case ACTION_MOVE:
           if (e.getEventTime() - e.getDownTime() > 100
               && e.getHistorySize() > 0
               && rawX[0] - e.getHistoricalX(0) > 20) {

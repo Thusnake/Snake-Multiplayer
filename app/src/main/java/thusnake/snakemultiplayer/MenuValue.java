@@ -125,6 +125,8 @@ public class MenuValue {
         minusButton.draw();
         plusButton.draw();
       }
+      glText.end();
+      glText.begin();
     }
   }
 

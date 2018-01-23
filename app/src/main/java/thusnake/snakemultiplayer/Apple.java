@@ -35,8 +35,8 @@ public class Apple {
   }
 
   public void die(int x, int y){
-    this.x = OpenGLES20Activity.random(1, game.getHorizontalSquares());
-    this.y = OpenGLES20Activity.random(1, game.getVerticalSquares());
+    this.x = OpenGLES20Activity.random(1, game.getHorizontalSquares()) - 1;
+    this.y = OpenGLES20Activity.random(1, game.getVerticalSquares()) - 1;
     if (this.x == x && this.y == y) {
       this.die(this.x, this.y);
       return;

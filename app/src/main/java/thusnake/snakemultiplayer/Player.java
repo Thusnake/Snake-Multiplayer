@@ -3,6 +3,11 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.os.Vibrator;
 
+import static thusnake.snakemultiplayer.Player.Direction.DOWN;
+import static thusnake.snakemultiplayer.Player.Direction.LEFT;
+import static thusnake.snakemultiplayer.Player.Direction.RIGHT;
+import static thusnake.snakemultiplayer.Player.Direction.UP;
+
 /**
  * Created by Nick on 12/12/2017.
  */
@@ -14,8 +19,9 @@ public class Player {
   private int number, score;
   private final String name;
   private final ControlType controlType;
+  private final CornerLayout.Corner controlCorner;
   public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI};
-  private final CornerLayout cornerLayout;
+  private CornerLayout cornerLayout;
   private BodyPart[] bodyParts = new BodyPart[0];
   private int bodyLength = 0;
   private float[] colors = new float[4];
@@ -30,7 +36,10 @@ public class Player {
     this.vibrator = (Vibrator) game.getRenderer().getContext()
         .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
-    this.direction = Direction.UP;
+    this.controlCorner = game.getRenderer().getMenu().playerControlCorner[number];
+    if (this.controlCorner == CornerLayout.Corner.UPPER_LEFT
+        || this.controlCorner == CornerLayout.Corner.UPPER_RIGHT) this.direction = DOWN;
+    else                                                          this.direction = UP;
     this.previousDirection = this.direction;
     this.alive = true;
     this.drawable = true;
@@ -42,22 +51,21 @@ public class Player {
     this.colors[3] = 1;
     this.score = 0;
     this.controlType = game.getRenderer().getMenu().playerControlType[number];
-    this.cornerLayout =
-        new CornerLayout(this, game.getRenderer().getMenu().playerControlCorner[number]);
-    if (this.controlType == ControlType.CORNER)
-      switch (game.getRenderer().getMenu().playerControlCorner[number]) {
-        case LOWER_LEFT:
-          this.expandBody(0, 0); break;
-        case LOWER_RIGHT:
-          this.expandBody(game.getRenderer().getMenu().horizontalSquares, 0); break;
-        case UPPER_LEFT:
-          this.expandBody(0, game.getRenderer().getMenu().verticalSquares); break;
-        case UPPER_RIGHT:
-          this.expandBody(game.getRenderer().getMenu().horizontalSquares,
-                          game.getRenderer().getMenu().verticalSquares); break;
-      }
+    this.cornerLayout = new CornerLayout(this,
+        this.game.getRenderer().getMenu().playerControlCorner[this.number]);
+    switch (game.getRenderer().getMenu().playerControlCorner[number]) {
+      case LOWER_LEFT:
+        this.expandBody(0, 0); break;
+      case LOWER_RIGHT:
+        this.expandBody(game.getRenderer().getMenu().horizontalSquares - 1, 0); break;
+      case UPPER_LEFT:
+        this.expandBody(0, game.getRenderer().getMenu().verticalSquares - 1); break;
+      case UPPER_RIGHT:
+        this.expandBody(game.getRenderer().getMenu().horizontalSquares - 1,
+                        game.getRenderer().getMenu().verticalSquares - 1); break;
+    }
     for (int index = 1; index < 4; index++) {
-      this.expandBody(Direction.DOWN);
+      this.expandBody(Player.getOppositeDirection(this.direction));
     }
   }
 
@@ -84,11 +92,11 @@ public class Player {
     // Check if the direction is invalid (opposite of the direction of the previous move).
     Direction oppositeDirection;
     switch (this.previousDirection) {
-      case UP: oppositeDirection = Direction.DOWN; break;
-      case DOWN: oppositeDirection = Direction.UP; break;
+      case UP: oppositeDirection = DOWN; break;
+      case DOWN: oppositeDirection = UP; break;
       case LEFT: oppositeDirection = Direction.RIGHT; break;
       case RIGHT: oppositeDirection = Direction.LEFT; break;
-      default: oppositeDirection = Direction.UP; break;
+      default: oppositeDirection = UP; break;
     }
     if (pressedDirection.equals(oppositeDirection)) return false;
 
@@ -197,5 +205,16 @@ public class Player {
     float[] bodyColors = {this.colors[0] / 2f, this.colors[1] / 2f,
                           this.colors[2] / 2f, this.colors[3]};
     return bodyColors;
+  }
+
+  // Static methods
+  public static Direction getOppositeDirection(Direction direction) {
+    switch (direction) {
+      case UP: return DOWN;
+      case DOWN: return UP;
+      case LEFT: return RIGHT;
+      case RIGHT: return LEFT;
+      default: return null;
+    }
   }
 }

@@ -94,7 +94,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public void setMenuState(MenuItem origin, Menu.MenuState state) { menu.setState(origin, state); }
   public void setMenuStateToPlayerOptions(int playerIndex) {
     menu.setPlayerOptionsIndex(playerIndex);
-    menu.setState(Menu.MenuState.PLAYERSOPTIONS);
+    menu.setState(this.menu.getCurrentMenuItems()[playerIndex], Menu.MenuState.PLAYERSOPTIONS);
   }
   public float getScreenWidth() { return this.screenWidth; }
   public float getScreenHeight() { return this.screenHeight; }
