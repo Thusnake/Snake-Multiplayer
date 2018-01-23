@@ -10,7 +10,7 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by Nick on 08/01/2018.
  */
 
-public class MenuValue {
+public class MenuValue implements MenuButton {
   private int valueInteger;
   private boolean valueBoolean;
   private String valueString;
@@ -129,6 +129,11 @@ public class MenuValue {
       glText.begin();
     }
   }
+
+  public void setColors(float[] rgba) {
+    if (rgba.length == 4) this.colors = rgba;
+  }
+  public void setOpacity(float opacity) { this.colors[3] = opacity; }
 
   public void move(double dt) {
     if (!this.x.isDone()) this.x.countEaseOut(dt, 8, this.height * 2);
@@ -254,6 +259,8 @@ public class MenuValue {
   public MenuItem getPlusButton() { return this.plusButton; }
   public MenuItem getMinusButton() { return this.minusButton; }
   public Type getType() { return this.type; }
+  public float getX() { return (float) this.x.getTime(); }
+  public float getY() { return (float) this.y.getTime(); }
 
   public void setVisible(boolean visible) { this.visible = visible; }
 

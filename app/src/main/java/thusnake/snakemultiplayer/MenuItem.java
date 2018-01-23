@@ -9,7 +9,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 // Holds a single menu item, which functions as a button.
-public class MenuItem {
+public class MenuItem implements MenuButton {
   public enum Alignment {LEFT, RIGHT, CENTER}
   private String text;
   private final Alignment align;

@@ -5,5 +5,5 @@ package thusnake.snakemultiplayer;
  */
 
 public interface MenuAction {
-  void perform(GameRenderer renderer, MenuItem origin);
+  void perform(GameRenderer renderer, MenuButton origin);
 }

@@ -271,7 +271,7 @@ public class Menu {
     this.menuStateItem.setDestinationY(this.screenHeight - 10 - glText.getCharHeight()*0.65);
   }
 
-  public void setState(MenuItem origin, MenuState state) {
+  public void setState(MenuButton origin, MenuState state) {
     this.menuStateItem.setX(origin.getX());
     this.menuStateItem.setY(origin.getY());
     origin.setOpacity(0);

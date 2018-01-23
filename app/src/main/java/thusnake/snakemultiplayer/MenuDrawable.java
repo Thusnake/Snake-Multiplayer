@@ -6,7 +6,7 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by Nick on 22/01/2018.
  */
 
-public class MenuDrawable {
+public class MenuDrawable implements MenuButton {
   private GameRenderer renderer;
   private GL10 gl;
   private SimpleTimer x, y;
@@ -42,6 +42,7 @@ public class MenuDrawable {
     if (rgba.length == 4)
       this.colors = rgba;
   }
+  public void setOpacity(float opacity) { this.colors[3] = opacity; }
 
   // Position manipulation methods
   public void move(double dt) {
@@ -60,4 +61,6 @@ public class MenuDrawable {
         && renderer.getScreenHeight() - y < this.y.getTime() + this.height);
   }
   public float getScaleX() { return this.scaleX; }
+  public float getX() { return (float) this.x.getTime(); }
+  public float getY() { return (float) this.y.getTime(); }
 }
