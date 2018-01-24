@@ -209,7 +209,10 @@ public class Menu {
 
     if (menuState == MenuState.PLAYERSOPTIONS || menuStatePrevious == MenuState.PLAYERSOPTIONS) {
       for (MenuItem menuItem : menuItemsPlayersOptions) menuItem.draw();
-      for (MenuDrawable square : colorSelectionSquare) square.draw();
+      for (MenuDrawable square : colorSelectionSquare) {
+        square.draw();
+        square.move(dt);
+      }
     }
 
     this.menuStateItem.move(dt);
@@ -238,7 +241,6 @@ public class Menu {
   }
 
   public void setState(MenuState state) {
-    System.out.println("Current color for player 1 is " + playerColor[0][0] + "," + playerColor[0][1] + "," + playerColor[0][2]);
     if (this.expandedItemIndex != -1) this.expandItem(this.expandedItemIndex);
     this.menuStatePrevious = this.menuState;
     this.menuState = state;
@@ -422,7 +424,6 @@ public class Menu {
   }
 
   public void setPlayerColor(int index) {
-    System.out.println("Color set to " + index);
     this.playerColor[this.playersOptionsIndex] = this.getColorFromIndex(index);
     this.menuStateItem.setColors(this.getColorFromIndex(index));
   }

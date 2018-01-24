@@ -9,9 +9,8 @@ import javax.microedition.khronos.opengles.GL10;
 public class MenuDrawable implements MenuButton {
   private GameRenderer renderer;
   private GL10 gl;
-  private SimpleTimer x, y;
+  private SimpleTimer x, y, scaleX, scaleY;
   private float width, height;
-  private float scaleX = 1, scaleY = 1;
   private float[] colors = {1f, 1f, 1f, 1f};
   private Square drawable;
   private MenuAction action;
@@ -21,15 +20,19 @@ public class MenuDrawable implements MenuButton {
     this.gl = renderer.getGl();
     this.x = new SimpleTimer(x);
     this.y = new SimpleTimer(y);
+    this.scaleX = new SimpleTimer(1.0);
+    this.scaleY = new SimpleTimer(1.0);
     this.width = width;
     this.height = height;
-    this.drawable = new Square(x, y, width, height);
+    this.drawable = new Square(-width/2, -height/2, width, height);
   }
 
   // Drawing methods
   public void draw() {
     gl.glPushMatrix();
-    gl.glScalef(this.scaleX, this.scaleY, 1);
+    gl.glTranslatef((float) this.x.getTime() + this.width/2f,
+                    (float) this.y.getTime() + this.height/2f, 0);
+    gl.glScalef((float) this.scaleX.getTime(), (float) this.scaleY.getTime(), 1);
     gl.glColor4f(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
     this.drawable.draw(this.gl);
     gl.glPopMatrix();
@@ -48,12 +51,17 @@ public class MenuDrawable implements MenuButton {
 
   // Position manipulation methods
   public void move(double dt) {
-
+    if (!this.scaleX.isDone()) this.scaleX.countEaseOut(dt, 8, 5*dt);
+    if (!this.scaleY.isDone()) this.scaleY.countEaseOut(dt, 8, 5*dt);
   }
 
   public void setScale(float scale) {
-    this.scaleX = scale;
-    this.scaleY = scale;
+    this.scaleX.setTime(scale);
+    this.scaleY.setTime(scale);
+  }
+  public void setScaleDestination(float scale) {
+    this.scaleX.setEndTimeFromNow(scale);
+    this.scaleY.setEndTimeFromNow(scale);
   }
 
   // Functional methods.
@@ -66,7 +74,7 @@ public class MenuDrawable implements MenuButton {
         && renderer.getScreenHeight() - y > this.y.getTime()
         && renderer.getScreenHeight() - y < this.y.getTime() + this.height);
   }
-  public float getScaleX() { return this.scaleX; }
+  public float getScaleX() { return (float) this.scaleX.getTime(); }
   public float getX() { return (float) this.x.getTime(); }
   public float getY() { return (float) this.y.getTime(); }
 }
