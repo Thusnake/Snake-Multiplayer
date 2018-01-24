@@ -30,6 +30,7 @@ public class Menu {
   public Player.ControlType[] playerControlType = new Player.ControlType[4];
   public CornerLayout.Corner[] playerControlCorner = new CornerLayout.Corner[4];
   public String[] playerName = new String[4];
+  public float[][] playerColor = new float[4][4];
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -64,6 +65,10 @@ public class Menu {
     this.playerControlCorner[1] = CornerLayout.Corner.LOWER_RIGHT;
     this.playerControlCorner[2] = CornerLayout.Corner.UPPER_LEFT;
     this.playerControlCorner[3] = CornerLayout.Corner.UPPER_RIGHT;
+    this.playerColor[0] = new float[] {1f, 1f, 1f, 1f};
+    this.playerColor[1] = new float[] {1f, 1f, 1f, 1f};
+    this.playerColor[2] = new float[] {1f, 1f, 1f, 1f};
+    this.playerColor[3] = new float[] {1f, 1f, 1f, 1f};
 
     // Create menuItem instances for each button.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -154,8 +159,16 @@ public class Menu {
       this.colorSelectionSquare[index] = new MenuDrawable(this.renderer,
           screenWidth*2 + 10*(index+1) + squareSize*index,
           screenHeight - glText.getCharHeight()*0.65f - squareSize, squareSize, squareSize);
-      this.colorSelectionSquare[index].setColor(this.getColorFromIndex(index));
+      this.colorSelectionSquare[index].setColors(this.getColorFromIndex(index));
     }
+    this.colorSelectionSquare[0].setAction((action, origin)-> renderer.getMenu().setPlayerColor(0));
+    this.colorSelectionSquare[1].setAction((action, origin)-> renderer.getMenu().setPlayerColor(1));
+    this.colorSelectionSquare[2].setAction((action, origin)-> renderer.getMenu().setPlayerColor(2));
+    this.colorSelectionSquare[3].setAction((action, origin)-> renderer.getMenu().setPlayerColor(3));
+    this.colorSelectionSquare[4].setAction((action, origin)-> renderer.getMenu().setPlayerColor(4));
+    this.colorSelectionSquare[5].setAction((action, origin)-> renderer.getMenu().setPlayerColor(5));
+    this.colorSelectionSquare[6].setAction((action, origin)-> renderer.getMenu().setPlayerColor(6));
+    this.colorSelectionSquare[7].setAction((action, origin)-> renderer.getMenu().setPlayerColor(7));
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
@@ -225,11 +238,13 @@ public class Menu {
   }
 
   public void setState(MenuState state) {
+    System.out.println("Current color for player 1 is " + playerColor[0][0] + "," + playerColor[0][1] + "," + playerColor[0][2]);
     if (this.expandedItemIndex != -1) this.expandItem(this.expandedItemIndex);
     this.menuStatePrevious = this.menuState;
     this.menuState = state;
     // Reset all items' opacity in case we've used an animation to transition out of that screen.
     for (MenuItem item : this.getCurrentMenuItems()) item.setOpacity(1);
+    this.menuStateItem.setColors(1f,1f,1f,1f);
     int screen;
     switch (state) {
       case MAIN:
@@ -248,8 +263,10 @@ public class Menu {
         this.menuStateItem.setText("Players");
         screen = 1;
         // Update the descriptions.
-        for (int index = 0; index < this.menuItemsPlayers.length; index++)
+        for (int index = 0; index < this.menuItemsPlayers.length; index++) {
           menuItemsPlayers[index].setDescription(this.playerControlType[index].toString());
+          menuItemsPlayers[index].setColors(this.playerColor[index]);
+        }
         break;
       case PLAYERSOPTIONS:
         this.menuStateItem.setText(this.playerName[this.playersOptionsIndex]);
@@ -259,6 +276,7 @@ public class Menu {
             .setValue(this.playerControlType[this.playersOptionsIndex].toString());
         this.menuItemsPlayersOptions[1].getValue()
             .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
+        this.menuStateItem.setColors(this.playerColor[this.playersOptionsIndex]);
         break;
       default:
         this.menuStateItem.setText("");
@@ -401,6 +419,12 @@ public class Menu {
     // Update the display value.
     this.menuItemsPlayersOptions[1].getValue()
         .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
+  }
+
+  public void setPlayerColor(int index) {
+    System.out.println("Color set to " + index);
+    this.playerColor[this.playersOptionsIndex] = this.getColorFromIndex(index);
+    this.menuStateItem.setColors(this.getColorFromIndex(index));
   }
 
   public float[] getColorFromIndex(int index) {

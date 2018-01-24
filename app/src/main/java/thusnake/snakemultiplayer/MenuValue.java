@@ -131,7 +131,9 @@ public class MenuValue implements MenuButton {
   }
 
   public void setColors(float[] rgba) {
-    if (rgba.length == 4) this.colors = rgba;
+    if (rgba.length == 4)
+      for (int index = 0; index < 4; index++)
+        this.colors[index] = rgba[index];
   }
   public void setOpacity(float opacity) { this.colors[3] = opacity; }
 

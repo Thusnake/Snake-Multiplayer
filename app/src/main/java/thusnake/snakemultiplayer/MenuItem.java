@@ -76,6 +76,11 @@ public class MenuItem implements MenuButton {
     this.setColors(r,g,b);
     this.setOpacity(a);
   }
+  public void setColors(float[] rgba) {
+    if (rgba.length == 4)
+      for (int index = 0; index < 4; index++)
+        this.colors[index] = rgba[index];
+  }
   public void setColors(float r, float g, float b) {
     this.colors[0] = r;
     this.colors[1] = g;

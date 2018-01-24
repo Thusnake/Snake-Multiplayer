@@ -45,10 +45,7 @@ public class Player {
     this.drawable = true;
     this.flashing = false;
     this.name = game.getRenderer().getMenu().playerName[number];
-    this.colors[0] = 1;
-    this.colors[1] = 1;
-    this.colors[2] = 1;
-    this.colors[3] = 1;
+    this.colors = game.getRenderer().getMenu().playerColor[number];
     this.score = 0;
     this.controlType = game.getRenderer().getMenu().playerControlType[number];
     this.cornerLayout = new CornerLayout(this,

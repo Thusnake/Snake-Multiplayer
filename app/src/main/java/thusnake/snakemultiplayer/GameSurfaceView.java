@@ -118,7 +118,7 @@ public class GameSurfaceView extends GLSurfaceView {
               case ACTION_MOVE:
                 square.setScale(e.getPressure(0)); break;
               case ACTION_UP:
-                square.setScale(1); break;
+                square.setScale(1); square.performAction(); break;
             }
           else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
             square.setScale(1);

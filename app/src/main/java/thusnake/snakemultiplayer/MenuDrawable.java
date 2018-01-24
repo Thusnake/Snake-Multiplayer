@@ -14,6 +14,7 @@ public class MenuDrawable implements MenuButton {
   private float scaleX = 1, scaleY = 1;
   private float[] colors = {1f, 1f, 1f, 1f};
   private Square drawable;
+  private MenuAction action;
 
   public MenuDrawable(GameRenderer renderer, float x, float y, float width, float height) {
     this.renderer = renderer;
@@ -38,9 +39,10 @@ public class MenuDrawable implements MenuButton {
     this.drawable.loadGLTexture(this.gl, this.renderer.getContext(), id);
   }
 
-  public void setColor(float[] rgba) {
+  public void setColors(float[] rgba) {
     if (rgba.length == 4)
-      this.colors = rgba;
+      for (int index = 0; index < 4; index++)
+        this.colors[index] = rgba[index];
   }
   public void setOpacity(float opacity) { this.colors[3] = opacity; }
 
@@ -53,6 +55,10 @@ public class MenuDrawable implements MenuButton {
     this.scaleX = scale;
     this.scaleY = scale;
   }
+
+  // Functional methods.
+  public void setAction(MenuAction action) { this.action = action; }
+  public void performAction() { this.action.perform(this.renderer, this); }
 
   // Getters
   public boolean isClicked(float x, float y) {
