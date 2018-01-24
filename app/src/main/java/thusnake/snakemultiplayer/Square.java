@@ -24,10 +24,10 @@ public class Square {
   private FloatBuffer textureBuffer;  // buffer holding the texture coordinates
   private float texture[] = {
       // Mapping coordinates for the vertices
-      0.0f, 1.0f,    // top left     (V2)
-      0.0f, 0.0f,   // bottom left  (V1)
-      1.0f, 0.0f,    // bottom right (V3)
-      1.0f, 1.0f    // top right    (V4)
+      0.0f, 0.0f,    // top left     (V2)
+      0.0f, 1.0f,   // bottom left  (V1)
+      1.0f, 1.0f,    // bottom right (V3)
+      1.0f, 0.0f    // top right    (V4)
 
   };
 

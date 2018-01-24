@@ -107,21 +107,43 @@ public class GameSurfaceView extends GLSurfaceView {
               menuItem.getValue().handleButtonsUp();
           }
 
-      // Handle player menu color squares.
+      // Handle player menu color and corner squares.
       if (gameRenderer.getMenu().getState() == Menu.MenuState.PLAYERSOPTIONS
-          || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS)
+          || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS) {
         for (MenuDrawable square : gameRenderer.getMenu().getColorSelectionSquares())
           if (square.isClicked(pointerX[0], pointerY[0]))
-            switch(e.getActionMasked()) {
+            switch (e.getActionMasked()) {
               case ACTION_DOWN:
-                square.setScaleDestination(1 - e.getPressure(0)/2); break;
+                square.setScaleDestination(1 - e.getPressure(0) / 2);
+                break;
               case ACTION_MOVE:
-                square.setScaleDestination(1 - e.getPressure(0)/2); break;
+                square.setScaleDestination(1 - e.getPressure(0) / 2);
+                break;
               case ACTION_UP:
-                square.setScaleDestination(1); square.performAction(); break;
+                square.setScaleDestination(1);
+                square.performAction();
+                break;
             }
           else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
             square.setScaleDestination(1);
+
+        for (MenuDrawable square : gameRenderer.getMenu().getCornerSelectionSquares())
+          if (square.isClicked(pointerX[0], pointerY[0]))
+            switch (e.getActionMasked()) {
+              case ACTION_DOWN:
+                square.setScaleDestination(1 - e.getPressure(0) / 2);
+                break;
+              case ACTION_MOVE:
+                square.setScaleDestination(1 - e.getPressure(0) / 2);
+                break;
+              case ACTION_UP:
+                square.setScaleDestination(1);
+                square.performAction();
+                break;
+            }
+          else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
+            square.setScaleDestination(1);
+      }
 
       switch(e.getAction()) {
         case ACTION_DOWN:

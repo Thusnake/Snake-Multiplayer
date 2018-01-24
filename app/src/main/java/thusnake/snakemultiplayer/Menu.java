@@ -17,7 +17,7 @@ public class Menu {
   private final GLText glText;
   private final MenuItem[] menuItemsMain, menuItemsConnect, menuItemsBoard, menuItemsPlayers,
       menuItemsPlayersOptions;
-  private final MenuDrawable[] colorSelectionSquare;
+  private final MenuDrawable[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem;
   public enum MenuState {MAIN, CONNECT, BOARD, PLAYERS, PLAYERSOPTIONS};
   private String[] menuItemStateNames = {"", "Connect", "Board", "Players", ""};
@@ -102,7 +102,7 @@ public class Menu {
           10 + screenWidth, screenHeight * 4/5f - glText.getCharHeight() * (i * 5/4f + 1) * 0.65f,
           MenuItem.Alignment.LEFT);
 
-    String[] menuItemsPlayersOptionsText = {"Type", ""};
+    String[] menuItemsPlayersOptionsText = {"Type"};
     this.menuItemsPlayersOptions = new MenuItem[menuItemsPlayersOptionsText.length];
     for (int i = 0; i < menuItemsPlayersOptionsText.length; i++)
       this.menuItemsPlayersOptions[i] = new MenuItem(renderer, menuItemsPlayersOptionsText[i],
@@ -144,12 +144,9 @@ public class Menu {
     this.menuItemsPlayers[3].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(3));
 
     this.menuItemsPlayersOptions[0].setAction((action, origin) -> renderer.getMenu().cyclePlayerControlTypes());
-    this.menuItemsPlayersOptions[1].setAction((action, origin) -> renderer.getMenu().cyclePlayerControlCorners());
 
     this.menuItemsPlayersOptions[0].setValue(new MenuValue(this.renderer, "",
         screenWidth * 3 - 10, this.menuItemsPlayersOptions[0].getY(), MenuItem.Alignment.RIGHT));
-    this.menuItemsPlayersOptions[1].setValue(new MenuValue(this.renderer, "LOWER LEFT",
-        screenWidth * 3 - 10, this.menuItemsPlayersOptions[1].getY(), MenuItem.Alignment.RIGHT));
 
     // Create the graphics.
     this.colorSelectionSquare = new MenuDrawable[8];
@@ -169,6 +166,28 @@ public class Menu {
     this.colorSelectionSquare[5].setAction((action, origin)-> renderer.getMenu().setPlayerColor(5));
     this.colorSelectionSquare[6].setAction((action, origin)-> renderer.getMenu().setPlayerColor(6));
     this.colorSelectionSquare[7].setAction((action, origin)-> renderer.getMenu().setPlayerColor(7));
+
+    this.cornerSelectionSquare = new MenuDrawable[4];
+    squareSize = (screenWidth*0.6f - 10 - 10*this.cornerSelectionSquare.length)
+                  / (float) this.cornerSelectionSquare.length;
+    for (int index = 0; index < this.cornerSelectionSquare.length; index++) {
+      this.cornerSelectionSquare[index] = new MenuDrawable(this.renderer,
+          screenWidth*2.2f + 10*(index+1) + squareSize*index,
+          this.menuItemsPlayersOptions[this.menuItemsPlayersOptions.length - 1].getY() - squareSize,
+          squareSize, squareSize);
+    }
+    this.cornerSelectionSquare[0].setGraphic(R.drawable.lowerleft);
+    this.cornerSelectionSquare[1].setGraphic(R.drawable.upperleft);
+    this.cornerSelectionSquare[2].setGraphic(R.drawable.upperright);
+    this.cornerSelectionSquare[3].setGraphic(R.drawable.lowerright);
+    this.cornerSelectionSquare[0].setAction((action, origin)
+        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.LOWER_LEFT));
+    this.cornerSelectionSquare[1].setAction((action, origin)
+        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.UPPER_LEFT));
+    this.cornerSelectionSquare[2].setAction((action, origin)
+        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.UPPER_RIGHT));
+    this.cornerSelectionSquare[3].setAction((action, origin)
+        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.LOWER_RIGHT));
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
@@ -210,6 +229,11 @@ public class Menu {
     if (menuState == MenuState.PLAYERSOPTIONS || menuStatePrevious == MenuState.PLAYERSOPTIONS) {
       for (MenuItem menuItem : menuItemsPlayersOptions) menuItem.draw();
       for (MenuDrawable square : colorSelectionSquare) {
+        square.draw();
+        square.move(dt);
+      }
+      for (MenuDrawable square : cornerSelectionSquare) {
+        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         square.draw();
         square.move(dt);
       }
@@ -276,8 +300,6 @@ public class Menu {
         // Update the chosen player's options values.
         this.menuItemsPlayersOptions[0].getValue()
             .setValue(this.playerControlType[this.playersOptionsIndex].toString());
-        this.menuItemsPlayersOptions[1].getValue()
-            .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
         this.menuStateItem.setColors(this.playerColor[this.playersOptionsIndex]);
         break;
       default:
@@ -399,33 +421,15 @@ public class Menu {
     // Update the display value.
     this.menuItemsPlayersOptions[0].getValue()
         .setValue(this.playerControlType[this.playersOptionsIndex].toString());
-    this.menuItemsPlayersOptions[1].getValue()
-        .setVisible(this.playerControlType[this.playersOptionsIndex] == Player.ControlType.CORNER);
-  }
-
-  public void cyclePlayerControlCorners() {
-    switch(this.playerControlCorner[this.playersOptionsIndex]) {
-      case LOWER_LEFT:
-        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.LOWER_RIGHT;
-        break;
-      case LOWER_RIGHT:
-        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.UPPER_LEFT;
-        break;
-      case UPPER_LEFT:
-        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.UPPER_RIGHT;
-        break;
-      case UPPER_RIGHT:
-        this.playerControlCorner[this.playersOptionsIndex] = CornerLayout.Corner.LOWER_LEFT;
-        break;
-    }
-    // Update the display value.
-    this.menuItemsPlayersOptions[1].getValue()
-        .setValue(this.playerControlCorner[this.playersOptionsIndex].toString());
   }
 
   public void setPlayerColor(int index) {
     this.playerColor[this.playersOptionsIndex] = this.getColorFromIndex(index);
     this.menuStateItem.setColors(this.getColorFromIndex(index));
+  }
+
+  public void setPlayerControlCorner(CornerLayout.Corner corner) {
+    this.playerControlCorner[this.playersOptionsIndex] = corner;
   }
 
   public float[] getColorFromIndex(int index) {
@@ -446,4 +450,5 @@ public class Menu {
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
   public MenuDrawable[] getColorSelectionSquares() { return this.colorSelectionSquare; }
+  public MenuDrawable[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
 }
