@@ -429,6 +429,11 @@ public class Menu {
   }
 
   public void setPlayerControlCorner(CornerLayout.Corner corner) {
+    // Find the other player that uses the selected corner and set it to the current player's.
+    for (int index = 0; index < this.playerControlCorner.length; index++)
+      if (index != this.playersOptionsIndex && this.playerControlCorner[index] == corner)
+        this.playerControlCorner[index] = this.playerControlCorner[this.playersOptionsIndex];
+    // Then set the current player's corner to the selected one.
     this.playerControlCorner[this.playersOptionsIndex] = corner;
   }
 
