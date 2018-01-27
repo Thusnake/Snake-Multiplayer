@@ -30,7 +30,7 @@ public class Menu {
   public Player.ControlType[] playerControlType = new Player.ControlType[4];
   public CornerLayout.Corner[] playerControlCorner = new CornerLayout.Corner[4];
   public String[] playerName = new String[4];
-  public float[][] playerColor = new float[4][4];
+  public int[] playerColor = new int[4];
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -65,10 +65,10 @@ public class Menu {
     this.playerControlCorner[1] = CornerLayout.Corner.LOWER_RIGHT;
     this.playerControlCorner[2] = CornerLayout.Corner.UPPER_LEFT;
     this.playerControlCorner[3] = CornerLayout.Corner.UPPER_RIGHT;
-    this.playerColor[0] = new float[] {1f, 1f, 1f, 1f};
-    this.playerColor[1] = new float[] {1f, 1f, 1f, 1f};
-    this.playerColor[2] = new float[] {1f, 1f, 1f, 1f};
-    this.playerColor[3] = new float[] {1f, 1f, 1f, 1f};
+    this.playerColor[0] = 0;
+    this.playerColor[1] = 0;
+    this.playerColor[2] = 0;
+    this.playerColor[3] = 0;
 
     // Create menuItem instances for each button.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -232,11 +232,11 @@ public class Menu {
         square.draw();
         square.move(dt);
       }
-      for (MenuDrawable square : cornerSelectionSquare) {
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-        square.draw();
-        square.move(dt);
-      }
+      if (this.playerControlType[this.playersOptionsIndex] != Player.ControlType.OFF)
+        for (MenuDrawable square : cornerSelectionSquare) {
+          square.draw();
+          square.move(dt);
+        }
     }
 
     this.menuStateItem.move(dt);
@@ -291,7 +291,7 @@ public class Menu {
         // Update the descriptions.
         for (int index = 0; index < this.menuItemsPlayers.length; index++) {
           menuItemsPlayers[index].setDescription(this.playerControlType[index].toString());
-          menuItemsPlayers[index].setColors(this.playerColor[index]);
+          menuItemsPlayers[index].setColors(getColorFromIndex(this.playerColor[index]));
         }
         break;
       case PLAYERSOPTIONS:
@@ -300,7 +300,14 @@ public class Menu {
         // Update the chosen player's options values.
         this.menuItemsPlayersOptions[0].getValue()
             .setValue(this.playerControlType[this.playersOptionsIndex].toString());
-        this.menuStateItem.setColors(this.playerColor[this.playersOptionsIndex]);
+        this.menuStateItem.setColors(getColorFromIndex(this.playerColor[this.playersOptionsIndex]));
+        this.fadeAllButOne(colorSelectionSquare, colorSelectionSquare[this.playerColor[this.playersOptionsIndex]]);
+        switch (this.playerControlCorner[this.playersOptionsIndex]) {
+          case LOWER_LEFT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[0]); break;
+          case UPPER_LEFT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[1]); break;
+          case UPPER_RIGHT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[2]); break;
+          case LOWER_RIGHT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[3]); break;
+        }
         break;
       default:
         this.menuStateItem.setText("");
@@ -424,7 +431,7 @@ public class Menu {
   }
 
   public void setPlayerColor(int index) {
-    this.playerColor[this.playersOptionsIndex] = this.getColorFromIndex(index);
+    this.playerColor[this.playersOptionsIndex] = index;
     this.menuStateItem.setColors(this.getColorFromIndex(index));
   }
 
@@ -435,6 +442,13 @@ public class Menu {
         this.playerControlCorner[index] = this.playerControlCorner[this.playersOptionsIndex];
     // Then set the current player's corner to the selected one.
     this.playerControlCorner[this.playersOptionsIndex] = corner;
+  }
+
+  public void fadeAllButOne(MenuButton[] buttons, MenuButton exception) {
+    for (MenuButton button : buttons) {
+      if (button != exception) button.setOpacity(0.5f);
+      else button.setOpacity(1);
+    }
   }
 
   public float[] getColorFromIndex(int index) {

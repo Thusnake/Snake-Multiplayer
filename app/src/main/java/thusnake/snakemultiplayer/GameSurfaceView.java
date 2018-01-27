@@ -122,6 +122,8 @@ public class GameSurfaceView extends GLSurfaceView {
               case ACTION_UP:
                 square.setScaleDestination(1);
                 square.performAction();
+                gameRenderer.getMenu()
+                    .fadeAllButOne(gameRenderer.getMenu().getColorSelectionSquares(), square);
                 break;
             }
           else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
@@ -139,6 +141,8 @@ public class GameSurfaceView extends GLSurfaceView {
               case ACTION_UP:
                 square.setScaleDestination(1);
                 square.performAction();
+                gameRenderer.getMenu()
+                    .fadeAllButOne(gameRenderer.getMenu().getCornerSelectionSquares(), square);
                 break;
             }
           else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
