@@ -83,6 +83,11 @@ public class BodyPart {
     }
   }
 
+  public void warp(int x, int y) {
+    this.x = x;
+    this.y = y;
+  }
+
   public void updateColors() {
     if (!this.isOutOfBounds()) this.boardSquares.updateColors(this.x, this.y, this.colors);
   }

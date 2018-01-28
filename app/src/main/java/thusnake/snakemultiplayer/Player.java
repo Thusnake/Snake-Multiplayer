@@ -143,6 +143,21 @@ public class Player {
   }
 
   public void checkDeath() {
+    // Check if you've hit a wall. Warp if stageBorders is off, die otherwise.
+    if (this.bodyParts[0].isOutOfBounds()) {
+      if (this.game.stageBorders) this.die();
+      else {
+        if (this.bodyParts[0].getX() < 0)
+          this.bodyParts[0].warp(this.game.getHorizontalSquares() - 1, this.bodyParts[0].getY());
+        else if (this.bodyParts[0].getX() > this.game.getHorizontalSquares() - 1)
+          this.bodyParts[0].warp(0, this.bodyParts[0].getY());
+        else if (this.bodyParts[0].getY() < 0)
+          this.bodyParts[0].warp(this.bodyParts[0].getX(), this.game.getVerticalSquares() - 1);
+        else if (this.bodyParts[0].getY() > this.game.getVerticalSquares() - 1)
+          this.bodyParts[0].warp(this.bodyParts[0].getX(), 0);
+      }
+    }
+
     // Check if you've hit anybody's body.
     for (Player player : game.getPlayers()) {
       if (player.isAlive())
@@ -152,8 +167,6 @@ public class Player {
               && this.bodyParts[0].getY() == bodyPart.getY())
             this.die();
     }
-    // Check if you've hit a wall. TODO check if wallDeath is on from properties.
-    if (this.bodyParts[0].isOutOfBounds()) this.die();
   }
 
   public void die() {

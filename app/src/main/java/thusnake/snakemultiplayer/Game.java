@@ -14,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 // An instance of this class would be a single game of snake.
 class Game {
-  private boolean gameOver = false, onlineSession, screenBorders;
+  private boolean gameOver = false, onlineSession;
   private SimpleTimer beginTimer = new SimpleTimer(0.0, 3.0);
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
@@ -39,6 +39,9 @@ class Game {
   private final Context context;
   private final float[] boardSquareColors = {0.125f, 0.125f, 0.125f, 1.0f};
 
+  // Public final variables - accessible for the players.
+  public final boolean stageBorders;
+
   // Constructor that sets up a local session.
   public Game(GameRenderer renderer, int screenWidth, int screenHeight) {
     onlineSession = false;
@@ -55,7 +58,7 @@ class Game {
     this.horizontalSquares = renderer.getMenu().horizontalSquares;
     this.verticalSquares = renderer.getMenu().verticalSquares;
     this.speed = renderer.getMenu().speed;
-    this.screenBorders = renderer.getMenu().stageBorders;
+    this.stageBorders = renderer.getMenu().stageBorders;
 
     // TODO Calculate board offset.
     this.boardOffsetY = 10.0;
