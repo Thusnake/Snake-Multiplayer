@@ -24,6 +24,7 @@ public class MenuItem implements MenuButton {
   private MenuAction action;
   private MenuValue value;
   private String description;
+  private float desctiptionOpacity = 1;
 
   // Constructor.
   public MenuItem(GameRenderer renderer, String text, float x, float y, Alignment align) {
@@ -56,7 +57,7 @@ public class MenuItem implements MenuButton {
       glText.end();
       gl.glPushMatrix();
       gl.glScalef(0.25f, 0.25f, 1f);
-      glText.begin(0.66f, 0.66f, 0.66f, 1f);
+      glText.begin(0.66f, 0.66f, 0.66f, desctiptionOpacity);
       glText.draw(this.description, (float) this.x.getTime() * 4,
           (float) this.y.getTime() * 4);
       glText.end();
@@ -100,6 +101,8 @@ public class MenuItem implements MenuButton {
     // TODO maybe have a way for descriptions to also be right-aligned.
     this.description = text;
   }
+
+  public void setDesctiptionOpacity(float opacity) { this.desctiptionOpacity = opacity; }
 
   public void setAction(MenuAction action) {
     this.action = action;

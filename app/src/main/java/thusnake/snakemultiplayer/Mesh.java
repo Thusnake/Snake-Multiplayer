@@ -23,6 +23,7 @@ public class Mesh {
   private final Game game;
   
   public Mesh (Game game) { this.game = game; }
+  public Mesh () { this.game = null; }
 
   protected void setVertices(float[] vertices) {
     ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
@@ -116,6 +117,16 @@ public class Mesh {
     setColors(this.colors);
   }
 
+  public void updateColors(int i, float r, float g, float b, float a) {
+    for (int n=0; n<4;n++) {
+      this.colors[i*16 + n*4] = r;
+      this.colors[i*16 + n*4 + 1] = g;
+      this.colors[i*16 + n*4 + 2] = b;
+      this.colors[i*16 + n*4 + 3] = a;
+    }
+    setColors(this.colors);
+  }
+
   public void draw(GL10 gl){
     gl.glFrontFace(GL10.GL_CCW);
     gl.glEnable(GL10.GL_CULL_FACE);
@@ -134,7 +145,7 @@ public class Mesh {
     gl.glDisable(GL10.GL_CULL_FACE);
   }
 
-  public float[] concatf(float[] a, float[] b) {
+  public static float[] concatf(float[] a, float[] b) {
     int aLen = a.length;
     int bLen = b.length;
     float[] c= new float[aLen+bLen];
@@ -143,7 +154,7 @@ public class Mesh {
     return c;
   }
 
-  public short[] concats(short[] a, short[] b) {
+  public static short[] concats(short[] a, short[] b) {
     int aLen = a.length;
     int bLen = b.length;
     short[] c= new short[aLen+bLen];

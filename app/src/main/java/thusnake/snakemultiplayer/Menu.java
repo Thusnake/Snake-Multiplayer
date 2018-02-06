@@ -2,6 +2,9 @@ package thusnake.snakemultiplayer;
 
 import com.android.texample.GLText;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -24,6 +27,8 @@ public class Menu {
   private MenuState menuState, menuStatePrevious;
   private int playersOptionsIndex, expandedItemIndex = -1;
   private SimpleTimer menuAnimationTimer = new SimpleTimer(0.0, 1.0);
+  private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
+  private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<BackgroundSnake>();
   // Menu variables
   public int horizontalSquares, verticalSquares, speed;
   public boolean stageBorders;
@@ -31,6 +36,9 @@ public class Menu {
   public CornerLayout.Corner[] playerControlCorner = new CornerLayout.Corner[4];
   public String[] playerName = new String[4];
   public int[] playerColor = new int[4];
+
+  // TODO Find a way to not use this, currently used for the background snakes, they refuse to render without it.
+  Square testSquare = new Square(500,0,0,0);
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -43,7 +51,7 @@ public class Menu {
     this.menuState = MenuState.MAIN;
     this.menuStateItem = new MenuItem(renderer, menuItemStateNames[0], 0, 0,
         MenuItem.Alignment.RIGHT);
-    this.menuStateItem.setEaseOutVariables(16, this.menuStateItem.getHeight() * 2);
+    this.menuStateItem.setEaseOutVariables(32, this.menuStateItem.getHeight() * 2);
 
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
@@ -206,6 +214,19 @@ public class Menu {
     if (!this.menuAnimationTimer.isDone()) this.menuAnimationTimer.countEaseOut(dt, 3, 0);
     if (!this.screenTransformX.isDone()) this.screenTransformX.countEaseOut(dt, 8, screenWidth/2);
 
+    // Draw the background items.
+    this.backgroundSnakeTimer.count(dt);
+    if (this.backgroundSnakeTimer.isDone()) {
+      BackgroundSnake newSnake = new BackgroundSnake(this);
+      this.backgroundSnakes.add(newSnake);
+      this.backgroundSnakeTimer.reset();
+      this.backgroundSnakeTimer.setEndTime(Math.random());
+    }
+    for (BackgroundSnake backgroundSnake : backgroundSnakes) {
+      backgroundSnake.update(dt);
+      backgroundSnake.draw(gl);
+    }
+
     // Draw the menu items.
     glText.begin(1f, 1f, 1f, 1f);
     for (MenuItem menuItem : menuItemsMain) menuItem.draw();
@@ -243,6 +264,8 @@ public class Menu {
     this.menuStateItem.draw();
 
     glText.end();
+
+    testSquare.draw(gl);
   }
 
   public MenuState getState() { return this.menuState; }
@@ -264,6 +287,7 @@ public class Menu {
     }
   }
 
+  // Handles setting the menu state to a given one.
   public void setState(MenuState state) {
     if (this.expandedItemIndex != -1) this.expandItem(this.expandedItemIndex);
     this.menuStatePrevious = this.menuState;
@@ -292,6 +316,10 @@ public class Menu {
         for (int index = 0; index < this.menuItemsPlayers.length; index++) {
           menuItemsPlayers[index].setDescription(this.playerControlType[index].toString());
           menuItemsPlayers[index].setColors(getColorFromIndex(this.playerColor[index]));
+          menuItemsPlayers[index].setOpacity(
+              (playerControlType[index] == Player.ControlType.OFF) ? 0.5f : 1f);
+          menuItemsPlayers[index].setDesctiptionOpacity(
+              (playerControlType[index] == Player.ControlType.OFF) ? 0.5f : 1f);
         }
         break;
       case PLAYERSOPTIONS:
@@ -320,6 +348,7 @@ public class Menu {
     this.menuStateItem.setDestinationY(this.screenHeight - 10 - glText.getCharHeight()*0.65);
   }
 
+  // A modified version which also handles the menuStateItem's animation.
   public void setState(MenuButton origin, MenuState state) {
     this.menuStateItem.setX(origin.getX());
     this.menuStateItem.setY(origin.getY());
@@ -327,6 +356,7 @@ public class Menu {
     this.setState(state);
   }
 
+  // Handles moving back one screen.
   public void goBack() {
     if (this.screenTransformX.isDone())
       switch (this.menuState) {
@@ -339,6 +369,8 @@ public class Menu {
       }
   }
 
+  // Expands an item which has an integer value, pushing all following items down to make room for
+  // the plus/minus buttons interface.
   public void expandItem(int expandIndex) {
     if (expandIndex < this.getCurrentMenuItems().length
         && this.getCurrentMenuItems()[expandIndex].getValue() != null) {
@@ -430,11 +462,13 @@ public class Menu {
         .setValue(this.playerControlType[this.playersOptionsIndex].toString());
   }
 
+  // Sets the currently selected player's color to a color from a given index.
   public void setPlayerColor(int index) {
     this.playerColor[this.playersOptionsIndex] = index;
     this.menuStateItem.setColors(this.getColorFromIndex(index));
   }
 
+  // Sets the currently selected player's control corner to a given CornerLayout.
   public void setPlayerControlCorner(CornerLayout.Corner corner) {
     // Find the other player that uses the selected corner and set it to the current player's.
     for (int index = 0; index < this.playerControlCorner.length; index++)
@@ -444,6 +478,7 @@ public class Menu {
     this.playerControlCorner[this.playersOptionsIndex] = corner;
   }
 
+  // Fades all buttons of a group except one.
   public void fadeAllButOne(MenuButton[] buttons, MenuButton exception) {
     for (MenuButton button : buttons) {
       if (button != exception) button.setOpacity(0.5f);
@@ -451,6 +486,7 @@ public class Menu {
     }
   }
 
+  // Takes a color index and returns the whole corresponding color as rgba.
   public float[] getColorFromIndex(int index) {
     switch(index) {
       case 0: return new float[] {1f, 1f, 1f, 1f};
@@ -465,9 +501,58 @@ public class Menu {
     }
   }
 
+  // More getters.
   public void setPlayerOptionsIndex(int index) { this.playersOptionsIndex = index; }
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
   public MenuDrawable[] getColorSelectionSquares() { return this.colorSelectionSquare; }
   public MenuDrawable[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
+  public GameRenderer getRenderer() { return this.renderer; }
+}
+
+// Backgrounds snakes which will appear randomly on the screen going from left to right.
+class BackgroundSnake extends Mesh {
+  private final float size, speed, initialY;
+  private final int length;
+  private float x;
+  private Menu menu;
+  private GL10 gl;
+  private double movementTimer;
+
+  // Constructor.
+  public BackgroundSnake(Menu menu) {
+    super();
+    this.menu = menu;
+    this.gl = this.menu.getRenderer().getGl();
+    float screenHeight = this.menu.getRenderer().getScreenHeight();
+
+    // Set their variables randomly. You can change up the formulas.
+    this.size = screenHeight * 0.05f + (float) Math.random() * screenHeight * 0.1f;
+    this.length = 4 + (int) Math.round(Math.random()*11);
+    this.speed = 1f / (6 + (int) Math.round(Math.random()*12));
+    this.initialY = size + (float) Math.random() * screenHeight * 2f;
+    this.movementTimer = speed;
+    this.x = -((size + 1) * length);
+
+    for (int index = 0; index < length; index++)
+      this.addSquare(index * size + index, 0, size, size);
+    this.applySquares();
+    this.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
+  }
+
+  // Moves the snake whenever it is time to be moved.
+  public void update(double dt) {
+    this.movementTimer -= dt;
+    while (this.movementTimer < 0) {
+      this.movementTimer += speed;
+      this.x += this.size + 1;
+    }
+  }
+
+  public void draw(GL10 gl) {
+    gl.glPushMatrix();
+    gl.glTranslatef(x,initialY,0);
+    super.draw(gl);
+    gl.glPopMatrix();
+  }
 }

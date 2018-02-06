@@ -20,7 +20,7 @@ public class Player {
   private final String name;
   private final ControlType controlType;
   private final CornerLayout.Corner controlCorner;
-  public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI};
+  public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
   private CornerLayout cornerLayout;
   private BodyPart[] bodyParts = new BodyPart[0];
   private int bodyLength = 0;
