@@ -1,7 +1,5 @@
 package thusnake.snakemultiplayer;
 
-import android.graphics.Paint;
-
 import com.android.texample.GLText;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -10,7 +8,7 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by Nick on 08/01/2018.
  */
 
-public class MenuValue implements MenuButton {
+public class MenuValue extends MenuDrawable {
   private int valueInteger;
   private boolean valueBoolean;
   private String valueString;
@@ -20,13 +18,8 @@ public class MenuValue implements MenuButton {
   private boolean expanded, visible = true;
   private MenuItem plusButton, minusButton;
   private SimpleTimer plusMinusOpacity = new SimpleTimer(0.0, 1.0);
-  private GameRenderer renderer;
-  private GL10 gl;
   private GLText glText;
-  private SimpleTimer x, y;
-  private float width, height, initialX, initialY;
-  private float[] colors = new float[4];
-  private MenuAction action;
+  private float width, height;
   private enum Holding {NOTHING, PLUS, MINUS}
   private Holding holding = Holding.NOTHING;
   private SimpleTimer holdTimer = new SimpleTimer(0.0, 2.0);
@@ -40,7 +33,6 @@ public class MenuValue implements MenuButton {
     this.valueInteger = initialValue;
     this.type = Type.INTEGER;
     this.initDimensions(x, y);
-    // TODO make them not appear on top of one another
     this.plusButton = new MenuItem(renderer, "+", x, y, align);
     this.minusButton = new MenuItem(renderer, "-", x - this.plusButton.getWidth(), y, align);
   }
@@ -63,22 +55,17 @@ public class MenuValue implements MenuButton {
 
   // All constructors share some code, so have a private one handle the shared code.
   private MenuValue(GameRenderer renderer, float x, float y, MenuItem.Alignment align) {
+    super(renderer, x, y);
     this.align = align;
-    this.renderer = renderer;
-    this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
-
-    for (int i = 0; i < 4; i++) this.colors[i] = 1;
   }
 
   private void initDimensions(float x, float y) {
     this.width = glText.getLength(this.getValueToString());
     this.height = glText.getCharHeight() * 0.65f;
-    this.initialX = x;
-    this.initialY = y;
-    if (align == MenuItem.Alignment.LEFT) this.x = new SimpleTimer(x);
-    else this.x = new SimpleTimer(x - this.width);
-    this.y = new SimpleTimer(y);
+    if (align == MenuItem.Alignment.LEFT) this.setX(x);
+    else this.setX(x - this.width);
+    this.setY(y);
   }
 
   // Setters for all types.
@@ -90,8 +77,8 @@ public class MenuValue implements MenuButton {
       }
 
       if (this.align == MenuItem.Alignment.RIGHT)
-        this.x.countDown(glText.getLength(this.getValueToString(newValue))
-            - glText.getLength(this.getValueToString()));
+        this.getXTimer().countDown(glText.getLength(this.getValueToString(newValue))
+                                 - glText.getLength(this.getValueToString()));
       this.width = glText.getLength(this.getValueToString(newValue));
       this.valueInteger = newValue;
       this.renderer.getMenu().syncValues();
@@ -100,8 +87,8 @@ public class MenuValue implements MenuButton {
   public void setValue(boolean newValue) {
     if (this.type == Type.BOOLEAN) {
       if (this.align == MenuItem.Alignment.RIGHT)
-        this.x.countDown(glText.getLength(this.getValueToString(newValue))
-            - glText.getLength(this.getValueToString()));
+        this.getXTimer().countDown(glText.getLength(this.getValueToString(newValue))
+                                 - glText.getLength(this.getValueToString()));
       this.width = glText.getLength(this.getValueToString(newValue));
       this.valueBoolean = newValue;
       this.renderer.getMenu().syncValues();
@@ -110,7 +97,8 @@ public class MenuValue implements MenuButton {
   public void setValue(String newValue) {
     if (this.type == Type.STRING) {
       if (this.align == MenuItem.Alignment.RIGHT)
-        this.x.countDown(glText.getLength(newValue) - glText.getLength(this.getValueToString()));
+        this.getXTimer().countDown(glText.getLength(newValue)
+                                 - glText.getLength(this.getValueToString()));
       this.width = glText.getLength(newValue);
       this.valueString = newValue;
       this.renderer.getMenu().syncValues();
@@ -119,8 +107,8 @@ public class MenuValue implements MenuButton {
 
   public void draw() {
     if (this.visible) {
-      gl.glColor4f(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
-      glText.draw(this.getValueToString(), (float) this.x.getTime(), (float) this.y.getTime());
+      gl.glColor4f(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
+      glText.draw(this.getValueToString(), this.getX(), this.getY());
       if (this.type == Type.INTEGER && this.expanded) {
         minusButton.draw();
         plusButton.draw();
@@ -130,16 +118,9 @@ public class MenuValue implements MenuButton {
     }
   }
 
-  public void setColors(float[] rgba) {
-    if (rgba.length == 4)
-      for (int index = 0; index < 4; index++)
-        this.colors[index] = rgba[index];
-  }
-  public void setOpacity(float opacity) { this.colors[3] = opacity; }
-
   public void move(double dt) {
-    if (!this.x.isDone()) this.x.countEaseOut(dt, 8, this.height * 2);
-    if (!this.y.isDone()) this.y.countEaseOut(dt, 8, this.height * 2);
+    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.height * 2);
+    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.height * 2);
     if (this.type == Type.INTEGER) {
       plusButton.move(dt);
       minusButton.move(dt);
@@ -200,11 +181,11 @@ public class MenuValue implements MenuButton {
     if(this.type == Type.INTEGER) {
       this.expanded = expanded;
       if (expanded) {
-        this.y.setEndTimeFromNow(this.initialY);
+        this.setDestinationToInitial();
         this.minusButton.setDestinationYFromOrigin(-this.height);
         this.plusButton.setDestinationYFromOrigin(-this.height);
       } else {
-        this.y.setEndTimeFromNow(this.initialY);
+        this.setDestinationToInitial();
         this.minusButton.setDestinationYFromOrigin(0);
         this.plusButton.setDestinationYFromOrigin(0);
         this.plusMinusOpacity.reset();
@@ -244,7 +225,7 @@ public class MenuValue implements MenuButton {
 
   // Movement methods.
   public void setDestinationYFromOrigin(double offsetY) {
-    this.y.setEndTimeFromNow(this.initialY + offsetY);
+    super.setDestinationYFromOrigin(offsetY);
     if (this.type == Type.INTEGER) {
       this.minusButton.setDestinationYFromOrigin(offsetY);
       this.plusButton.setDestinationYFromOrigin(offsetY);
@@ -253,16 +234,9 @@ public class MenuValue implements MenuButton {
 
   // Other getters.
   public boolean isExpanded() { return this.expanded; }
-  public boolean isClicked(float x, float y) {
-    return (this.visible && x > this.x.getTime() && x < this.x.getTime() + this.width
-      && renderer.getScreenHeight() - y > this.y.getTime()
-      && renderer.getScreenHeight() - y < this.y.getTime() + this.height);
-  }
   public MenuItem getPlusButton() { return this.plusButton; }
   public MenuItem getMinusButton() { return this.minusButton; }
   public Type getType() { return this.type; }
-  public float getX() { return (float) this.x.getTime(); }
-  public float getY() { return (float) this.y.getTime(); }
 
   public void setVisible(boolean visible) { this.visible = visible; }
 

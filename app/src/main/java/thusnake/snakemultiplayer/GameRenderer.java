@@ -91,7 +91,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public Menu getMenu() { return this.menu; }
   public Game getGame() { return this.game; }
   public int[] getPairedDevices() { return new int[] {}; } // TODO: Make it actually return the connected devices.
-  public void setMenuState(MenuButton origin, Menu.MenuState state) { menu.setState(origin, state); }
+  public void setMenuState(MenuDrawable origin, Menu.MenuState state) { menu.setState(origin, state); }
   public void setMenuStateToPlayerOptions(int playerIndex) {
     menu.setPlayerOptionsIndex(playerIndex);
     menu.setState(this.menu.getCurrentMenuItems()[playerIndex], Menu.MenuState.PLAYERSOPTIONS);
@@ -104,6 +104,9 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
   public void quitGame() {
     game = null;
+  }
+  public void triggerStats() {
+    // TODO Opens game stats
   }
 
   public void setPointerDown() {

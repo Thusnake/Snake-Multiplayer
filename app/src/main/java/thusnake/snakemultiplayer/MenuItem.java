@@ -9,57 +9,47 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 // Holds a single menu item, which functions as a button.
-public class MenuItem implements MenuButton {
+public class MenuItem extends MenuDrawable {
   public enum Alignment {LEFT, RIGHT, CENTER}
   private String text;
   private final Alignment align;
-  private float width, height, initialX, initialY;
-  private SimpleTimer x, y;
+  private float width, height;
   private double easeOutMultiplier, easeOutInertia;
-  private float[] colors = new float[4];
-  private GameRenderer renderer;
-  private GL10 gl;
   private GLText glText;
   private boolean visible;
-  private MenuAction action;
   private MenuValue value;
   private String description;
   private float desctiptionOpacity = 1;
 
   // Constructor.
   public MenuItem(GameRenderer renderer, String text, float x, float y, Alignment align) {
+    super(renderer, x, y);
     this.text = text;
     this.align = align;
-    this.initialX = x;
-    this.initialY = y;
 
-    this.renderer = renderer;
-    this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
     this.width = glText.getLength(text);
     this.height = glText.getHeight() * 0.65f;
+
     this.easeOutMultiplier = 8;
     this.easeOutInertia = this.height * 2;
-    if (align == Alignment.LEFT) this.x = new SimpleTimer(x);
-    else this.x = new SimpleTimer(x - this.width);
-    this.y = new SimpleTimer(y);
 
-    for (int i = 0; i < 4; i++) this.colors[i] = 1f;
+    if (align == Alignment.LEFT) this.setX(x);
+    else this.setX(x - this.width);
   }
 
   // Simply draws the text representation of the button. Has to be called inside a block of
   // GLText.
   public void draw() {
     glText.end();
-    glText.begin(this.colors[0], this.colors[1], this.colors[2], this.colors[3]);
-    glText.draw(this.text, (float) this.x.getTime(), (float) this.y.getTime());
+    glText.begin(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
+    glText.draw(this.text, this.getX(), this.getY());
     if (this.description != null) {
       glText.end();
       gl.glPushMatrix();
       gl.glScalef(0.25f, 0.25f, 1f);
       glText.begin(0.66f, 0.66f, 0.66f, desctiptionOpacity);
-      glText.draw(this.description, (float) this.x.getTime() * 4,
-          (float) this.y.getTime() * 4);
+      glText.draw(this.description, this.getX() * 4, this.getY() * 4);
       glText.end();
       gl.glPopMatrix();
       glText.begin();
@@ -68,8 +58,8 @@ public class MenuItem implements MenuButton {
   }
 
   public void move(double dt) {
-    if (!this.x.isDone()) this.x.countEaseOut(dt, 8, this.height * 2);
-    if (!this.y.isDone()) this.y.countEaseOut(dt, 8, this.height * 2);
+    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.height * 2);
+    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.height * 2);
     if (this.value != null) this.value.move(dt);
   }
 
@@ -77,23 +67,13 @@ public class MenuItem implements MenuButton {
     this.setColors(r,g,b);
     this.setOpacity(a);
   }
-  public void setColors(float[] rgba) {
-    if (rgba.length == 4)
-      for (int index = 0; index < 4; index++)
-        this.colors[index] = rgba[index];
-  }
   public void setColors(float r, float g, float b) {
-    this.colors[0] = r;
-    this.colors[1] = g;
-    this.colors[2] = b;
-  }
-  public void setOpacity(float a) {
-    this.colors[3] = a;
+    super.setColors(new float[] {r, g, b, this.getColors()[3]});
   }
 
   public void setText(String text) {
     if (this.align == Alignment.RIGHT)
-      this.x.countDown(glText.getLength(text) - glText.getLength(this.text));
+      this.getXTimer().countDown(glText.getLength(text) - glText.getLength(this.text));
     this.width = glText.getLength(text);
     this.text = text;
   }
@@ -102,46 +82,33 @@ public class MenuItem implements MenuButton {
     this.description = text;
   }
 
-  public void setDesctiptionOpacity(float opacity) { this.desctiptionOpacity = opacity; }
+  public void setDescriptionOpacity(float opacity) { this.desctiptionOpacity = opacity; }
 
-  public void setAction(MenuAction action) {
-    this.action = action;
-  }
   public void setValue(MenuValue value) { this.value = value; }
 
-  public void performAction() { if (this.action != null) this.action.perform(this.renderer, this); }
-
   // Returns true if the given coordinates are in the button.
+  @Override
   public boolean isClicked(float x, float y) {
-    return (x > this.x.getTime() && x < this.x.getTime() + this.width
-        && renderer.getScreenHeight() - y > this.y.getTime()
-        && renderer.getScreenHeight() - y < this.y.getTime() + this.height
+    return (x > this.getXTimer().getTime() && x < this.getX() + this.width
+        && renderer.getScreenHeight() - y > this.getY()
+        && renderer.getScreenHeight() - y < this.getY() + this.height
         || this.value != null && this.value.isClicked(x, y));
   }
 
   public boolean isVisible() {
     return !this.visible || this.text.equals("");
   }
-  public float getX() { return (float) this.x.getTime(); }
-  public float getY() { return (float) this.y.getTime(); }
   public float getWidth() { return this.width; }
   public float getHeight() { return this.height; }
   public GameRenderer getRenderer() { return this.renderer; }
   public MenuValue getValue() { return this.value; }
 
-  public void setX(double x) { this.x.setTime(x); }
-  public void setY(double y) { this.y.setTime(y); }
+  @Override
   public void setDestinationX(double destinationX) {
-    if (this.align == Alignment.RIGHT) this.x.setEndTimeFromNow(destinationX - this.width);
-    else this.x.setEndTimeFromNow(destinationX);
+    if (this.align == Alignment.RIGHT) super.setDestinationX(destinationX - this.width);
+    else super.setDestinationX(destinationX);
   }
-  public void setDestinationY(double destinationY) { this.y.setEndTimeFromNow(destinationY); }
-  public void setDestinationXFromOrigin(double offsetX) {
-    this.x.setEndTimeFromNow(this.initialX + offsetX);
-  }
-  public void setDestinationYFromOrigin(double offsetY) {
-    this.y.setEndTimeFromNow(this.initialY + offsetY);
-  }
+
   public void setEaseOutVariables(double multiplier, double inertia) {
     this.easeOutMultiplier = multiplier;
     this.easeOutInertia = inertia;

@@ -57,12 +57,14 @@ public class GameSurfaceView extends GLSurfaceView {
           for (Player player : gameRenderer.getGame().getPlayers())
             if (player.isAlive() && player.getCornerLayout()
                                     .changeDirectionBasedOnCoordinates(pointerX[0], pointerY[0]))
+              break;
           break;
         case MotionEvent.ACTION_POINTER_DOWN:
           for (Player player : gameRenderer.getGame().getPlayers())
             if (player.isAlive() && player.getCornerLayout()
                                     .changeDirectionBasedOnCoordinates(pointerX[e.getActionIndex()],
-                                                                      pointerY[e.getActionIndex()]))
+                                        pointerY[e.getActionIndex()]))
+              break;
           break;
         case ACTION_MOVE:
           // Handle moving onto a cornerLayout button.
@@ -83,7 +85,7 @@ public class GameSurfaceView extends GLSurfaceView {
             if (pointerY[0] < 1/3.0 * gameRenderer.getScreenHeight()) {
               gameRenderer.startGame();
             } else if (pointerY[0] < 2/3.0 * gameRenderer.getScreenHeight()) {
-              // TODO Opens game stats
+              gameRenderer.triggerStats();
             } else {
               gameRenderer.quitGame();
             }
@@ -110,7 +112,7 @@ public class GameSurfaceView extends GLSurfaceView {
       // Handle player menu color and corner squares.
       if (gameRenderer.getMenu().getState() == Menu.MenuState.PLAYERSOPTIONS
           || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS) {
-        for (MenuDrawable square : gameRenderer.getMenu().getColorSelectionSquares())
+        for (MenuImage square : gameRenderer.getMenu().getColorSelectionSquares())
           if (square.isClicked(pointerX[0], pointerY[0]))
             switch (e.getActionMasked()) {
               case ACTION_DOWN:
@@ -129,7 +131,7 @@ public class GameSurfaceView extends GLSurfaceView {
           else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
             square.setScaleDestination(1);
 
-        for (MenuDrawable square : gameRenderer.getMenu().getCornerSelectionSquares())
+        for (MenuImage square : gameRenderer.getMenu().getCornerSelectionSquares())
           if (square.isClicked(pointerX[0], pointerY[0]))
             switch (e.getActionMasked()) {
               case ACTION_DOWN:
