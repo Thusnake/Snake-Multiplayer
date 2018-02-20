@@ -1,7 +1,14 @@
 package thusnake.snakemultiplayer;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+
 import com.android.texample.GLText;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -19,6 +26,8 @@ public class Menu {
   private final GLText glText;
   private final MenuItem[] menuItemsMain, menuItemsConnect, menuItemsBoard, menuItemsPlayers,
       menuItemsPlayersOptions;
+  private final ArrayList<MenuItem> pairedDevicesItems = new ArrayList<>();
+  private final ArrayList<MenuItem> foundDevicesItems = new ArrayList<>();
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem;
   public enum MenuState {MAIN, CONNECT, BOARD, PLAYERS, PLAYERSOPTIONS};
@@ -27,11 +36,13 @@ public class Menu {
   private int playersOptionsIndex, expandedItemIndex = -1;
   private SimpleTimer menuAnimationTimer = new SimpleTimer(0.0, 1.0);
   private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
-  private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<BackgroundSnake>();
+  private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<>();
   private enum ConnectionType {BLUETOOTH, WIFI}
   private enum ConnectionRole {HOST, GUEST}
   private ConnectionType connectionType = null;
   private ConnectionRole connectionRole = null;
+  private final OpenGLES20Activity originActivity;
+
   // Menu variables
   public int horizontalSquares, verticalSquares, speed;
   public boolean stageBorders;
@@ -48,6 +59,7 @@ public class Menu {
     this.renderer = renderer;
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
+    this.originActivity = (OpenGLES20Activity) renderer.getContext();
 
     this.screenTransformX = new SimpleTimer(0.0);
     this.screenTransformY = new SimpleTimer(0.0);
@@ -90,7 +102,7 @@ public class Menu {
               - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
           MenuItem.Alignment.LEFT);
 
-    this.menuItemsConnect = new MenuItem[4];
+    this.menuItemsConnect = new MenuItem[5];
     this.menuItemsConnect[0] = new MenuItem(renderer, "Host", 10 + screenWidth,
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[1] = new MenuItem(renderer, "Join", 10 + screenWidth,
@@ -99,6 +111,8 @@ public class Menu {
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.RIGHT);
     this.menuItemsConnect[3] = new MenuItem(renderer, "Wi-Fi", screenWidth * 2 - 10,
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuItem.Alignment.RIGHT);
+    this.menuItemsConnect[4] = new MenuItem(renderer, "Test123", screenWidth*2.5f,
+        screenHeight / 8, MenuItem.Alignment.CENTER);
 
     String[] menuItemsBoardText = {"Hor Squares", "Ver Squares", "Speed", "Stage Borders"};
     this.menuItemsBoard = new MenuItem[menuItemsBoardText.length];
@@ -163,7 +177,8 @@ public class Menu {
     this.menuItemsPlayers[2].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(2));
     this.menuItemsPlayers[3].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(3));
 
-    this.menuItemsPlayersOptions[0].setAction((action, origin) -> renderer.getMenu().cyclePlayerControlTypes());
+    this.menuItemsPlayersOptions[0]
+        .setAction((action, origin) -> renderer.getMenu().cyclePlayerControlTypes());
 
     this.menuItemsPlayersOptions[0].setValue(new MenuValue(this.renderer, "",
         screenWidth * 3 - 10, this.menuItemsPlayersOptions[0].getY(), MenuItem.Alignment.RIGHT));

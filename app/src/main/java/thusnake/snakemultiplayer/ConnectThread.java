@@ -12,12 +12,14 @@ import java.util.UUID;
 public class ConnectThread extends Thread {
     private final BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
+    private final OpenGLES20Activity originActivity;
 
-    public ConnectThread(BluetoothDevice device) {
+    public ConnectThread(OpenGLES20Activity activity, BluetoothDevice device) {
         // Use a temporary object that is later assigned to mmSocket,
         // because mmSocket is final
         BluetoothSocket tmp = null;
         mmDevice = device;
+        this.originActivity = activity;
 
         // Get a BluetoothSocket to connect with the given BluetoothDevice
         try {
@@ -30,7 +32,7 @@ public class ConnectThread extends Thread {
 
     public void run() {
         // Cancel discovery because it will slow down the connection
-        OpenGLES20Activity.mBluetoothAdapter.cancelDiscovery();
+        originActivity.bluetoothAdapter.cancelDiscovery();
 
         try {
             // Connect the device through the socket. This will block
@@ -58,8 +60,8 @@ public class ConnectThread extends Thread {
     }
 
     private void manageConnectedSocket(BluetoothSocket socket) {
-        OpenGLES20Activity.cnctdThread = new ConnectedThread(socket);
-        OpenGLES20Activity.cnctdThread.start();
+        originActivity.connectedThread = new ConnectedThread(socket);
+        originActivity.connectedThread.start();
         byte players = 0;
         /*for (int i = 0; i < 4; i++) {
             if (MyGLRenderer.playercontroltype[i+1] != 0) {
@@ -67,7 +69,7 @@ public class ConnectThread extends Thread {
             }
         }*/
         byte bytes[] = {2,1,players};
-        OpenGLES20Activity.cnctdThread.write(bytes);
+        originActivity.connectedThread.write(bytes);
     }
 
     BluetoothDevice getCurrentDevice() {

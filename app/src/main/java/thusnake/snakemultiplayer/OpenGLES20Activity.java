@@ -23,95 +23,95 @@ import java.util.Random;
  */
 
 public class OpenGLES20Activity extends Activity {
-    private GameSurfaceView mGLView;
-    public static AcceptThread acptThread;
-    public static ConnectThread cnctThread;
-    public static ConnectedThread cnctdThread;
-    public static ConnectedThread[] cnctdThreads = new ConnectedThread[3];
-    private Vibrator v;
-    static BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-    public final static int REQUEST_ENABLE_BT = 1;
-    public static ArrayList<String> mArrayAdapter = new ArrayList<>();
-    public static ArrayList<BluetoothDevice> mDevices = new ArrayList<>();
+  private GameSurfaceView gameView;
+  public AcceptThread acceptThread;
+  public ConnectThread connectThread;
+  public ConnectedThread connectedThread;
+  public ConnectedThread[] connectedThreads = new ConnectedThread[3];
+  private Vibrator v;
+  public BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+  public final int REQUEST_ENABLE_BT = 1;
+  public ArrayList<String> arrayAdapter = new ArrayList<>();
+  public ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
 
-    // Create a BroadcastReceiver for ACTION_FOUND
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (!mDevices.contains(device))mDevices.add(device);
-                // Add the name and address to an array adapter to show in a ListView
-                mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-            }
+  // Create a BroadcastReceiver for ACTION_FOUND
+  private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      String action = intent.getAction();
+      // When discovery finds a device
+      if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+        // Get the BluetoothDevice object from the Intent
+        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        if (!bluetoothDevices.contains(device)) bluetoothDevices.add(device);
+        // Add the name and address to an array adapter to show in a ListView
+        arrayAdapter.add(device.getName() + "\n" + device.getAddress());
+      }
+    }
+  };
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    switch (requestCode) {
+      case 1: {
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          bluetoothAdapter.cancelDiscovery();
+          for (int i=gameView.getGameRenderer().getPairedDevices().length; i<arrayAdapter.size(); i++) {
+            arrayAdapter.remove(i);
+          }
+          bluetoothAdapter.startDiscovery();
+        } else {
+          bluetoothAdapter.cancelDiscovery();
         }
-    };
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case 1: {
-                if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mBluetoothAdapter.cancelDiscovery();
-                    for (int i=mGLView.getGameRenderer().getPairedDevices().length; i<mArrayAdapter.size(); i++) {
-                        mArrayAdapter.remove(i);
-                    }
-                    mBluetoothAdapter.startDiscovery();
-                } else {
-                    mBluetoothAdapter.cancelDiscovery();
-                }
-            }
-        }
+      }
     }
+  }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        // Create a GLSurfaceView instance and set it
-        // as the ContentView for this Activity.
-        mGLView = new GameSurfaceView(this);
-        setContentView(mGLView);
+    // Create a GLSurfaceView instance and set it
+    // as the ContentView for this Activity.
+    gameView = new GameSurfaceView(this);
+    setContentView(gameView);
 
-        // Register the BroadcastReceiver
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
+    // Register the BroadcastReceiver
+    IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+    registerReceiver(broadcastReceiver, filter); // Don't forget to unregister during onDestroy
 
-        if (mBluetoothAdapter != null) acptThread = new AcceptThread();
+    if (bluetoothAdapter != null) acceptThread = new AcceptThread(this);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    gameView.onResume();
+
+    View decorView = getWindow().getDecorView();
+    // Hide both the navigation bar and the status bar.
+    if (Build.VERSION.SDK_INT >= 19) {
+      int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          | View.SYSTEM_UI_FLAG_FULLSCREEN
+          | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+          | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+          | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+          | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+      decorView.setSystemUiVisibility(uiOptions);
     }
+  }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mGLView.onResume();
+  @Override
+  protected void onPause() {
+    super.onPause();
+    gameView.onPause();
+  }
 
-        View decorView = getWindow().getDecorView();
-        // Hide both the navigation bar and the status bar.
-        if (Build.VERSION.SDK_INT >= 19) {
-            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            decorView.setSystemUiVisibility(uiOptions);
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mGLView.onPause();
-    }
-
-    @Override
-    protected  void onDestroy(){
+  @Override
+  protected  void onDestroy(){
         /*if (MyGLRenderer.playingBluetooth) {
             byte[] bytes = {8, 2};
             MyGLRenderer.writeHost(bytes);
@@ -121,18 +121,18 @@ public class OpenGLES20Activity extends Activity {
             } catch (java.lang.InterruptedException e) {
             }
         }*/
-        super.onDestroy();
+    super.onDestroy();
 
-        unregisterReceiver(mReceiver);
-    }
+    unregisterReceiver(broadcastReceiver);
+  }
 
-    static int random(int min, int max){
-        Random rand = new Random();
-        return rand.nextInt((max-min)+1) + min;
-    }
+  static int random(int min, int max){
+    Random rand = new Random();
+    return rand.nextInt((max-min)+1) + min;
+  }
 
-    static float randomf(float min, float max) {
-        Random rand = new Random();
-        return rand.nextFloat() * (max - min) + min;
-    }
+  static float randomf(float min, float max) {
+    Random rand = new Random();
+    return rand.nextFloat() * (max - min) + min;
+  }
 }

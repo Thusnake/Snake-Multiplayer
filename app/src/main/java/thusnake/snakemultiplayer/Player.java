@@ -79,6 +79,17 @@ public class Player {
       this.bodyParts[partIndex].move();
     }
 
+    // Warp if the stage borders are disabled.
+    if (bodyParts[0].isOutOfBounds() && !game.stageBorders)
+      if (this.bodyParts[0].getX() < 0)
+        this.bodyParts[0].warp(this.game.getHorizontalSquares() - 1, this.bodyParts[0].getY());
+      else if (this.bodyParts[0].getX() > this.game.getHorizontalSquares() - 1)
+        this.bodyParts[0].warp(0, this.bodyParts[0].getY());
+      else if (this.bodyParts[0].getY() < 0)
+        this.bodyParts[0].warp(this.bodyParts[0].getX(), this.game.getVerticalSquares() - 1);
+      else if (this.bodyParts[0].getY() > this.game.getVerticalSquares() - 1)
+        this.bodyParts[0].warp(this.bodyParts[0].getX(), 0);
+
     this.previousDirection = this.direction;
     return true;
   }
@@ -144,19 +155,8 @@ public class Player {
 
   public void checkDeath() {
     // Check if you've hit a wall. Warp if stageBorders is off, die otherwise.
-    if (this.bodyParts[0].isOutOfBounds()) {
-      if (this.game.stageBorders) this.die();
-      else {
-        if (this.bodyParts[0].getX() < 0)
-          this.bodyParts[0].warp(this.game.getHorizontalSquares() - 1, this.bodyParts[0].getY());
-        else if (this.bodyParts[0].getX() > this.game.getHorizontalSquares() - 1)
-          this.bodyParts[0].warp(0, this.bodyParts[0].getY());
-        else if (this.bodyParts[0].getY() < 0)
-          this.bodyParts[0].warp(this.bodyParts[0].getX(), this.game.getVerticalSquares() - 1);
-        else if (this.bodyParts[0].getY() > this.game.getVerticalSquares() - 1)
-          this.bodyParts[0].warp(this.bodyParts[0].getX(), 0);
-      }
-    }
+    if (this.bodyParts[0].isOutOfBounds() && this.game.stageBorders)
+      this.die();
 
     // Check if you've hit anybody's body.
     for (Player player : game.getPlayers()) {

@@ -7,7 +7,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 public class MenuImage extends MenuDrawable {
-  private SimpleTimer x, y, scaleX, scaleY;
+  private SimpleTimer scaleX, scaleY;
   private float width, height;
   private Square drawable;
   private MenuAction action;
@@ -24,8 +24,8 @@ public class MenuImage extends MenuDrawable {
   // Drawing methods
   public void draw() {
     gl.glPushMatrix();
-    gl.glTranslatef((float) this.x.getTime() + this.width/2f,
-                    (float) this.y.getTime() + this.height/2f, 0);
+    gl.glTranslatef(this.getX() + this.width/2f,
+                    this.getY() + this.height/2f, 0);
     gl.glScalef((float) this.scaleX.getTime(), (float) this.scaleY.getTime(), 1);
     gl.glColor4f(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
     this.drawable.draw(this.gl);

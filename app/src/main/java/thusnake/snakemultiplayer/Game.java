@@ -37,6 +37,7 @@ class Game {
   private final GL10 gl;
   private final GLText glText;
   private final Context context;
+  private final OpenGLES20Activity originActivity;
   private final float[] boardSquareColors = {0.125f, 0.125f, 0.125f, 1.0f};
 
   // Public final variables - accessible for the players.
@@ -51,6 +52,7 @@ class Game {
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
     this.context = renderer.getContext();
+    this.originActivity = (OpenGLES20Activity) context;
     this.scores = context.getSharedPreferences("scores", Context.MODE_PRIVATE);
     this.scoresEditor = scores.edit();
 
@@ -289,7 +291,7 @@ class Game {
   }
 
   private void sendBytes(byte[] bytes) {
-    for(ConnectedThread connectedThread : OpenGLES20Activity.cnctdThreads) {
+    for(ConnectedThread connectedThread : originActivity.connectedThreads) {
       if (connectedThread != null) connectedThread.write(bytes);
     }
   }
