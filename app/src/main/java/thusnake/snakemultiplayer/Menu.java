@@ -543,6 +543,10 @@ public class Menu {
     }
   }
 
+  public void handleInputBytes(byte[] inputBytes) {
+
+  }
+
   // Fades all buttons of a group except one.
   public void fadeAllButOne(MenuDrawable[] buttons, MenuDrawable exception) {
     for (MenuDrawable button : buttons) {

@@ -296,6 +296,10 @@ class Game {
     }
   }
 
+  public void handleInputBytes(byte[] inputBytes) {
+
+  }
+
   public GameRenderer getRenderer() { return this.renderer; }
   public int getHorizontalSquares() { return this.horizontalSquares; }
   public int getVerticalSquares() { return this.verticalSquares; }

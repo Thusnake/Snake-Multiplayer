@@ -74,13 +74,13 @@ public class AcceptThread extends Thread {
   }
 
   private void manageConnectedSocket(BluetoothSocket socket) {
-    int index = 0;
+    int index;
     for (index = 0; index < 4; index++) {
       if (originActivity.connectedThreads[index] == null) {
         break;
       }
     }
-    originActivity.connectedThreads[index] = new ConnectedThread(socket);
+    originActivity.connectedThreads[index] = new ConnectedThread(originActivity, socket);
     originActivity.connectedThreads[index].start();
     //byte bytes[] = {4,7,(byte)(4 - Player.getPlayingLocal())};
     //OpenGLES20Activity.cnctdThreads[index].write(bytes);

@@ -119,4 +119,9 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
 
   public double getPointerDownTime() { return this.pointerDownTime; }
+
+  public void handleInputBytes(byte[] bytes) {
+    if (this.game == null) this.menu.handleInputBytes(bytes);
+    else this.game.handleInputBytes(bytes);
+  }
 }
