@@ -19,7 +19,6 @@ public class MenuValue extends MenuDrawable {
   private MenuItem plusButton, minusButton;
   private SimpleTimer plusMinusOpacity = new SimpleTimer(0.0, 1.0);
   private GLText glText;
-  private float width, height;
   private enum Holding {NOTHING, PLUS, MINUS}
   private Holding holding = Holding.NOTHING;
   private SimpleTimer holdTimer = new SimpleTimer(0.0, 2.0);
@@ -61,10 +60,10 @@ public class MenuValue extends MenuDrawable {
   }
 
   private void initDimensions(float x, float y) {
-    this.width = glText.getLength(this.getValueToString());
-    this.height = glText.getCharHeight() * 0.65f;
+    this.setWidth(glText.getLength(this.getValueToString()));
+    this.setHeight(glText.getCharHeight() * 0.65f);
     if (align == MenuItem.Alignment.LEFT) this.setX(x);
-    else this.setX(x - this.width);
+    else this.setX(x - this.getWidth());
     this.setY(y);
   }
 
@@ -79,7 +78,7 @@ public class MenuValue extends MenuDrawable {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.getXTimer().countDown(glText.getLength(this.getValueToString(newValue))
                                  - glText.getLength(this.getValueToString()));
-      this.width = glText.getLength(this.getValueToString(newValue));
+      this.setWidth(glText.getLength(this.getValueToString(newValue)));
       this.valueInteger = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -89,7 +88,7 @@ public class MenuValue extends MenuDrawable {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.getXTimer().countDown(glText.getLength(this.getValueToString(newValue))
                                  - glText.getLength(this.getValueToString()));
-      this.width = glText.getLength(this.getValueToString(newValue));
+      this.setWidth(glText.getLength(this.getValueToString(newValue)));
       this.valueBoolean = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -99,7 +98,7 @@ public class MenuValue extends MenuDrawable {
       if (this.align == MenuItem.Alignment.RIGHT)
         this.getXTimer().countDown(glText.getLength(newValue)
                                  - glText.getLength(this.getValueToString()));
-      this.width = glText.getLength(newValue);
+      this.setWidth(glText.getLength(newValue));
       this.valueString = newValue;
       this.renderer.getMenu().syncValues();
     }
@@ -119,8 +118,8 @@ public class MenuValue extends MenuDrawable {
   }
 
   public void move(double dt) {
-    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.height * 2);
-    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.height * 2);
+    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.getHeight() * 2);
+    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.getHeight() * 2);
     if (this.type == Type.INTEGER) {
       plusButton.move(dt);
       minusButton.move(dt);
@@ -182,8 +181,8 @@ public class MenuValue extends MenuDrawable {
       this.expanded = expanded;
       if (expanded) {
         this.setDestinationToInitial();
-        this.minusButton.setDestinationYFromOrigin(-this.height);
-        this.plusButton.setDestinationYFromOrigin(-this.height);
+        this.minusButton.setDestinationYFromOrigin(-this.getHeight());
+        this.plusButton.setDestinationYFromOrigin(-this.getHeight());
       } else {
         this.setDestinationToInitial();
         this.minusButton.setDestinationYFromOrigin(0);
@@ -224,12 +223,28 @@ public class MenuValue extends MenuDrawable {
   }
 
   // Movement methods.
+  @Override
   public void setDestinationYFromOrigin(double offsetY) {
     super.setDestinationYFromOrigin(offsetY);
     if (this.type == Type.INTEGER) {
       this.minusButton.setDestinationYFromOrigin(offsetY);
       this.plusButton.setDestinationYFromOrigin(offsetY);
     }
+  }
+
+  @Override
+  public void setDestinationToInitial() {
+    if (this.align == MenuItem.Alignment.RIGHT)
+      this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth());
+    else
+      this.getXTimer().setEndTimeFromNow(this.getInitialX());
+    this.getYTimer().setEndTimeFromNow(this.getInitialY());
+  }
+
+  @Override
+  public void setDestinationX(double destinationX) {
+    if (this.align == MenuItem.Alignment.RIGHT) super.setDestinationX(destinationX - this.getWidth());
+    else super.setDestinationX(destinationX);
   }
 
   // Other getters.

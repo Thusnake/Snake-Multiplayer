@@ -57,6 +57,13 @@ public abstract class MenuDrawable {
   public float getY() { return (float) this.y.getTime(); }
   public SimpleTimer getXTimer() { return this.x; }
   public SimpleTimer getYTimer() { return this.y; }
+  public float getInitialX() { return this.initialX; }
+  public float getInitialY() { return this.initialY; }
+  public void setWidth(float width) { this.width = width; }
+  public void setHeight(float height) { this.height = height; }
+  public float getWidth() { return this.width; }
+  public float getHeight() { return this.height; }
+
 
   public void setDestinationX(double destinationX) { this.x.setEndTimeFromNow(destinationX); }
   public void setDestinationY(double destinationY) { this.y.setEndTimeFromNow(destinationY); }

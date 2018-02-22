@@ -13,7 +13,6 @@ public class MenuItem extends MenuDrawable {
   public enum Alignment {LEFT, RIGHT, CENTER}
   private String text;
   private final Alignment align;
-  private float width, height;
   private double easeOutMultiplier, easeOutInertia;
   private GLText glText;
   private boolean visible;
@@ -28,18 +27,19 @@ public class MenuItem extends MenuDrawable {
     this.align = align;
 
     this.glText = renderer.getGlText();
-    this.width = glText.getLength(text);
-    this.height = glText.getHeight() * 0.65f;
+    this.setWidth(glText.getLength(text));
+    this.setHeight(glText.getHeight() * 0.65f);
 
     this.easeOutMultiplier = 8;
-    this.easeOutInertia = this.height * 2;
+    this.easeOutInertia = this.getHeight() * 2;
 
     if (align == Alignment.LEFT) this.setX(x);
-    else this.setX(x - this.width);
+    else this.setX(x - this.getWidth());
   }
 
   // Simply draws the text representation of the button. Has to be called inside a block of
   // GLText.
+  @Override
   public void draw() {
     glText.end();
     glText.begin(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
@@ -58,8 +58,8 @@ public class MenuItem extends MenuDrawable {
   }
 
   public void move(double dt) {
-    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.height * 2);
-    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.height * 2);
+    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.getHeight() * 2);
+    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.getHeight() * 2);
     if (this.value != null) this.value.move(dt);
   }
 
@@ -74,7 +74,7 @@ public class MenuItem extends MenuDrawable {
   public void setText(String text) {
     if (this.align == Alignment.RIGHT)
       this.getXTimer().countDown(glText.getLength(text) - glText.getLength(this.text));
-    this.width = glText.getLength(text);
+    this.setWidth(glText.getLength(text));
     this.text = text;
   }
   public void setDescription(String text) {
@@ -89,24 +89,31 @@ public class MenuItem extends MenuDrawable {
   // Returns true if the given coordinates are in the button.
   @Override
   public boolean isClicked(float x, float y) {
-    return (x > this.getXTimer().getTime() && x < this.getX() + this.width
+    return (x > this.getXTimer().getTime() && x < this.getX() + this.getWidth()
         && renderer.getScreenHeight() - y > this.getY()
-        && renderer.getScreenHeight() - y < this.getY() + this.height
+        && renderer.getScreenHeight() - y < this.getY() + this.getHeight()
         || this.value != null && this.value.isClicked(x, y));
   }
 
   public boolean isVisible() {
     return !this.visible || this.text.equals("");
   }
-  public float getWidth() { return this.width; }
-  public float getHeight() { return this.height; }
   public GameRenderer getRenderer() { return this.renderer; }
   public MenuValue getValue() { return this.value; }
 
   @Override
   public void setDestinationX(double destinationX) {
-    if (this.align == Alignment.RIGHT) super.setDestinationX(destinationX - this.width);
+    if (this.align == Alignment.RIGHT) super.setDestinationX(destinationX - this.getWidth());
     else super.setDestinationX(destinationX);
+  }
+
+  @Override
+  public void setDestinationToInitial() {
+    if (this.align == Alignment.RIGHT)
+      this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth());
+    else
+      this.getXTimer().setEndTimeFromNow(this.getInitialX());
+    this.getYTimer().setEndTimeFromNow(this.getInitialY());
   }
 
   public void setEaseOutVariables(double multiplier, double inertia) {
