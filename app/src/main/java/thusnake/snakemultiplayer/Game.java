@@ -14,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 // An instance of this class would be a single game of snake.
 class Game {
-  private boolean gameOver = false, onlineSession;
+  private boolean gameOver = false;
   private SimpleTimer beginTimer = new SimpleTimer(0.0, 3.0);
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
@@ -45,8 +45,6 @@ class Game {
 
   // Constructor that sets up a local session.
   public Game(GameRenderer renderer, int screenWidth, int screenHeight) {
-    onlineSession = false;
-
     // Get the essentials.
     this.renderer = renderer;
     this.gl = renderer.getGl();
@@ -119,29 +117,10 @@ class Game {
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
   }
 
-  // Constructor that sets up a online game.
-  // TODO
-
   // Runs a single frame of the snake game.
   public void run(double dt) {
     // Check if the game is over.
-    if ((gameMode == GameMode.MULTIPLAYER && this.getAlivePlayers() <= 1)
-        || (gameMode == GameMode.SINGLEPLAYER && this.getAlivePlayers() == 0)
-        && !gameOver) {
-      gameOver = true;
-      if (gameMode == GameMode.MULTIPLAYER) {
-        winner = this.assessWinner();
-      } else if (gameMode == GameMode.SINGLEPLAYER) {
-        if (players[0].getScore() > scores.getInt("high_score_classic", 0)) {
-          scoresEditor.putInt("high_score_classic", players[0].getScore());
-          scoresEditor.commit();
-        }
-      }
-      if (onlineSession) {
-        byte[] bytesToSend = {6,1,(byte)winner};
-        this.sendBytes(bytesToSend);
-      }
-    }
+    checkGameOver();
 
     // Handle timers.
     if (!gameOver && beginTimer.getTime() > 2.0) moveTimer.countDown(dt);
@@ -156,19 +135,7 @@ class Game {
     // Handle movement based on moveTimer.
     while(!gameOver && moveTimer.getTime() <= 0.0) {
       moveTimer.countUp(1.0 / speed);
-      for (Player player : players) {
-        // Move and check if it has eaten the apple.
-        if (player.isAlive() && player.move()) {
-          if (apple.check(player))
-            boardSquares.updateColors(apple.x, apple.y, apple.getColors());
-        }
-      }
-      for (Player player : players)
-        if(player.isAlive()) player.checkDeath();
-      // Online play
-      if (onlineSession) {
-        // TODO send bytes type 9
-      }
+      moveAllSnakes();
     }
 
     // Draw all drawable snakes.
@@ -290,7 +257,37 @@ class Game {
     gl.glPopMatrix();
   }
 
-  private void sendBytes(byte[] bytes) {
+  protected boolean checkGameOver() {
+    if ((gameMode == GameMode.MULTIPLAYER && this.getAlivePlayers() <= 1)
+        || (gameMode == GameMode.SINGLEPLAYER && this.getAlivePlayers() == 0)
+        && !gameOver) {
+      gameOver = true;
+      if (gameMode == GameMode.MULTIPLAYER) {
+        winner = this.assessWinner();
+      } else if (gameMode == GameMode.SINGLEPLAYER) {
+        if (players[0].getScore() > scores.getInt("high_score_classic", 0)) {
+          scoresEditor.putInt("high_score_classic", players[0].getScore());
+          scoresEditor.commit();
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  protected void moveAllSnakes() {
+    for (Player player : players) {
+      // Move and check if it has eaten the apple.
+      if (player.isAlive() && player.move()) {
+        if (apple.check(player))
+          boardSquares.updateColors(apple.x, apple.y, apple.getColors());
+      }
+    }
+    for (Player player : players)
+      if(player.isAlive()) player.checkDeath();
+  }
+
+  protected void sendBytes(byte[] bytes) {
     for(ConnectedThread connectedThread : originActivity.connectedThreads) {
       if (connectedThread != null) connectedThread.write(bytes);
     }

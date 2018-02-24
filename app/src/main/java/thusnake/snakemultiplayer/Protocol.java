@@ -26,8 +26,9 @@ public class Protocol {
   // Host codes
   public static byte APPROVE_CONNECT = -10;
   public static byte START_GAME = -20;
-  public static byte END_GAME = -30;
+  public static byte END_GAME = -30; // Followed by 1 winner byte.
   public static byte GAME_MOVEMENT_OCCURED = -40; // Followed by 1 movement byte.
+  public static byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
 
   // Movement code methods.
   public static byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
