@@ -28,6 +28,7 @@ public class Player {
   private Game game;
   private Vibrator vibrator;
   private Mesh boardSquares;
+  private int onlineIdentifier;
 
   // Constructor for a corner layout player.
   public Player() {
@@ -218,6 +219,8 @@ public class Player {
     return bodyColors;
   }
 
+  public int getOnlineIdentifier() { return this.onlineIdentifier; }
+
   // Setters
   public void setControlType(ControlType type) { this.controlType = type; }
   public void setCornerLayout(CornerLayout.Corner corner) {
@@ -228,6 +231,7 @@ public class Player {
     this.colors = Menu.getColorFromIndex(colorIndex);
     this.colorIndex = colorIndex;
   }
+  public void setOnlineIdentifier(int id) { this.onlineIdentifier = id; }
 
   // Static methods
   public static Direction getOppositeDirection(Direction direction) {

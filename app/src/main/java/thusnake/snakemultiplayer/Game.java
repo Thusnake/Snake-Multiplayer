@@ -84,8 +84,8 @@ class Game {
     this.winner = -1;
 
     int playersToCreate = 0;
-    for (Player.ControlType controlType : this.renderer.getMenu().playerControlType)
-      if (controlType != Player.ControlType.OFF) playersToCreate++;
+    for (Player player : players)
+      if (player != null && player.getControlType() != Player.ControlType.OFF) playersToCreate++;
     if (playersToCreate == 0) this.renderer.quitGame();
     else if (playersToCreate == 1) this.gameMode = GameMode.SINGLEPLAYER;
     else this.gameMode = GameMode.MULTIPLAYER;
@@ -144,7 +144,7 @@ class Game {
     }
 
     // Draw all drawable snakes.
-    for (Player player : players) if (player.isDrawable()) player.updateColors();
+    for (Player player : players) if (player != null && player.isDrawable()) player.updateColors();
 
     // Draw all apples.
     apple.updateColors();
@@ -161,7 +161,7 @@ class Game {
     /* TODO I believe that if a snake goes over a flashing dead snake, the dead snake's flash will
     take priority over the alive one. This is not intended. */
     for(Player player : players) {
-      if(!player.isAlive() && player.isFlashing()) {
+      if(player != null && !player.isAlive() && player.isFlashing()) {
         for (BodyPart bodyPart : player.getBodyParts()) {
           if (!bodyPart.isOutOfBounds() && !player.isDrawable())
             boardSquares.updateColors(bodyPart.getX(), bodyPart.getY(), boardSquareColors);
@@ -175,7 +175,7 @@ class Game {
 
     // Draw the display controllers.
     for (Player player : players) {
-      if (player.getControlType() == Player.ControlType.CORNER) {
+      if (player != null && player.getControlType() == Player.ControlType.CORNER) {
         gl.glColor4f(player.getColors()[0], player.getColors()[1],
                      player.getColors()[2], player.getColors()[3]);
         // For some unknown reason I can not load the texture inside the constructor properly.
@@ -283,13 +283,13 @@ class Game {
   protected void moveAllSnakes() {
     for (Player player : players) {
       // Move and check if it has eaten the apple.
-      if (player.isAlive() && player.move()) {
+      if (player != null && player.isAlive() && player.move()) {
         if (apple.check(player))
           boardSquares.updateColors(apple.x, apple.y, apple.getColors());
       }
     }
     for (Player player : players)
-      if(player.isAlive()) player.checkDeath();
+      if(player != null && player.isAlive()) player.checkDeath();
   }
 
   protected void sendBytes(byte[] bytes) {

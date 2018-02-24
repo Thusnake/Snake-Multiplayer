@@ -36,6 +36,7 @@ public class Menu {
   private enum ConnectionRole {HOST, GUEST}
   private ConnectionType connectionType = null;
   private ConnectionRole connectionRole = null;
+  private int onlineIdentifier;
   private final OpenGLES20Activity originActivity;
 
   // Menu variables
@@ -555,8 +556,23 @@ public class Menu {
           .decodeCorner(inputBytes[1])); break;
       case Protocol.REQUEST_CONNECT:
         if (connectionRole == ConnectionRole.HOST) {
-          sourceThread.write(new byte[] {Protocol.APPROVE_CONNECT});
-          // TODO Also send the unique guest code to the guest.
+          // Check what would be the smallest unique ID you could give the new device.
+          byte id;
+          for (id = 0; true; id++) {
+            boolean idUnique = true;
+            for (int index = 0; index < players.length; index++)
+              if (players[index] != null && players[index].getOnlineIdentifier() == id)
+                idUnique = false;
+            if (idUnique) break;
+          }
+          sourceThread.write(new byte[] {Protocol.APPROVE_CONNECT, id});
+        }
+        break;
+      case Protocol.APPROVE_CONNECT:
+        if (connectionRole == ConnectionRole.GUEST) {
+          // Clear the players and set the unique identifier for this device.
+          for (int index = 0; index < players.length; index++) players[index] = null;
+          this.onlineIdentifier = inputBytes[1];
         }
         break;
     }
@@ -605,14 +621,12 @@ class BackgroundSnake extends Mesh {
   private final int length;
   private float x;
   private Menu menu;
-  private GL10 gl;
   private double movementTimer;
 
   // Constructor.
   public BackgroundSnake(Menu menu) {
     super();
     this.menu = menu;
-    this.gl = this.menu.getRenderer().getGl();
     float screenHeight = this.menu.getRenderer().getScreenHeight();
 
     // Set their variables randomly. You can change up the formulas.
