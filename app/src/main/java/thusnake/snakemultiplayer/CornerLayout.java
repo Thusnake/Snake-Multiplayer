@@ -11,6 +11,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class CornerLayout {
   public enum Corner {UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT}
+  private final Corner corner;
   private final Square drawableLayout;
   private final float x, y, width;
   private final Player player;
@@ -19,6 +20,7 @@ public class CornerLayout {
 
   public CornerLayout(Player player, Corner corner) {
     this.player = player;
+    this.corner = corner;
     this.gl = player.getGame().getRenderer().getGl();
     float screenWidth = player.getGame().getRenderer().getScreenWidth();
     float screenHeight = player.getGame().getRenderer().getScreenHeight();
@@ -83,4 +85,6 @@ public class CornerLayout {
     }
     return false;
   }
+
+  public Corner getCorner() { return this.corner; }
 }

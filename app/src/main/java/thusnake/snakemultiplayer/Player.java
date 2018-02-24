@@ -17,41 +17,39 @@ public class Player {
   private Direction direction, previousDirection;
   private boolean alive, drawable, flashing;
   private int number, score;
-  private final String name;
-  private final ControlType controlType;
-  private final CornerLayout.Corner controlCorner;
+  private String name;
+  private ControlType controlType;
   public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
   private CornerLayout cornerLayout;
   private BodyPart[] bodyParts = new BodyPart[0];
   private int bodyLength = 0;
   private float[] colors = new float[4];
-  private final Game game;
-  private final Vibrator vibrator;
-  private final Mesh boardSquares;
+  private int colorIndex = 0;
+  private Game game;
+  private Vibrator vibrator;
+  private Mesh boardSquares;
 
   // Constructor for a corner layout player.
-  public Player(Game game, int number) {
+  public Player() {
+
+  }
+
+  // Gets called upon game start.
+  public void prepareForGame(Game game, int number) {
     this.game = game;
     this.number = number;
     this.vibrator = (Vibrator) game.getRenderer().getContext()
         .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
-    this.controlCorner = game.getRenderer().getMenu().playerControlCorner[number];
-    if (this.controlCorner == CornerLayout.Corner.UPPER_LEFT
-        || this.controlCorner == CornerLayout.Corner.UPPER_RIGHT) this.direction = DOWN;
+    if (this.getControlCorner() == CornerLayout.Corner.UPPER_LEFT
+        || this.getControlCorner() == CornerLayout.Corner.UPPER_RIGHT) this.direction = DOWN;
     else                                                          this.direction = UP;
     this.previousDirection = this.direction;
     this.alive = true;
     this.drawable = true;
     this.flashing = false;
-    this.name = game.getRenderer().getMenu().playerName[number];
-    this.colors = game.getRenderer().getMenu()
-        .getColorFromIndex(game.getRenderer().getMenu().playerColor[number]);
     this.score = 0;
-    this.controlType = game.getRenderer().getMenu().playerControlType[number];
-    this.cornerLayout = new CornerLayout(this,
-        this.game.getRenderer().getMenu().playerControlCorner[this.number]);
-    switch (game.getRenderer().getMenu().playerControlCorner[number]) {
+    switch (this.getControlCorner()) {
       case LOWER_LEFT:
         this.expandBody(0, 0); break;
       case LOWER_RIGHT:
@@ -60,7 +58,7 @@ public class Player {
         this.expandBody(0, game.getRenderer().getMenu().verticalSquares - 1); break;
       case UPPER_RIGHT:
         this.expandBody(game.getRenderer().getMenu().horizontalSquares - 1,
-                        game.getRenderer().getMenu().verticalSquares - 1); break;
+            game.getRenderer().getMenu().verticalSquares - 1); break;
     }
     for (int index = 1; index < 4; index++) {
       this.expandBody(Player.getOppositeDirection(this.direction));
@@ -200,6 +198,7 @@ public class Player {
   public int getScore() { return this.score; }
   public ControlType getControlType() { return this.controlType; }
   public CornerLayout getCornerLayout() { return this.cornerLayout; }
+  public CornerLayout.Corner getControlCorner() { return this.cornerLayout.getCorner(); }
 
   public BodyPart getBodyPart(int bodyPartIndex) {
     if (bodyPartIndex >= 0)
@@ -212,10 +211,22 @@ public class Player {
   public int getBodyLength() { return this.bodyLength; }
 
   public float[] getColors() { return this.colors; }
+  public int getColorIndex() { return this.colorIndex; }
   public float[] getBodyColors() {
     float[] bodyColors = {this.colors[0] / 2f, this.colors[1] / 2f,
                           this.colors[2] / 2f, this.colors[3]};
     return bodyColors;
+  }
+
+  // Setters
+  public void setControlType(ControlType type) { this.controlType = type; }
+  public void setCornerLayout(CornerLayout.Corner corner) {
+    this.cornerLayout = new CornerLayout(this, corner);
+  }
+  public void setName(String name) { this.name = name; }
+  public void setColors(int colorIndex) {
+    this.colors = Menu.getColorFromIndex(colorIndex);
+    this.colorIndex = colorIndex;
   }
 
   // Static methods

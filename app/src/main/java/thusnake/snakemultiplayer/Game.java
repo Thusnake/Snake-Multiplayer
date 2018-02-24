@@ -27,6 +27,7 @@ class Game {
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
   private final Player[] players;
+  private int playersPlaying;
   private final Apple apple;
   private final int horizontalSquares, verticalSquares;
   private final Mesh boardSquares = new Mesh(this);
@@ -44,7 +45,7 @@ class Game {
   public final boolean stageBorders;
 
   // Constructor that sets up a local session.
-  public Game(GameRenderer renderer, int screenWidth, int screenHeight) {
+  public Game(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
     // Get the essentials.
     this.renderer = renderer;
     this.gl = renderer.getGl();
@@ -89,14 +90,18 @@ class Game {
     else if (playersToCreate == 1) this.gameMode = GameMode.SINGLEPLAYER;
     else this.gameMode = GameMode.MULTIPLAYER;
 
-    // Create the players
+    // Prepare the players
+    this.players = players;
     if (gameMode == GameMode.SINGLEPLAYER) {
-      players = new Player[1];
-      players[0] = new Player(this, 0);
+      this.players[0].prepareForGame(this, 0);
     } else {
-      this.players = new Player[playersToCreate];
-      for (int index = 0; index < this.players.length; index++)
-        players[index] = new Player(this, index);
+      for (int index = 0; index < this.players.length; index++) {
+        if (this.players[index] == null) {
+          this.playersPlaying = index;
+          break;
+        }
+        this.players[index].prepareForGame(this, index);
+      }
     }
 
     // Create the board mesh, the apple(s) and other objects.
@@ -328,7 +333,7 @@ class Game {
     // If no players are alive it returns -1.
     return -1;
   }
-  public int getPlayersPlaying() { return this.players.length; }
+  public int getPlayersPlaying() { return this.playersPlaying; }
   public Mesh getBoardSquares() { return this.boardSquares; }
   public float[] getBoardSquareColors() { return this.boardSquareColors; }
   public SimpleTimer getGameOverTimer() { return this.gameOverTimer; }

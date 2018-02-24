@@ -1,11 +1,5 @@
 package thusnake.snakemultiplayer;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
 import com.android.texample.GLText;
 
 import java.util.ArrayList;
@@ -22,6 +16,7 @@ public class Menu {
   private SimpleTimer screenTransformX, screenTransformY;
   private float screenWidth, screenHeight;
   private GameRenderer renderer;
+  private Player[] players = new Player[4];
   private final GL10 gl;
   private final GLText glText;
   private final MenuItem[] menuItemsMain, menuItemsConnect, menuItemsBoard, menuItemsPlayers,
@@ -46,10 +41,6 @@ public class Menu {
   // Menu variables
   public int horizontalSquares, verticalSquares, speed;
   public boolean stageBorders;
-  public Player.ControlType[] playerControlType = new Player.ControlType[4];
-  public CornerLayout.Corner[] playerControlCorner = new CornerLayout.Corner[4];
-  public String[] playerName = new String[4];
-  public int[] playerColor = new int[4];
 
   // TODO Find a way to not use this, currently used for the background snakes, they refuse to render without it.
   Square testSquare = new Square(500,0,0,0);
@@ -76,22 +67,25 @@ public class Menu {
     this.verticalSquares = 20;
     this.speed = 12;
     this.stageBorders = true;
-    this.playerControlType[0] = Player.ControlType.CORNER;
-    this.playerControlType[1] = Player.ControlType.OFF;
-    this.playerControlType[2] = Player.ControlType.OFF;
-    this.playerControlType[3] = Player.ControlType.OFF;
-    this.playerName[0] = "Player 1";
-    this.playerName[1] = "Player 2";
-    this.playerName[2] = "Player 3";
-    this.playerName[3] = "Player 4";
-    this.playerControlCorner[0] = CornerLayout.Corner.LOWER_LEFT;
-    this.playerControlCorner[1] = CornerLayout.Corner.LOWER_RIGHT;
-    this.playerControlCorner[2] = CornerLayout.Corner.UPPER_LEFT;
-    this.playerControlCorner[3] = CornerLayout.Corner.UPPER_RIGHT;
-    this.playerColor[0] = 0;
-    this.playerColor[1] = 0;
-    this.playerColor[2] = 0;
-    this.playerColor[3] = 0;
+
+    // Initialize the players.
+    for (int index = 0; index < players.length; index++) players[index] = new Player();
+    this.players[0].setControlType(Player.ControlType.CORNER);
+    this.players[1].setControlType(Player.ControlType.OFF);
+    this.players[2].setControlType(Player.ControlType.OFF);
+    this.players[3].setControlType(Player.ControlType.OFF);
+    this.players[0].setName("Player 1");
+    this.players[1].setName("Player 2");
+    this.players[2].setName("Player 3");
+    this.players[3].setName("Player 4");
+    this.players[0].setCornerLayout(CornerLayout.Corner.LOWER_LEFT);
+    this.players[1].setCornerLayout(CornerLayout.Corner.LOWER_RIGHT);
+    this.players[2].setCornerLayout(CornerLayout.Corner.UPPER_LEFT);
+    this.players[3].setCornerLayout(CornerLayout.Corner.UPPER_RIGHT);
+    this.players[0].setColors(0);
+    this.players[1].setColors(0);
+    this.players[2].setColors(0);
+    this.players[3].setColors(0);
 
     // Create menuItem instances for each button.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -280,7 +274,7 @@ public class Menu {
         square.draw();
         square.move(dt);
       }
-      if (this.playerControlType[this.playersOptionsIndex] != Player.ControlType.OFF)
+      if (this.players[this.playersOptionsIndex].getControlType() != Player.ControlType.OFF)
         for (MenuImage square : cornerSelectionSquare) {
           square.draw();
           square.move(dt);
@@ -350,23 +344,24 @@ public class Menu {
         screen = 1;
         // Update the descriptions.
         for (int index = 0; index < this.menuItemsPlayers.length; index++) {
-          menuItemsPlayers[index].setDescription(this.playerControlType[index].toString());
-          menuItemsPlayers[index].setColors(getColorFromIndex(this.playerColor[index]));
+          menuItemsPlayers[index].setDescription(this.players[index].getControlType().toString());
+          menuItemsPlayers[index].setColors(this.players[index].getColors());
           menuItemsPlayers[index].setOpacity(
-              (playerControlType[index] == Player.ControlType.OFF) ? 0.5f : 1f);
+              (players[index].getControlType() == Player.ControlType.OFF) ? 0.5f : 1f);
           menuItemsPlayers[index].setDescriptionOpacity(
-              (playerControlType[index] == Player.ControlType.OFF) ? 0.5f : 1f);
+              (players[index].getControlType() == Player.ControlType.OFF) ? 0.5f : 1f);
         }
         break;
       case PLAYERSOPTIONS:
-        this.menuStateItem.setText(this.playerName[this.playersOptionsIndex]);
+        this.menuStateItem.setText(this.players[this.playersOptionsIndex].getName());
         screen = 2;
         // Update the chosen player's options values.
         this.menuItemsPlayersOptions[0].getValue()
-            .setValue(this.playerControlType[this.playersOptionsIndex].toString());
-        this.menuStateItem.setColors(getColorFromIndex(this.playerColor[this.playersOptionsIndex]));
-        this.fadeAllButOne(colorSelectionSquare, colorSelectionSquare[this.playerColor[this.playersOptionsIndex]]);
-        switch (this.playerControlCorner[this.playersOptionsIndex]) {
+            .setValue(this.players[this.playersOptionsIndex].getControlType().toString());
+        this.menuStateItem.setColors(this.players[this.playersOptionsIndex].getColors());
+        this.fadeAllButOne(colorSelectionSquare,
+            colorSelectionSquare[this.players[this.playersOptionsIndex].getColorIndex()]);
+        switch (this.players[this.playersOptionsIndex].getControlCorner()) {
           case LOWER_LEFT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[0]); break;
           case UPPER_LEFT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[1]); break;
           case UPPER_RIGHT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[2]); break;
@@ -470,22 +465,22 @@ public class Menu {
   public void cyclePlayerControlTypes() {
     // TODO Make it so that you can only turn on/off the last player in the stack.
     // TODO Have some buttons to make this easier to do.
-    switch (this.playerControlType[this.playersOptionsIndex]) {
+    switch (this.players[this.playersOptionsIndex].getControlType()) {
       case OFF:
-        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.CORNER;
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
         break;
       case CORNER:
-        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.SWIPE;
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.SWIPE);
         break;
       case SWIPE:
         // TODO the next one would be keyboard and then gamepad, but they're not implemented
-        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.OFF;
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.OFF);
         break;
       case KEYBOARD:
-        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.OFF;
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.OFF);
         break;
       case GAMEPAD:
-        this.playerControlType[this.playersOptionsIndex] = Player.ControlType.OFF;
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.OFF);
         break;
       // The following ones you should not be able to easily switch off.
       case BLUETOOTH:
@@ -495,23 +490,24 @@ public class Menu {
     }
     // Update the display value.
     this.menuItemsPlayersOptions[0].getValue()
-        .setValue(this.playerControlType[this.playersOptionsIndex].toString());
+        .setValue(this.players[this.playersOptionsIndex].getControlType().toString());
   }
 
   // Sets the currently selected player's color to a color from a given index.
   public void setPlayerColor(int index) {
-    this.playerColor[this.playersOptionsIndex] = index;
-    this.menuStateItem.setColors(this.getColorFromIndex(index));
+    this.players[this.playersOptionsIndex].setColors(index);
+    this.menuStateItem.setColors(getColorFromIndex(index));
   }
 
   // Sets the currently selected player's control corner to a given CornerLayout.
   public void setPlayerControlCorner(CornerLayout.Corner corner) {
     // Find the other player that uses the selected corner and set it to the current player's.
-    for (int index = 0; index < this.playerControlCorner.length; index++)
-      if (index != this.playersOptionsIndex && this.playerControlCorner[index] == corner)
-        this.playerControlCorner[index] = this.playerControlCorner[this.playersOptionsIndex];
+    for (int index = 0; index < this.players.length; index++)
+      if (index != this.playersOptionsIndex && this.players[index].getControlCorner() == corner)
+        this.players[index]
+            .setCornerLayout(this.players[this.playersOptionsIndex].getControlCorner());
     // Then set the current player's corner to the selected one.
-    this.playerControlCorner[this.playersOptionsIndex] = corner;
+    this.players[this.playersOptionsIndex].setCornerLayout(corner);
   }
 
   // Sets the connection type to a given value and handles the connection menu animation.
@@ -543,8 +539,32 @@ public class Menu {
     }
   }
 
-  public void handleInputBytes(byte[] inputBytes) {
+  public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
+    switch(inputBytes[0]) {
+      case Protocol.SNAKE1_COLOR_CHANGED: players[0].setColors(inputBytes[1]); break;
+      case Protocol.SNAKE2_COLOR_CHANGED: players[1].setColors(inputBytes[1]); break;
+      case Protocol.SNAKE3_COLOR_CHANGED: players[2].setColors(inputBytes[1]); break;
+      case Protocol.SNAKE4_COLOR_CHANGED: players[3].setColors(inputBytes[1]); break;
+      case Protocol.SNAKE1_CORNER_CHANGED: players[0].setCornerLayout(Protocol
+          .decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE2_CORNER_CHANGED: players[1].setCornerLayout(Protocol
+          .decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE3_CORNER_CHANGED: players[2].setCornerLayout(Protocol
+          .decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE4_CORNER_CHANGED: players[3].setCornerLayout(Protocol
+          .decodeCorner(inputBytes[1])); break;
+      case Protocol.REQUEST_CONNECT:
+        if (connectionRole == ConnectionRole.HOST) {
+          sourceThread.write(new byte[] {Protocol.APPROVE_CONNECT});
+          // TODO Also send the unique guest code to the guest.
+        }
+        break;
+    }
 
+    // Tell everyone what happened if the message was some change in settings.
+    if (connectionRole == ConnectionRole.HOST && inputBytes[0] >= 20 && inputBytes[0] < 50)
+      for(ConnectedThread connectedThread : originActivity.connectedThreads)
+        if (connectedThread != null) connectedThread.write(inputBytes);
   }
 
   // Fades all buttons of a group except one.
@@ -556,7 +576,7 @@ public class Menu {
   }
 
   // Takes a color index and returns the whole corresponding color as rgba.
-  public float[] getColorFromIndex(int index) {
+  public static float[] getColorFromIndex(int index) {
     switch(index) {
       case 0: return new float[] {1f, 1f, 1f, 1f};
       case 1: return new float[] {1f, 0f, 0f, 1f};

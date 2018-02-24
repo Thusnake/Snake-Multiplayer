@@ -6,32 +6,32 @@ package thusnake.snakemultiplayer;
 
 public class Protocol {
   // Guest codes
-  public static byte REQUEST_CONNECT = 0;
+  public static final byte REQUEST_CONNECT = 0;
 
   // Universal codes
-  public static byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
-  public static byte SNAKE1_COLOR_CHANGED = 20; // Followed by 1 color byte.
-  public static byte SNAKE2_COLOR_CHANGED = 21; // Followed by 1 color byte.
-  public static byte SNAKE3_COLOR_CHANGED = 22; // Followed by 1 color byte.
-  public static byte SNAKE4_COLOR_CHANGED = 23; // Followed by 1 color byte.
-  public static byte SNAKE1_CORNER_CHANGED = 30; // Followed by 1 corner byte.
-  public static byte SNAKE2_CORNER_CHANGED = 31; // Followed by 1 corner byte.
-  public static byte SNAKE3_CORNER_CHANGED = 32; // Followed by 1 corner byte.
-  public static byte SNAKE4_CORNER_CHANGED = 33; // Followed by 1 corner byte.
-  public static byte SNAKE1_NAME_CHANGED = 40; // Followed by 1 length byte and a string of chars.
-  public static byte SNAKE2_NAME_CHANGED = 41; // Followed by 1 length byte and a string of chars.
-  public static byte SNAKE3_NAME_CHANGED = 42; // Followed by 1 length byte and a string of chars.
-  public static byte SNAKE4_NAME_CHANGED = 43; // Followed by 1 length byte and a string of chars.
+  public static final byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
+  public static final byte SNAKE1_COLOR_CHANGED = 20; // Followed by 1 color byte.
+  public static final byte SNAKE2_COLOR_CHANGED = 21; // Followed by 1 color byte.
+  public static final byte SNAKE3_COLOR_CHANGED = 22; // Followed by 1 color byte.
+  public static final byte SNAKE4_COLOR_CHANGED = 23; // Followed by 1 color byte.
+  public static final byte SNAKE1_CORNER_CHANGED = 30; // Followed by 1 corner byte.
+  public static final byte SNAKE2_CORNER_CHANGED = 31; // Followed by 1 corner byte.
+  public static final byte SNAKE3_CORNER_CHANGED = 32; // Followed by 1 corner byte.
+  public static final byte SNAKE4_CORNER_CHANGED = 33; // Followed by 1 corner byte.
+  public static final byte SNAKE1_NAME_CHANGED = 40; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE2_NAME_CHANGED = 41; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE3_NAME_CHANGED = 42; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE4_NAME_CHANGED = 43; // Followed by 1 length byte and a string of chars.
 
   // Host codes
-  public static byte APPROVE_CONNECT = -10;
-  public static byte START_GAME = -20;
-  public static byte END_GAME = -30; // Followed by 1 winner byte.
-  public static byte GAME_MOVEMENT_OCCURED = -40; // Followed by 1 movement byte.
-  public static byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
+  public static final byte APPROVE_CONNECT = -10;
+  public static final byte START_GAME = -20;
+  public static final byte END_GAME = -30; // Followed by 1 winner byte.
+  public static final byte GAME_MOVEMENT_OCCURED = -40; // Followed by 1 movement byte.
+  public static final byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
 
   // Movement code methods.
-  public static byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
+  public static final byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
                                      Player.Direction direction3, Player.Direction direction4) {
     byte dir1 = encodeDirection(direction1);
     byte dir2 = encodeDirection(direction2);
@@ -66,6 +66,26 @@ public class Protocol {
       case 2: return Player.Direction.LEFT;
       case 3: return Player.Direction.RIGHT;
       default: return Player.Direction.UP;
+    }
+  }
+
+  public static byte encodeCorner(CornerLayout.Corner corner) {
+    switch (corner) {
+      case LOWER_LEFT: return 0;
+      case UPPER_LEFT: return 1;
+      case UPPER_RIGHT: return 2;
+      case LOWER_RIGHT: return 3;
+      default: return 0;
+    }
+  }
+
+  public static CornerLayout.Corner decodeCorner(byte code) {
+    switch (code) {
+      case 0: return CornerLayout.Corner.LOWER_LEFT;
+      case 1: return CornerLayout.Corner.UPPER_LEFT;
+      case 2: return CornerLayout.Corner.UPPER_RIGHT;
+      case 3: return CornerLayout.Corner.LOWER_RIGHT;
+      default: return CornerLayout.Corner.LOWER_LEFT;
     }
   }
   
