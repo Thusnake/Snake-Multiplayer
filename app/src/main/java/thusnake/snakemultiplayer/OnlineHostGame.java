@@ -7,8 +7,8 @@ package thusnake.snakemultiplayer;
 public class OnlineHostGame extends Game {
 
   // Constructor.
-  public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight) {
-    super(renderer, screenWidth, screenHeight);
+  public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
+    super(renderer, screenWidth, screenHeight, players);
     this.sendBytes(new byte[] {Protocol.START_GAME});
   }
 

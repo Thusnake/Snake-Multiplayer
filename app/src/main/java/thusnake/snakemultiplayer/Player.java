@@ -32,7 +32,8 @@ public class Player {
 
   // Constructor for a corner layout player.
   public Player() {
-
+    this.controlType = ControlType.OFF;
+    this.setColors(0);
   }
 
   // Gets called upon game start.
@@ -44,12 +45,15 @@ public class Player {
     this.boardSquares = game.getBoardSquares();
     if (this.getControlCorner() == CornerLayout.Corner.UPPER_LEFT
         || this.getControlCorner() == CornerLayout.Corner.UPPER_RIGHT) this.direction = DOWN;
-    else                                                          this.direction = UP;
+    else                                                               this.direction = UP;
     this.previousDirection = this.direction;
     this.alive = true;
     this.drawable = true;
     this.flashing = false;
     this.score = 0;
+
+    this.bodyParts = new BodyPart[0];
+    this.bodyLength = 0;
     switch (this.getControlCorner()) {
       case LOWER_LEFT:
         this.expandBody(0, 0); break;
@@ -223,8 +227,8 @@ public class Player {
 
   // Setters
   public void setControlType(ControlType type) { this.controlType = type; }
-  public void setCornerLayout(CornerLayout.Corner corner) {
-    this.cornerLayout = new CornerLayout(this, corner);
+  public void setCornerLayout(GameRenderer renderer, CornerLayout.Corner corner) {
+    this.cornerLayout = new CornerLayout(renderer, this, corner);
   }
   public void setName(String name) { this.name = name; }
   public void setColors(int colorIndex) {

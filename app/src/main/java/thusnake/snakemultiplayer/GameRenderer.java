@@ -99,8 +99,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public float getScreenWidth() { return this.screenWidth; }
   public float getScreenHeight() { return this.screenHeight; }
 
-  public void startGame() {
-    game = new Game(this, screenWidth, screenHeight);
+  public void startGame(Player[] players) {
+    game = new Game(this, screenWidth, screenHeight, players);
   }
   public void quitGame() {
     game = null;

@@ -62,14 +62,6 @@ public class ConnectThread extends Thread {
   private void manageConnectedSocket(BluetoothSocket socket) {
     originActivity.connectedThread = new ConnectedThread(this.originActivity, socket);
     originActivity.connectedThread.start();
-    byte players = 0;
-    for (int i = 0; i < 4; i++) {
-      if (originActivity.getRenderer().getMenu().playerControlType[i] != Player.ControlType.OFF) {
-        players++;
-      }
-    }
-    byte bytes[] = {2,1,players};
-    originActivity.connectedThread.write(bytes);
   }
 
   BluetoothDevice getCurrentDevice() {

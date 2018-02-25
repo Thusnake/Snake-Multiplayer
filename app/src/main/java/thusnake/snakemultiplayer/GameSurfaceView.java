@@ -83,7 +83,7 @@ public class GameSurfaceView extends GLSurfaceView {
               && gameRenderer.getGame().getGameOverTimer().getTime() > 0.5) {
             // TODO Make it so that it knows which pointer did what.
             if (pointerY[0] < 1/3.0 * gameRenderer.getScreenHeight()) {
-              gameRenderer.startGame();
+              gameRenderer.startGame(gameRenderer.getGame().getPlayers());
             } else if (pointerY[0] < 2/3.0 * gameRenderer.getScreenHeight()) {
               gameRenderer.triggerStats();
             } else {

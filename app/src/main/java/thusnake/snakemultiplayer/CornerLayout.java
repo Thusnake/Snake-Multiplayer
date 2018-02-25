@@ -18,12 +18,12 @@ public class CornerLayout {
   private final GL10 gl;
   private boolean textureLoaded = false;
 
-  public CornerLayout(Player player, Corner corner) {
+  public CornerLayout(GameRenderer renderer, Player player, Corner corner) {
     this.player = player;
     this.corner = corner;
-    this.gl = player.getGame().getRenderer().getGl();
-    float screenWidth = player.getGame().getRenderer().getScreenWidth();
-    float screenHeight = player.getGame().getRenderer().getScreenHeight();
+    this.gl = renderer.getGl();
+    float screenWidth = renderer.getScreenWidth();
+    float screenHeight = renderer.getScreenHeight();
     this.width = screenHeight / 720f * 300f;
     switch(corner) {
       case UPPER_LEFT:
@@ -49,8 +49,7 @@ public class CornerLayout {
     }
     this.drawableLayout = new Square(this.x, screenHeight - this.y - this.width,
         this.width, this.width);
-    this.drawableLayout.loadGLTexture(this.gl, player.getGame().getRenderer().getContext(),
-        R.drawable.androidcontrols);
+    this.drawableLayout.loadGLTexture(this.gl, renderer.getContext(), R.drawable.androidcontrols);
   }
 
   public void loadGLTexture(Context context) {
