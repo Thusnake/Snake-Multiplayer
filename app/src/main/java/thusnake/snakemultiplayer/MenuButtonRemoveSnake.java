@@ -15,12 +15,6 @@ public class MenuButtonRemoveSnake extends MenuItem {
     this.playerButton = playerButton;
   }
 
-  @Override
-  public void performAction() {
-    super.performAction();
-    this.hide();
-  }
-
   public void hide() {
     this.setDestinationXFromOrigin(this.getWidth() + 10);
     this.setDrawableOutsideOfScreen(false);

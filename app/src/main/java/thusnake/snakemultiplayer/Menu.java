@@ -542,8 +542,6 @@ public class Menu {
   }
 
   public void cyclePlayerControlTypes() {
-    // TODO Make it so that you can only turn on/off the last player in the stack.
-    // TODO Have some buttons to make this easier to do.
     switch (this.players[this.playersOptionsIndex].getControlType()) {
       case OFF:
         break;
