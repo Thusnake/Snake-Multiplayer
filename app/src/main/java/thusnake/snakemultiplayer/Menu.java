@@ -546,20 +546,19 @@ public class Menu {
     // TODO Have some buttons to make this easier to do.
     switch (this.players[this.playersOptionsIndex].getControlType()) {
       case OFF:
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
         break;
       case CORNER:
         this.players[this.playersOptionsIndex].setControlType(Player.ControlType.SWIPE);
         break;
       case SWIPE:
         // TODO the next one would be keyboard and then gamepad, but they're not implemented
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.OFF);
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
         break;
       case KEYBOARD:
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.OFF);
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
         break;
       case GAMEPAD:
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.OFF);
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
         break;
       // The following ones you should not be able to easily switch off.
       case BLUETOOTH:
