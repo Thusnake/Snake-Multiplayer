@@ -13,6 +13,7 @@ public abstract class MenuDrawable {
   private MenuAction action;
   public final GameRenderer renderer;
   public final GL10 gl;
+  private boolean drawableOutsideOfScreen = true;
 
   public MenuDrawable(GameRenderer renderer, float x, float y) {
     this.renderer = renderer;
@@ -64,7 +65,6 @@ public abstract class MenuDrawable {
   public float getWidth() { return this.width; }
   public float getHeight() { return this.height; }
 
-
   public void setDestinationX(double destinationX) { this.x.setEndTimeFromNow(destinationX); }
   public void setDestinationY(double destinationY) { this.y.setEndTimeFromNow(destinationY); }
   public void setDestinationToInitial() {
@@ -72,9 +72,16 @@ public abstract class MenuDrawable {
     this.y.setEndTimeFromNow(initialY);
   }
   public void setDestinationXFromOrigin(double offsetX) {
-    this.x.setEndTimeFromNow(this.initialY + offsetX);
+    this.x.setEndTimeFromNow(this.initialX + offsetX);
   }
   public void setDestinationYFromOrigin(double offsetY) {
     this.y.setEndTimeFromNow(this.initialY + offsetY);
   }
+
+  public void setDrawableOutsideOfScreen(boolean drawableOutsideOfScreen) {
+    this.drawableOutsideOfScreen = drawableOutsideOfScreen;
+  }
+  public boolean isDrawableOutsideOfScreen() { return this.drawableOutsideOfScreen;}
+
+  public int getScreenNumber() { return (int) (this.getX() / renderer.getScreenWidth());}
 }

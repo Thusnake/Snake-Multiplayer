@@ -28,7 +28,7 @@ public class Menu {
   private final ArrayList<MenuItem> foundDevicesItems = new ArrayList<>();
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem, addSnakeButton;
-  private final MenuItem[] removeSnakeButtons = new MenuItem[4];
+  private final MenuButtonRemoveSnake[] removeSnakeButtons = new MenuButtonRemoveSnake[4];
   public enum MenuState {MAIN, CONNECT, BOARD, PLAYERS, PLAYERSOPTIONS};
   private String[] menuItemStateNames = {"", "Connect", "Board", "Players", ""};
   private MenuState menuState = MenuState.MAIN, menuStatePrevious = MenuState.MAIN;
@@ -124,11 +124,9 @@ public class Menu {
 
     this.addSnakeButton = new MenuItem(renderer, "+", screenWidth*2 - 10,
         menuItemsPlayers[1].getY(), MenuItem.Alignment.RIGHT);
-    for (int index = 0; index < removeSnakeButtons.length; index++) {
-      this.removeSnakeButtons[index] = new MenuItem(renderer, "-", screenWidth * 2 - 10,
-          menuItemsPlayers[index].getY(), MenuItem.Alignment.RIGHT);
-      this.removeSnakeButtons[index].setOpacity(0);
-    }
+    for (int index = 0; index < removeSnakeButtons.length; index++)
+      this.removeSnakeButtons[index]
+          = new MenuButtonRemoveSnake(renderer, menuItemsPlayers[index]);
 
     // Player options screen buttons.
     String[] menuItemsPlayersOptionsText = {"Type"};
@@ -201,7 +199,7 @@ public class Menu {
       this.colorSelectionSquare[index] = new MenuImage(this.renderer,
           screenWidth*2 + 10*(index+1) + squareSize*index,
           screenHeight - glText.getCharHeight()*0.65f - squareSize, squareSize, squareSize);
-      this.colorSelectionSquare[index].setColors(this.getColorFromIndex(index));
+      this.colorSelectionSquare[index].setColors(getColorFromIndex(index));
     }
     this.colorSelectionSquare[0].setAction((action, origin)-> renderer.getMenu().setPlayerColor(0));
     this.colorSelectionSquare[1].setAction((action, origin)-> renderer.getMenu().setPlayerColor(1));
@@ -287,25 +285,30 @@ public class Menu {
       backgroundSnake.draw(gl);
     }
 
-    // Draw the menu items.
     glText.begin(1f, 1f, 1f, 1f);
 
+    // Draw the current menu items.
     for (MenuDrawable drawable : getCurrentDrawables()) {
-      drawable.draw();
+      if (drawable.isDrawableOutsideOfScreen() || screenTransformX.isDone())
+        drawable.draw();
       drawable.move(dt);
     }
 
+    // Also draw the menu items for the previous screen.
     if (menuStatePrevious != menuState)
       for (MenuDrawable drawable : getPreviousDrawables()) {
-        drawable.draw();
+        if (drawable.isDrawableOutsideOfScreen())
+          drawable.draw();
         drawable.move(dt);
       }
 
+    // Draw the menu state element.
     this.menuStateItem.move(dt);
     this.menuStateItem.draw();
 
     glText.end();
 
+    // This is required for the background snakes to render. Do not understand why.
     testSquare.draw(gl);
   }
 
@@ -340,20 +343,6 @@ public class Menu {
       case PLAYERSOPTIONS: return drawablesPlayersOptions;
       default: return null;
     }
-  }
-
-  private MenuItem[] mergeItemArrays(MenuItem[][] items) {
-    int lengthSum = 0;
-    for (int arrayIndex = 0; arrayIndex < items.length; arrayIndex++)
-      lengthSum += items[arrayIndex].length;
-
-    MenuItem[] mergedArray = new MenuItem[lengthSum];
-    int arrayCurrentIndex = 0;
-    for (int arrayIndex = 0; arrayIndex < items.length; arrayIndex++)
-      for (int itemIndex = 0; itemIndex < items[arrayIndex].length; itemIndex++)
-        mergedArray[arrayCurrentIndex++] = items[arrayIndex][itemIndex];
-
-    return mergedArray;
   }
 
   // Handles setting the menu state to a given one.
@@ -435,6 +424,11 @@ public class Menu {
     this.setState(state);
   }
 
+  // Calls set state for the menu's current state so that it updates some visual values.
+  public void updateState() {
+    this.setState(menuState);
+  }
+
   // Handles moving back one screen.
   public void goBack() {
     if (this.screenTransformX.isDone())
@@ -510,21 +504,22 @@ public class Menu {
     }
   }
 
-  // Enables the first currently disabled snake to play.
+  // Enables the first currently disabled snake to play and handles the players menu animations.
   public void addSnake() {
     for (int index = 0; index < players.length; index++)
       if (players[index].getControlType() == Player.ControlType.OFF) {
         players[index].setControlType(Player.ControlType.CORNER);
-        removeSnakeButtons[index].setOpacity(1);
+        removeSnakeButtons[index].show();
         if (index != players.length - 1)
           addSnakeButton.setDestinationY(menuItemsPlayers[index+1].getY());
         else
           addSnakeButton.setOpacity(0);
         break;
       }
+    this.updateState();
   }
 
-  // Disables a given snake from play.
+  // Disables a given snake from play and handles the players menu animations.
   public void removeSnake(int snakeIndex) {
     int index;
     for (index = snakeIndex; index < players.length - 1; index++)
@@ -533,11 +528,14 @@ public class Menu {
       else
         break;
     players[index].setControlType(Player.ControlType.OFF);
-    removeSnakeButtons[index].setOpacity(0);
+    removeSnakeButtons[index].hide();
+    addSnakeButton.setDestinationY(menuItemsPlayers[index].getY());
+    addSnakeButton.setOpacity(1);
+    this.updateState();
   }
 
   // Swaps the indices of two snakes in the players menu screen.
-  public void swapSnakes(int firstSnakeIndex, int secondSnakeIndex) {
+  private void swapSnakes(int firstSnakeIndex, int secondSnakeIndex) {
     Player playerHolder = players[secondSnakeIndex];
     players[secondSnakeIndex] = players[firstSnakeIndex];
     players[firstSnakeIndex] = playerHolder;

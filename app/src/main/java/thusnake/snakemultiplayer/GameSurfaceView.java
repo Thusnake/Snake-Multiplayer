@@ -123,7 +123,6 @@ public class GameSurfaceView extends GLSurfaceView {
                 break;
               case ACTION_UP:
                 square.setScaleDestination(1);
-                square.performAction();
                 gameRenderer.getMenu()
                     .fadeAllButOne(gameRenderer.getMenu().getColorSelectionSquares(), square);
                 break;
@@ -142,7 +141,6 @@ public class GameSurfaceView extends GLSurfaceView {
                 break;
               case ACTION_UP:
                 square.setScaleDestination(1);
-                square.performAction();
                 gameRenderer.getMenu()
                     .fadeAllButOne(gameRenderer.getMenu().getCornerSelectionSquares(), square);
                 break;
@@ -163,11 +161,11 @@ public class GameSurfaceView extends GLSurfaceView {
           }
           break;
         case MotionEvent.ACTION_UP:
-          // Handle pressing menu items depending on which menu we're currently on.
-          // Only the first pointer can click on menu items!
-          for (MenuItem menuItem : gameRenderer.getMenu().getCurrentMenuItems()) {
-            if (menuItem.isClicked(pointerX[0], pointerY[0]))
-              menuItem.performAction();
+          // Handle pressing menu drawables depending on which menu we're currently on.
+          // Only the first pointer can click on menu drawables!
+          for (MenuDrawable menuDrawable : gameRenderer.getMenu().getCurrentDrawables()) {
+            if (menuDrawable.isClicked(pointerX[0], pointerY[0]))
+              menuDrawable.performAction();
           }
           break;
         default:

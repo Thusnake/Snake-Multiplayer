@@ -108,6 +108,12 @@ public class MenuItem extends MenuDrawable {
   }
 
   @Override
+  public void setDestinationXFromOrigin(double offsetX) {
+    if (this.align == Alignment.RIGHT) super.setDestinationXFromOrigin(offsetX - this.getWidth());
+    else super.setDestinationXFromOrigin(offsetX);
+  }
+
+  @Override
   public void setDestinationToInitial() {
     if (this.align == Alignment.RIGHT)
       this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth());
