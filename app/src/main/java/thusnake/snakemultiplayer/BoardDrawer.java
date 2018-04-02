@@ -91,7 +91,7 @@ public abstract class BoardDrawer {
   public void drawCountdownText(SimpleTimer beginTimer) {
     gl.glPushMatrix();
     gl.glScalef(2f, 2f, 1f);
-    gl.glTranslatef(-this.getScreenWidth() / 4f, this.getScreenHeight() / 4f, 0f);
+    gl.glTranslatef(-this.getScreenWidth() / 4f, -this.getScreenHeight() / 4f, 0f);
     glText.begin(1f, 1f, 1f, 1f);
     String countdownText;
     if (beginTimer.getTime() < 2.0) countdownText =
