@@ -9,7 +9,7 @@ public class BodyPart {
   private final boolean isHead;
   private float[] colors;
   private final Player player;
-  private final Game game;
+  private final BoardDrawer game;
   private final Mesh boardSquares;
 
   // Default constructor - duplicates last body part.

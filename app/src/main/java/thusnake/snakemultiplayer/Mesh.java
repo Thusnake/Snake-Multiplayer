@@ -20,9 +20,9 @@ public class Mesh {
   private short[] indices = null;
   private float[] colors = null;
   private int numOfSquares = 0;
-  private final Game game;
+  private final BoardDrawer game;
   
-  public Mesh (Game game) { this.game = game; }
+  public Mesh (BoardDrawer game) { this.game = game; }
   public Mesh () { this.game = null; }
 
   protected void setVertices(float[] vertices) {

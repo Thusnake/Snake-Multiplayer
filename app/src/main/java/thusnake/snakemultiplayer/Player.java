@@ -15,7 +15,7 @@ import static thusnake.snakemultiplayer.Player.Direction.UP;
 public class Player {
   public enum Direction {UP, DOWN, LEFT, RIGHT}
   private Direction direction, previousDirection;
-  private boolean alive, drawable, flashing;
+  private boolean alive = false, drawable = false, flashing;
   private int number, score;
   private String name;
   private ControlType controlType;
@@ -25,7 +25,7 @@ public class Player {
   private int bodyLength = 0;
   private float[] colors = new float[4];
   private int colorIndex = 0;
-  private Game game;
+  private BoardDrawer game;
   private Vibrator vibrator;
   private Mesh boardSquares;
   private int onlineIdentifier;
@@ -37,7 +37,7 @@ public class Player {
   }
 
   // Gets called upon game start.
-  public void prepareForGame(Game game, int number) {
+  public void prepareForGame(BoardDrawer game, int number) {
     this.game = game;
     this.number = number;
     this.vibrator = (Vibrator) game.getRenderer().getContext()
@@ -197,7 +197,7 @@ public class Player {
 
   public int getNumber() { return this.number; }
   public String getName() { return this.name; }
-  public Game getGame() { return this.game; }
+  public BoardDrawer getGame() { return this.game; }
   public Mesh getBoardSquares() { return this.boardSquares; }
 
   public int getScore() { return this.score; }
