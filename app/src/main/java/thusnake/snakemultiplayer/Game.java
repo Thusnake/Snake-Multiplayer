@@ -19,6 +19,7 @@ class Game extends BoardDrawer {
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
   private SimpleTimer gameOverTimer = new SimpleTimer(0.0);
+  private int moveCount = 0;
   private enum GameMode {SINGLEPLAYER, MULTIPLAYER};
   private GameMode gameMode;
   private int winner;
@@ -225,6 +226,7 @@ class Game extends BoardDrawer {
   }
 
   protected void moveAllSnakes() {
+    moveCount++;
     for (Player player : players) {
       // Move and check if it has eaten the apple.
       if (player != null && player.isAlive() && player.move()) {
@@ -249,6 +251,7 @@ class Game extends BoardDrawer {
   public GameRenderer getRenderer() { return this.renderer; }
   public GameMode getGameMode() { return this.gameMode; }
   public boolean isOver() { return this.gameOver; }
+  public int getMoveCount() { return this.moveCount; }
   public Player[] getPlayers() { return this.players; }
   public int getAlivePlayers() {
     int playersAlive = 0;

@@ -25,7 +25,14 @@ public class OnlineHostGame extends Game {
   protected void moveAllSnakes() {
     super.moveAllSnakes();
     Player[] players = this.getPlayers();
-    this.sendBytes(new byte[] {Protocol.GAME_MOVEMENT_OCCURED, Protocol.getMovementCode(
+    this.sendBytes(new byte[] {
+        Protocol.GAME_MOVEMENT_OCCURED,
+        (byte) (this.getMoveCount() & 0xFF),        // First byte of the moveCount integer.
+        (byte) ((this.getMoveCount() >> 8) & 0xFF), // Second byte of the moveCount integer.
+        // The rest of the bytes are not handled and so everything goes wrong if the game becomes
+        // longer than 32768 moves.
+
+        Protocol.getMovementCode(                   // Get the code corresponding to the move.
         (players[0] != null) ? players[0].getDirection() : Player.Direction.UP,
         (players[1] != null) ? players[1].getDirection() : Player.Direction.UP,
         (players[2] != null) ? players[2].getDirection() : Player.Direction.UP,
