@@ -7,6 +7,7 @@ package thusnake.snakemultiplayer;
 public class Protocol {
   // Guest codes
   public static final byte REQUEST_CONNECT = 0;
+  public static final byte REQUEST_MOVE = 1; // Followed by the move's id.
 
   // Universal codes
   public static final byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
@@ -28,6 +29,8 @@ public class Protocol {
   public static final byte START_GAME = -20;
   public static final byte END_GAME = -30; // Followed by 1 winner byte.
   public static final byte GAME_MOVEMENT_OCCURED = -40; // Followed by the move's id and 1 movement byte.
+  public static final byte GAME_MOVEMENT_INFORMATION = -41; // Followed by the move's id and 1 movement byte.
+  public static final byte GAME_MOVEMENT_MISSING = -42; // Followed by the move's id.
   public static final byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
 
   // Movement code methods.

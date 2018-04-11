@@ -1,10 +1,13 @@
 package thusnake.snakemultiplayer;
 
+import java.util.ArrayList;
+
 /**
  * Created by Nick on 24/02/2018.
  */
 
 public class OnlineHostGame extends Game {
+  private ArrayList<Byte> moveCodes = new ArrayList<>();
 
   // Constructor.
   public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
@@ -25,6 +28,13 @@ public class OnlineHostGame extends Game {
   protected void moveAllSnakes() {
     super.moveAllSnakes();
     Player[] players = this.getPlayers();
+    this.moveCodes.add(Protocol.getMovementCode(
+        (players[0] != null) ? players[0].getDirection() : Player.Direction.UP,
+        (players[1] != null) ? players[1].getDirection() : Player.Direction.UP,
+        (players[2] != null) ? players[2].getDirection() : Player.Direction.UP,
+        (players[3] != null) ? players[3].getDirection() : Player.Direction.UP
+    ));
+
     this.sendBytes(new byte[] {
         Protocol.GAME_MOVEMENT_OCCURED,
         (byte) (this.getMoveCount() & 0xFF),        // First byte of the moveCount integer.
@@ -32,16 +42,28 @@ public class OnlineHostGame extends Game {
         // The rest of the bytes are not handled and so everything goes wrong if the game becomes
         // longer than 32768 moves.
 
-        Protocol.getMovementCode(                   // Get the code corresponding to the move.
-        (players[0] != null) ? players[0].getDirection() : Player.Direction.UP,
-        (players[1] != null) ? players[1].getDirection() : Player.Direction.UP,
-        (players[2] != null) ? players[2].getDirection() : Player.Direction.UP,
-        (players[3] != null) ? players[3].getDirection() : Player.Direction.UP
-    )});
+        this.moveCodes.get(this.moveCodes.size() - 1) // Get the last movement code and send it.
+    });
   }
 
   @Override
   public void handleInputBytes(byte[] bytes) {
-
+    if (bytes[0] == Protocol.REQUEST_MOVE) {
+      try {
+        // Send back the move number together with the information for it.
+        this.sendBytes(new byte[]{
+            Protocol.GAME_MOVEMENT_INFORMATION,
+            bytes[1],
+            bytes[2],
+            this.moveCodes.get(bytes[1] + (bytes[2] << 8))
+        });
+      } catch (IndexOutOfBoundsException e) {
+        // If we don't have information about the move (e.g. it hasn't happened yet) return a
+        // movement missing signal.
+        this.sendBytes(new byte[] {
+            Protocol.GAME_MOVEMENT_MISSING, bytes[1], bytes[2]
+        });
+      }
+    }
   }
 }
