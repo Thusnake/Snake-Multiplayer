@@ -17,6 +17,9 @@ public class GuestGame extends BoardDrawer {
   private final Square[] boardLines = new Square[2];
   private final Square boardFade;
   private float screenTransformX, screenTransformY;
+  private int moveCount = 0;
+  private double speed = 1;
+  private SimpleTimer moveTimer;
 
   public GuestGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
     super(renderer, screenWidth, screenHeight);
@@ -30,6 +33,7 @@ public class GuestGame extends BoardDrawer {
     this.beginTimer = new SimpleTimer(0.0, 0.3);
     this.gameOverTimer = new SimpleTimer(0.0);
     this.screenRumbleTimer = new SimpleTimer(0.0);
+    this.moveTimer = new SimpleTimer(0.0, this.speed);
 
     this.screenTransformX = 0f;
     this.screenTransformY = 0f;
@@ -107,7 +111,22 @@ public class GuestGame extends BoardDrawer {
 
   public void handleInputBytes(byte[] inputBytes) {
     switch (inputBytes[0]) {
-      case Protocol.GAME_MOVEMENT_OCCURED:
+      case Protocol.GAME_MOVEMENT_OCCURRED:
+        int moveId = inputBytes[1] + (inputBytes[2] << 8);
+        if (moveId - moveCount == 1) {
+          // Load the directions in an array and apply them to each player.
+          Player.Direction[] directions = new Player.Direction[4];
+          Protocol.decodeMovementCode(inputBytes[3], directions);
+          for (int index = 0; index < 4; index++)
+            if (players[index] != null && players[index].isAlive())
+              players[index].changeDirection(directions[index]);
+          // Move all the snakes.
+          for (Player player : players)
+            if (player != null && player.isAlive())
+              player.move();
+          // Update the counter.
+          moveCount++;
+        }
         break;
       case Protocol.GAME_MOVEMENT_INFORMATION:
         break;

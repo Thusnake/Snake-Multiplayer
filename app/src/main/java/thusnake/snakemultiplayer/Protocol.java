@@ -29,7 +29,7 @@ public class Protocol {
   public static final byte APPROVE_CONNECT = -10;
   public static final byte START_GAME = -20;
   public static final byte END_GAME = -30; // Followed by 1 winner byte.
-  public static final byte GAME_MOVEMENT_OCCURED = -40; // Followed by the move's id and 1 movement byte.
+  public static final byte GAME_MOVEMENT_OCCURRED = -40; // Followed by the move's id and 1 movement byte.
   public static final byte GAME_MOVEMENT_INFORMATION = -41; // Followed by the move's id and 1 movement byte.
   public static final byte GAME_MOVEMENT_MISSING = -42; // Followed by the move's id.
   public static final byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
@@ -48,7 +48,7 @@ public class Protocol {
   }
   
   public static void decodeMovementCode(byte code, Player.Direction[] array) {
-    if (array.length < 4) return; 
+    if (array == null || array.length < 4) return;
     for (int index = 0; index < 4; index++)
       array[index] = decodeDirection(code / (int) Math.pow(2, index * 2));
   }

@@ -36,7 +36,7 @@ public class OnlineHostGame extends Game {
     ));
 
     this.sendBytes(new byte[] {
-        Protocol.GAME_MOVEMENT_OCCURED,
+        Protocol.GAME_MOVEMENT_OCCURRED,
         (byte) (this.getMoveCount() & 0xFF),        // First byte of the moveCount integer.
         (byte) ((this.getMoveCount() >> 8) & 0xFF), // Second byte of the moveCount integer.
         // The rest of the bytes are not handled and so everything goes wrong if the game becomes
