@@ -122,6 +122,6 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
   public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
     if (this.game == null) this.menu.handleInputBytes(bytes, sourceThread);
-    else this.game.handleInputBytes(bytes);
+    else this.game.handleInputBytes(bytes, sourceThread);
   }
 }

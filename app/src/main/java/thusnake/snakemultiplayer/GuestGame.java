@@ -106,6 +106,15 @@ public class GuestGame extends BoardDrawer {
   public Player[] getPlayers() { return this.players; }
 
   public void handleInputBytes(byte[] inputBytes) {
-
+    switch (inputBytes[0]) {
+      case Protocol.GAME_MOVEMENT_OCCURED:
+        break;
+      case Protocol.GAME_MOVEMENT_INFORMATION:
+        break;
+      case Protocol.GAME_MOVEMENT_MISSING:
+        break;
+      default:
+        break;
+    }
   }
 }

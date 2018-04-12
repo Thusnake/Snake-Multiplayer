@@ -47,23 +47,27 @@ public class OnlineHostGame extends Game {
   }
 
   @Override
-  public void handleInputBytes(byte[] bytes) {
-    if (bytes[0] == Protocol.REQUEST_MOVE) {
-      try {
-        // Send back the move number together with the information for it.
-        this.sendBytes(new byte[]{
-            Protocol.GAME_MOVEMENT_INFORMATION,
-            bytes[1],
-            bytes[2],
-            this.moveCodes.get(bytes[1] + (bytes[2] << 8))
-        });
-      } catch (IndexOutOfBoundsException e) {
-        // If we don't have information about the move (e.g. it hasn't happened yet) return a
-        // movement missing signal.
-        this.sendBytes(new byte[] {
-            Protocol.GAME_MOVEMENT_MISSING, bytes[1], bytes[2]
-        });
-      }
+  public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
+    switch (bytes[0]) {
+      case Protocol.REQUEST_MOVE:
+        try {
+          // Send back the move number together with the information for it.
+          sourceThread.write(new byte[]{
+              Protocol.GAME_MOVEMENT_INFORMATION,
+              bytes[1],
+              bytes[2],
+              this.moveCodes.get(bytes[1] + (bytes[2] << 8))
+          });
+        } catch (IndexOutOfBoundsException e) {
+          // If we don't have information about the move (e.g. it hasn't happened yet) return a
+          // movement missing signal.
+          sourceThread.write(new byte[] {
+              Protocol.GAME_MOVEMENT_MISSING, bytes[1], bytes[2]
+          });
+        }
+        break;
+      default:
+        break;
     }
   }
 }

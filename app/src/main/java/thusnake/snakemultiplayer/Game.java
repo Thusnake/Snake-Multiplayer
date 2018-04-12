@@ -244,7 +244,7 @@ class Game extends BoardDrawer {
     }
   }
 
-  public void handleInputBytes(byte[] inputBytes) {
+  public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
 
   }
 

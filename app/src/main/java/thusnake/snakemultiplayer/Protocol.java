@@ -23,6 +23,7 @@ public class Protocol {
   public static final byte SNAKE2_NAME_CHANGED = 41; // Followed by 1 length byte and a string of chars.
   public static final byte SNAKE3_NAME_CHANGED = 42; // Followed by 1 length byte and a string of chars.
   public static final byte SNAKE4_NAME_CHANGED = 43; // Followed by 1 length byte and a string of chars.
+  public static final byte SPEED_CHANGED = 50; // Followed by 1 speed byte.
 
   // Host codes
   public static final byte APPROVE_CONNECT = -10;
