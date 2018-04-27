@@ -269,7 +269,7 @@ public class Menu {
 
   public void run(double dt) {
     this.gl.glTranslatef((float) screenTransformX.getTime(),
-                         (float) screenTransformY.getTime(), 0f);
+                         (float) -screenTransformY.getTime(), 0f);
     this.gl.glColor4f(1f, 1f, 1f, 1f);
 
     //this.gl.glEnable(GL10.GL_BLEND);
@@ -278,6 +278,7 @@ public class Menu {
     // Handle timers.
     if (!this.menuAnimationTimer.isDone()) this.menuAnimationTimer.countEaseOut(dt, 3, 0);
     if (!this.screenTransformX.isDone()) this.screenTransformX.countEaseOut(dt, 8, screenWidth/2);
+    if (!this.screenTransformY.isDone()) this.screenTransformY.countEaseOut(dt, 8, screenHeight/2);
 
     // Draw the background items.
     this.backgroundSnakeTimer.count(dt);
@@ -420,6 +421,7 @@ public class Menu {
     }
 
     this.screenTransformX.setEndTimeFromNow(-this.screenWidth * screen);
+    this.screenTransformY.setEndTimeFromNow(0);
     this.menuStateItem.setDestinationX(this.screenWidth * (screen + 1) - 10);
     this.menuStateItem.setDestinationY(this.screenHeight - 10 - glText.getCharHeight()*0.65);
   }
@@ -710,6 +712,25 @@ public class Menu {
       case 7: return new float[] {1f, 0f, 1f, 1f};
       default: return new float[] {1f, 1f, 1f, 1f};
     }
+  }
+
+  // Tells if the current screen should be scrollable or locked.
+  public boolean isScrollable() {
+    return this.getScrollHeight() < 0;
+  }
+
+  // Gets the lowest point of the lowest item drawn on screen.
+  public float getScrollHeight() {
+    float minHeight = 0;
+    for (MenuDrawable drawable : getCurrentDrawables())
+      if (drawable.getY() < minHeight) minHeight = drawable.getY();
+    return minHeight;
+  }
+
+  // Performs a screen scroll vertically by a given amount.
+  public void scroll(float amount) {
+    this.screenTransformY.setTime(Math.max(this.getScrollHeight(),
+                                  Math.min(0, amount + screenTransformY.getTime())));
   }
 
   // More getters.

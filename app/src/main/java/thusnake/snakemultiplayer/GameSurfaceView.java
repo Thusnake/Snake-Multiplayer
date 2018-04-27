@@ -158,6 +158,9 @@ public class GameSurfaceView extends GLSurfaceView {
               && rawX[0] - e.getHistoricalX(0) > 20) {
             // The user has swiped right - we should go back one menu (left).
             gameRenderer.getMenu().goBack();
+          } else if (e.getEventTime() - e.getDownTime() > 100 && e.getHistorySize() > 0
+                     && gameRenderer.getMenu().isScrollable()) {
+            gameRenderer.getMenu().scroll(rawY[0] - e.getHistoricalY(0));
           }
           break;
         case MotionEvent.ACTION_UP:
