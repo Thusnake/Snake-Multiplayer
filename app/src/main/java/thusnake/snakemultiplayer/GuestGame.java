@@ -1,6 +1,8 @@
 package thusnake.snakemultiplayer;
 
 import android.content.Context;
+import android.util.Pair;
+
 import com.android.texample.GLText;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -20,6 +22,7 @@ public class GuestGame extends BoardDrawer {
   private int moveCount = 0;
   private double speed = 1;
   private SimpleTimer moveTimer;
+  private MissedMovesList missedMovesList;
 
   public GuestGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
     super(renderer, screenWidth, screenHeight);
@@ -63,6 +66,11 @@ public class GuestGame extends BoardDrawer {
       if (screenRumbleTimer.getTime() < 0.0) screenRumbleTimer.reset();
       screenTransformX = (float) ((Math.random() - 0.5) * 10.0 * screenRumbleTimer.getTime());
       screenTransformY = (float) ((Math.random() - 0.5) * 10.0 * screenRumbleTimer.getTime());
+    }
+
+    // Catch up on any missed moves that you can.
+    while (missedMovesList.firstIsReady()) {
+      this.handleInputBytes(missedMovesList.extractFirst());
     }
 
     // Draw all drawable snakes.
@@ -126,6 +134,18 @@ public class GuestGame extends BoardDrawer {
               player.move();
           // Update the counter.
           moveCount++;
+        } else if (moveId - moveCount > 1) {
+          // We've probably missed a move (or more) and so we'll send a request.
+          int missedMoves = moveId - moveCount - 1;
+          for (int missedMoveIndex = 0; missedMoveIndex < missedMoves; missedMoveIndex++) {
+            Pair<Byte, Byte> idBytes = Protocol.encodeMoveID(moveCount + missedMoveIndex + 1);
+            this.sendBytes(new byte[] {Protocol.REQUEST_MOVE, idBytes.first, idBytes.second});
+          }
+          // Create a list (or expand the current one) of missed moves.
+          if (this.missedMovesList == null)
+            this.missedMovesList = new MissedMovesList(moveCount, moveId, inputBytes);
+          else
+            this.missedMovesList.expand(moveId);
         }
         break;
       case Protocol.GAME_MOVEMENT_INFORMATION:
@@ -135,5 +155,9 @@ public class GuestGame extends BoardDrawer {
       default:
         break;
     }
+  }
+
+  public void sendBytes(byte[] bytes) {
+    // TODO
   }
 }

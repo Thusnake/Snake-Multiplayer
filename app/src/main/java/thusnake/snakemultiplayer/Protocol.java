@@ -1,5 +1,7 @@
 package thusnake.snakemultiplayer;
 
+import android.util.Pair;
+
 /**
  * Created by Nick on 22/02/2018.
  */
@@ -92,6 +94,13 @@ public class Protocol {
       default: return CornerLayout.Corner.LOWER_LEFT;
     }
   }
-  
+
+  public static Pair<Byte, Byte> encodeMoveID(int moveID) {
+    return new Pair<>((byte) (moveID & 0xFF), (byte) ((moveID >> 8) & 0xFF));
+  }
+
+  public static int decodeMoveID(byte firstByte, byte secondByte) {
+    return firstByte + (secondByte << 8);
+  }
   
 }
