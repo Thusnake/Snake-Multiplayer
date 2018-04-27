@@ -15,7 +15,6 @@ public class MenuItem extends MenuDrawable {
   private final Alignment align;
   private double easeOutMultiplier, easeOutInertia;
   private GLText glText;
-  private boolean visible;
   private MenuValue value;
   private String description;
   private float desctiptionOpacity = 1;
@@ -89,15 +88,10 @@ public class MenuItem extends MenuDrawable {
   // Returns true if the given coordinates are in the button.
   @Override
   public boolean isClicked(float x, float y) {
-    return (x > this.getXTimer().getTime() && x < this.getX() + this.getWidth()
-        && renderer.getScreenHeight() - y > this.getY()
-        && renderer.getScreenHeight() - y < this.getY() + this.getHeight()
-        || this.value != null && this.value.isClicked(x, y));
+    return (super.isClicked(x,y) || this.value != null && this.value.isClicked(x, y));
   }
 
-  public boolean isVisible() {
-    return !this.visible || this.text.equals("");
-  }
+  public boolean isVisible() { return this.isDrawable() || this.text.equals(""); }
   public GameRenderer getRenderer() { return this.renderer; }
   public MenuValue getValue() { return this.value; }
 

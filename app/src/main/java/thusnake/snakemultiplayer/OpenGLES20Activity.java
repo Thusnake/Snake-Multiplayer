@@ -92,7 +92,7 @@ public class OpenGLES20Activity extends Activity {
     gameView.onResume();
 
     View decorView = getWindow().getDecorView();
-    /* Hide both the navigation bar and the status bar.
+    // Hide both the navigation bar and the status bar.
     if (Build.VERSION.SDK_INT >= 19) {
       int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
           | View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -102,7 +102,6 @@ public class OpenGLES20Activity extends Activity {
           | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
       decorView.setSystemUiVisibility(uiOptions);
     }
-    */
   }
 
   @Override

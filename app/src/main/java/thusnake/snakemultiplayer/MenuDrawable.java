@@ -13,7 +13,7 @@ public abstract class MenuDrawable {
   private MenuAction action;
   public final GameRenderer renderer;
   public final GL10 gl;
-  private boolean drawableOutsideOfScreen = true;
+  private boolean drawableOutsideOfScreen = true, drawable = true;
 
   public MenuDrawable(GameRenderer renderer, float x, float y) {
     this.renderer = renderer;
@@ -30,7 +30,8 @@ public abstract class MenuDrawable {
 
   // The non-abstract methods.
   public boolean isClicked(float x, float y) {
-    return (x > this.x.getTime() && x < this.x.getTime() + this.width
+    return (this.drawable
+        && x > this.x.getTime() && x < this.x.getTime() + this.width
         && renderer.getScreenHeight() - y > this.y.getTime()
         && renderer.getScreenHeight() - y < this.y.getTime() + this.height);
   }
@@ -82,6 +83,9 @@ public abstract class MenuDrawable {
     this.drawableOutsideOfScreen = drawableOutsideOfScreen;
   }
   public boolean isDrawableOutsideOfScreen() { return this.drawableOutsideOfScreen;}
+
+  public void setDrawable(boolean drawable) { this.drawable = drawable; }
+  public boolean isDrawable() { return this.drawable; }
 
   public int getScreenNumber() { return (int) (this.getX() / renderer.getScreenWidth());}
 }
