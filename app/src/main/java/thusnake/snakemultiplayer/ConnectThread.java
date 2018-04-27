@@ -43,7 +43,8 @@ public class ConnectThread extends Thread {
       // Unable to connect; close the socket and get out
       try {
         mmSocket.close();
-      } catch (IOException closeException) { }
+      } catch (IOException closeException)
+        { System.out.println("Something went wrong with the socket."); }
       return;
     }
 

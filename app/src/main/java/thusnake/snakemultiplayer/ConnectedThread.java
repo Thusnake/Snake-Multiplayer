@@ -54,7 +54,7 @@ public class ConnectedThread extends Thread {
   public void write(byte[] bytes) {
     try {
       outStream.write(bytes);
-    } catch (IOException e) { }
+    } catch (IOException e) { System.out.println("Unable to send bytes : " + e.getMessage()); }
   }
 
   /* Call this from the main activity to shutdown the connection */

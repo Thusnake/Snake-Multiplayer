@@ -60,7 +60,7 @@ public class AcceptThread extends Thread {
           // MY_UUID is the app's UUID string, also used by the client code
           UUID uuid = UUID.fromString("55199d92-8a72-4fb7-807e-f482efeff3d6");
           tmp = originActivity.bluetoothAdapter.listenUsingRfcommWithServiceRecord("host",uuid);
-        } catch (IOException e) { }
+        } catch (IOException e) { System.out.println(e.getMessage()); }
         mmServerSocket = tmp;
       }
     }
@@ -70,16 +70,15 @@ public class AcceptThread extends Thread {
   public void cancel() {
     try {
       mmServerSocket.close();
-    } catch (IOException e) { }
+    } catch (IOException e) { System.out.println("Couldn't close accept socket."); }
   }
 
   private void manageConnectedSocket(BluetoothSocket socket) {
     int index;
-    for (index = 0; index < 4; index++) {
-      if (originActivity.connectedThreads[index] == null) {
+    for (index = 0; index < 4; index++)
+      if (originActivity.connectedThreads[index] == null)
         break;
-      }
-    }
+
     originActivity.connectedThreads[index] = new ConnectedThread(originActivity, socket);
     originActivity.connectedThreads[index].start();
     //byte bytes[] = {4,7,(byte)(4 - Player.getPlayingLocal())};
