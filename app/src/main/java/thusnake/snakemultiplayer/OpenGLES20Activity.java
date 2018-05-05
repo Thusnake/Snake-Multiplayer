@@ -46,6 +46,7 @@ public class OpenGLES20Activity extends Activity {
         if (!bluetoothDevices.contains(device)) bluetoothDevices.add(device);
         // Add the name and address to an array adapter to show in a ListView
         arrayAdapter.add(device.getName() + "\n" + device.getAddress());
+        gameView.getGameRenderer().getMenu().addFoundDevice(device);
       }
     }
   };

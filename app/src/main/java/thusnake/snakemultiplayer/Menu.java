@@ -2,14 +2,19 @@ package thusnake.snakemultiplayer;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.util.ArraySet;
+import android.util.Pair;
 
 import com.android.texample.GLText;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -26,12 +31,21 @@ public class Menu {
   private Player[] players = new Player[4];
   private final GL10 gl;
   private final GLText glText;
+
   private final MenuItem[] menuItemsMain, menuItemsConnect, menuItemsBoard, menuItemsPlayers,
       menuItemsPlayersOptions;
-  private final ArrayList<MenuDrawable> drawablesMain, drawablesConnect, drawablesBoard,
+  private final List<MenuDrawable> drawablesMain, drawablesConnect, drawablesBoard,
       drawablesPlayers, drawablesPlayersOptions;
-  private final Set<MenuItem> pairedDevicesItems = new LinkedHashSet<>();
-  private final Set<MenuItem> foundDevicesItems = new LinkedHashSet<>();
+
+  private enum ConnectionType {BLUETOOTH, WIFI}
+  private enum ConnectionRole {HOST, GUEST}
+  private ConnectionType connectionType = null;
+  private ConnectionRole connectionRole = null;
+  private final DeviceItemMap pairedDevices = new DeviceItemMap();
+  private final DeviceItemMap foundDevices = new DeviceItemMap();
+  private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
+  private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
+
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem, addSnakeButton;
   private final MenuButtonRemoveSnake[] removeSnakeButtons = new MenuButtonRemoveSnake[4];
@@ -42,10 +56,7 @@ public class Menu {
   private SimpleTimer menuAnimationTimer = new SimpleTimer(0.0, 1.0);
   private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
   private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<>();
-  private enum ConnectionType {BLUETOOTH, WIFI}
-  private enum ConnectionRole {HOST, GUEST}
-  private ConnectionType connectionType = null;
-  private ConnectionRole connectionRole = null;
+
   private int onlineIdentifier;
   private final OpenGLES20Activity originActivity;
 
@@ -54,7 +65,7 @@ public class Menu {
   public boolean stageBorders;
 
   // TODO Find a way to not use this, currently used for the background snakes, they refuse to render without it.
-  Square testSquare = new Square(500,0,0,0);
+  private Square testSquare = new Square(500,0,0,0);
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -101,7 +112,7 @@ public class Menu {
           MenuItem.Alignment.LEFT);
 
     // Connect screen buttons.
-    this.menuItemsConnect = new MenuItem[5];
+    this.menuItemsConnect = new MenuItem[7];
     this.menuItemsConnect[0] = new MenuItem(renderer, "Host", 10 + screenWidth,
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[1] = new MenuItem(renderer, "Join", 10 + screenWidth,
@@ -112,6 +123,15 @@ public class Menu {
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuItem.Alignment.RIGHT);
     this.menuItemsConnect[4] = new MenuItem(renderer, "Search", screenWidth*1.5f,
         screenHeight / 8, MenuItem.Alignment.CENTER);
+    this.menuItemsConnect[5] = new MenuItem(renderer, "Devices:", screenWidth + 10,
+        screenHeight / 8, MenuItem.Alignment.LEFT);
+    this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
+        screenHeight / 8, MenuItem.Alignment.CENTER);
+
+    bluetoothGuestMenu.add(menuItemsConnect[4]);
+    bluetoothGuestMenu.add(menuItemsConnect[5]);
+    bluetoothHostMenu.add(menuItemsConnect[6]);
+    updateConnectMenuContents();
 
     // Board screen buttons.
     String[] menuItemsBoardText = {"Hor Squares", "Ver Squares", "Speed", "Stage Borders"};
@@ -158,6 +178,7 @@ public class Menu {
     this.menuItemsConnect[3].setAction((action,origin) -> renderer.getMenu()
         .setConnectionType(ConnectionType.WIFI));
     this.menuItemsConnect[4].setAction((action,origin) -> renderer.getMenu().beginSearch());
+    this.menuItemsConnect[6].setAction((action,origin) -> renderer.getMenu().beginHost());
 
     this.menuItemsBoard[0].setAction((action, origin) -> renderer.getMenu().expandItem(0));
     this.menuItemsBoard[1].setAction((action, origin) -> renderer.getMenu().expandItem(1));
@@ -339,11 +360,11 @@ public class Menu {
         return null;
     }
   }
-  public ArrayList<MenuDrawable> getCurrentDrawables() { return getDrawablesFromState(menuState); }
-  public ArrayList<MenuDrawable> getPreviousDrawables() {
+  public List<MenuDrawable> getCurrentDrawables() { return getDrawablesFromState(menuState); }
+  public List<MenuDrawable> getPreviousDrawables() {
     return getDrawablesFromState(menuStatePrevious);
   }
-  public ArrayList<MenuDrawable> getDrawablesFromState(MenuState state) {
+  public List<MenuDrawable> getDrawablesFromState(MenuState state) {
     switch(state) {
       case MAIN: return drawablesMain;
       case CONNECT: return drawablesConnect;
@@ -624,27 +645,96 @@ public class Menu {
       this.menuItemsConnect[1].setOpacity(1);
     }
   }
+  // Updates the visible contents of the "connect" menu based on the selected role and type.
+  public void updateConnectMenuContents() {
+    // Set all to not drawable.
+    for (MenuDrawable drawable : bluetoothHostMenu) drawable.setDrawable(false);
+    for (MenuDrawable drawable : bluetoothGuestMenu) drawable.setDrawable(false);
+    // Update based on state.
+    if (connectionType == ConnectionType.BLUETOOTH) {
+      if (connectionRole == ConnectionRole.HOST)
+        for (MenuDrawable drawable : bluetoothHostMenu) drawable.setDrawable(true);
+      else if (connectionRole == ConnectionRole.GUEST)
+        for (MenuDrawable drawable : bluetoothGuestMenu) drawable.setDrawable(true);
+    }
+  }
 
-  // Starts searching for nearby devices.
+  // Adds all the paired devices to the list and displays them.
+  public void updatePairedDevices() {
+    Set<BluetoothDevice> bondedDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
+    // Add the new search results.
+    for (BluetoothDevice device : bondedDevices) {
+      if (!pairedDevices.has(device)) {
+        MenuItem deviceItem = new MenuItem(renderer, device.getName(), screenWidth + 10,
+            menuItemsConnect[5].getY() - (pairedDevices.size() + 1) * glText.getCharHeight() * 0.65f * 5 / 4,
+            MenuItem.Alignment.LEFT);
+        deviceItem.setDescription(device.getAddress());
+        deviceItem.setAction((action,origin)
+            -> renderer.getMenu().connectToDeviceViaItem((MenuItem) origin));
+        pairedDevices.add(device, deviceItem);
+      }
+    }
+    bluetoothGuestMenu.addAll(pairedDevices.getItems());
+    drawablesConnect.addAll(pairedDevices.getItems());
+  }
+
+  // Adds a newly found device to the list and displays it.
+  public void addFoundDevice(BluetoothDevice device) {
+    if (!foundDevices.has(device) && !pairedDevices.has(device)) {
+      MenuItem deviceItem = new MenuItem(renderer, device.getName(), screenWidth + 10,
+          menuItemsConnect[5].getY() - (pairedDevices.size() + foundDevices.size() + 1)
+              * glText.getCharHeight() * 0.65f * 5 / 4, MenuItem.Alignment.LEFT);
+      deviceItem.setDescription(device.getAddress());
+      deviceItem.setAction((action,origin)
+          -> renderer.getMenu().connectToDeviceViaItem((MenuItem) origin));
+      foundDevices.add(device, deviceItem);
+      bluetoothGuestMenu.add(deviceItem);
+      drawablesConnect.add(deviceItem);
+    }
+  }
+
+  // Finds the device corresponding to a given menu item and connects to it.
+  private void connectToDeviceViaItem(MenuItem item) {
+    BluetoothDevice targetDevice;
+    if ((targetDevice = foundDevices.getDevice(item)) != null) {
+      originActivity.connectThread = new ConnectThread(originActivity, targetDevice);
+      originActivity.connectThread.run();
+    } else if ((targetDevice = pairedDevices.getDevice(item)) != null) {
+      originActivity.connectThread = new ConnectThread(originActivity, targetDevice);
+      originActivity.connectThread.run();
+    }
+  }
+
+  // Begins the search for nearby devices.
   public void beginSearch() {
     // Set the search button to invisible.
     this.menuItemsConnect[4].setDrawable(false);
-    Set<BluetoothDevice> bondedDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
-    // Clear the previous search results.
-    drawablesConnect.removeAll(pairedDevicesItems);
-    pairedDevicesItems.clear();
-    // Add the header.
-    pairedDevicesItems.add(new MenuItem(renderer, "Paired:", screenWidth + 10, screenHeight / 8,
-        MenuItem.Alignment.LEFT));
-    // Add the new search results.
-    for (BluetoothDevice device : bondedDevices) {
-      MenuItem deviceItem = new MenuItem(renderer, device.getName(), screenWidth + 10,
-          screenHeight/8 - pairedDevicesItems.size() * glText.getCharHeight() * 0.65f * 5/4,
-          MenuItem.Alignment.LEFT);
-      deviceItem.setDescription(device.getAddress());
-      pairedDevicesItems.add(deviceItem);
+    BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+    if (adapter == null) {
+      // There is no bluetooth adapter, so don't do anything.
+      this.menuItemsConnect[4].setDrawable(true);
+      this.menuItemsConnect[4].setText("Bluetooth error :/");
+    } else {
+      if (!adapter.isEnabled()) {
+        // There is an adapter, but it's not enabled.
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        originActivity.startActivityForResult(enableBtIntent, originActivity.REQUEST_ENABLE_BT);
+      }
+      // Add all the already paired devices to the list.
+      this.updatePairedDevices();
     }
-    drawablesConnect.addAll(pairedDevicesItems);
+  }
+
+  // Begins the hosting of a bluetooth game.
+  public void beginHost() {
+    // Make discoverable for 5 minutes.
+    Intent discoverableIntent =
+        new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+    discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+    originActivity.startActivity(discoverableIntent);
+    // Begin the thread for accepting devices.
+    originActivity.acceptThread = new AcceptThread(originActivity);
+    originActivity.acceptThread.run();
   }
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
@@ -787,5 +877,53 @@ class BackgroundSnake extends Mesh {
     gl.glTranslatef(x,initialY,0);
     super.draw(gl);
     gl.glPopMatrix();
+  }
+}
+
+
+
+// A map that holds unique devices and their respective menu items.
+class DeviceItemMap{
+  private ArrayList<Pair<BluetoothDevice, MenuItem>> deviceMap = new ArrayList<>();
+
+  public DeviceItemMap() {
+  }
+
+  public boolean add(BluetoothDevice device, MenuItem deviceItem) {
+    if (this.has(device)) return false;
+
+    deviceMap.add(new Pair<>(device, deviceItem));
+    return true;
+  }
+
+  public boolean has(BluetoothDevice device) {
+    for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
+      if (device == pair.first)
+        return true;
+
+    return false;
+  }
+
+  public int size() { return deviceMap.size(); }
+
+  public ArrayList<MenuItem> getItems() {
+    ArrayList<MenuItem> itemsList = new ArrayList<>();
+    for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
+      itemsList.add(pair.second);
+    return itemsList;
+  }
+
+  public MenuItem getItem(BluetoothDevice device) {
+    for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
+      if (device == pair.first)
+        return pair.second;
+    return null;
+  }
+
+  public BluetoothDevice getDevice(MenuItem item) {
+    for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
+      if (item == pair.second)
+        return pair.first;
+    return null;
   }
 }
