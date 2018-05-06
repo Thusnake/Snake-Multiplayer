@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -264,7 +265,7 @@ public class Menu {
     drawablesMain = new ArrayList<>();
     drawablesMain.addAll(Arrays.asList(menuItemsMain));
 
-    drawablesConnect = new ArrayList<>();
+    drawablesConnect = new CopyOnWriteArrayList<>();
     drawablesConnect.addAll(Arrays.asList(menuItemsConnect));
 
     drawablesBoard = new ArrayList<>();
@@ -630,6 +631,7 @@ public class Menu {
       this.menuItemsConnect[2].setOpacity(0.25f);
       this.menuItemsConnect[3].setOpacity(1);
     }
+    updateConnectMenuContents();
   }
   // Likewise, but for connection roles.
   public void setConnectionRole(ConnectionRole role) {
@@ -644,6 +646,7 @@ public class Menu {
       this.menuItemsConnect[0].setOpacity(0.25f);
       this.menuItemsConnect[1].setOpacity(1);
     }
+    updateConnectMenuContents();
   }
   // Updates the visible contents of the "connect" menu based on the selected role and type.
   public void updateConnectMenuContents() {
@@ -806,14 +809,14 @@ public class Menu {
 
   // Tells if the current screen should be scrollable or locked.
   public boolean isScrollable() {
-    return this.getScrollHeight() < 0;
+    return this.getScrollHeight() < 0 || screenTransformY.getTime() < this.getScrollHeight();
   }
 
   // Gets the lowest point of the lowest item drawn on screen.
   public float getScrollHeight() {
     float minHeight = 0;
     for (MenuDrawable drawable : getCurrentDrawables())
-      if (drawable.getY() < minHeight) minHeight = drawable.getY();
+      if (drawable.isDrawable() && drawable.getY() < minHeight) minHeight = drawable.getY();
     return minHeight;
   }
 
