@@ -19,6 +19,9 @@ public class GameSurfaceView extends GLSurfaceView {
   private Context context;
   private GLText glText;
   private double pointerDownDuration = 0;
+  private enum HoldMode {NORMAL, HOR_SCROLL, VER_SCROLL}
+  private HoldMode holdMode = HoldMode.NORMAL;
+  private float holdOriginX, holdOriginY;
 
   public GameSurfaceView(Context context) {
     super(context);
@@ -153,26 +156,48 @@ public class GameSurfaceView extends GLSurfaceView {
         case ACTION_DOWN:
           break;
         case ACTION_MOVE:
-          if (e.getEventTime() - e.getDownTime() > 100
-              && e.getHistorySize() > 0
-              && rawX[0] - e.getHistoricalX(0) > 20) {
-            // The user has swiped right - we should go back one menu (left).
-            gameRenderer.getMenu().goBack();
-          } else if (e.getEventTime() - e.getDownTime() > 100 && e.getHistorySize() > 0
-                     && gameRenderer.getMenu().isScrollable()) {
-            gameRenderer.getMenu().scroll(rawY[0] - e.getHistoricalY(0));
+          // Changing the hold mode checkers.
+          if (holdMode == HoldMode.NORMAL && e.getEventTime() - e.getDownTime() > 100
+              && e.getHistorySize() > 0) {
+            if (rawX[0] - e.getHistoricalX(0) > 20 || rawX[0] - holdOriginX > 60) {
+              // The user has swiped right.
+              holdMode = HoldMode.HOR_SCROLL;
+            } else if (gameRenderer.getMenu().isScrollable()
+                       && (Math.abs(rawY[0] - e.getHistoricalY(0)) > 20
+                        || Math.abs(rawY[0] - holdOriginY) > 60)) {
+              // The user has swiped vertically.
+              holdMode = HoldMode.VER_SCROLL;
+            }
+          }
+
+          // Using the hold mode.
+          if (e.getHistorySize() > 0) {
+            if (holdMode == HoldMode.VER_SCROLL && gameRenderer.getMenu().isScrollable())
+              gameRenderer.getMenu().scroll(rawY[0] - e.getHistoricalY(0));
+            else if (holdMode == HoldMode.HOR_SCROLL && rawX[0] - e.getHistoricalX(0) > 20)
+              gameRenderer.getMenu().goBack();
           }
           break;
         case MotionEvent.ACTION_UP:
-          // Handle pressing menu drawables depending on which menu we're currently on.
-          // Only the first pointer can click on menu drawables!
-          for (MenuDrawable menuDrawable : gameRenderer.getMenu().getCurrentDrawables()) {
-            if (menuDrawable.isClicked(pointerX[0], pointerY[0]))
-              menuDrawable.performAction();
+          if (holdMode == HoldMode.NORMAL) {
+            // Handle pressing menu drawables depending on which menu we're currently on.
+            // Only the first pointer can click on menu drawables!
+            for (MenuDrawable menuDrawable : gameRenderer.getMenu().getCurrentDrawables()) {
+              if (menuDrawable.isClicked(pointerX[0], pointerY[0]))
+                menuDrawable.performAction();
+            }
           }
           break;
         default:
           break;
+      }
+
+      // Nullify the hold mode if the user releases their pointer.
+      if (e.getAction() == ACTION_UP) holdMode = HoldMode.NORMAL;
+      // Set the origin coordinates it the user presses the screen.
+      else if (e.getAction() == ACTION_DOWN) {
+        holdOriginX = e.getRawX();
+        holdOriginY = e.getRawY();
       }
     }
     return true;
