@@ -27,6 +27,7 @@ import javax.microedition.khronos.opengles.GL10;
 // And instance of this class would be a single menu with all menu items.
 public class Menu {
   private SimpleTimer screenTransformX, screenTransformY;
+  private int currentScreen = 0;
   private float screenWidth, screenHeight;
   private GameRenderer renderer;
   private Player[] players = new Player[4];
@@ -442,8 +443,7 @@ public class Menu {
         break;
     }
 
-    this.screenTransformX.setEndTimeFromNow(-this.screenWidth * screen);
-    this.screenTransformY.setEndTimeFromNow(0);
+    this.setScreen(screen);
     this.menuStateItem.setDestinationX(this.screenWidth * (screen + 1) - 10);
     this.menuStateItem.setDestinationY(this.screenHeight - 10 - glText.getCharHeight()*0.65);
   }
@@ -472,6 +472,12 @@ public class Menu {
         case PLAYERSOPTIONS: this.setState(MenuState.PLAYERS); break;
         default: break;
       }
+  }
+
+  public void setScreen(int screen) {
+    this.screenTransformX.setEndTimeFromNow(-this.screenWidth * screen);
+    this.screenTransformY.setEndTimeFromNow(0);
+    this.currentScreen = screen;
   }
 
   // Expands an item which has an integer value, pushing all following items down to make room for
@@ -824,6 +830,24 @@ public class Menu {
   public void scroll(float amount) {
     this.screenTransformY.setTime(Math.max(this.getScrollHeight(),
                                   Math.min(0, amount + screenTransformY.getTime())));
+  }
+
+  // Performs a screen scroll horizontally by a given amount, but only to the left.
+  public void peekLeftScreen(float amount) {
+    if (screenTransformX.isDone())
+      this.screenTransformX.setTime(Math.min(Math.max(currentScreen * (-screenWidth),
+                                             amount + screenTransformX.getTime())
+                                    ,0));
+  }
+
+  // Checks the current screen horizontal transformation and snaps it to either the current screen
+  // or the one on the left. You cannot snap forward (to the screen on the right).
+  public void snapToClosestHorizontalScreen() {
+    if (screenTransformX.getEndTime() % screenWidth > -screenWidth * 4 / 5
+        && screenTransformX.getEndTime() % screenWidth != 0)
+      this.goBack();
+    else
+      this.setScreen(currentScreen);
   }
 
   // More getters.

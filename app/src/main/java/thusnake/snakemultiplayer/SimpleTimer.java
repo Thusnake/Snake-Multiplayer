@@ -28,6 +28,7 @@ public class SimpleTimer {
     return this.time;
   }
   public double getInitialTime() { return this.initialTime; }
+  public double getEndTime() { return this.endTime; }
 
   public boolean countDown(double time) {
     try {
@@ -76,7 +77,7 @@ public class SimpleTimer {
     return true;
   }
 
-  public void setTime(double time) { this.time = time; }
+  public void setTime(double time) { this.time = time; this.endTime = time; }
 
   public void setEndTime(double time) {
     this.endTime = time;

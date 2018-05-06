@@ -162,6 +162,8 @@ public class GameSurfaceView extends GLSurfaceView {
             if (rawX[0] - e.getHistoricalX(0) > 20 || rawX[0] - holdOriginX > 60) {
               // The user has swiped right.
               holdMode = HoldMode.HOR_SCROLL;
+              gameRenderer.getMenu()
+                  .peekLeftScreen(Math.max(rawX[0] - e.getHistoricalX(0), rawX[0] - holdOriginX));
             } else if (gameRenderer.getMenu().isScrollable()
                        && (Math.abs(rawY[0] - e.getHistoricalY(0)) > 20
                         || Math.abs(rawY[0] - holdOriginY) > 60)) {
@@ -174,8 +176,17 @@ public class GameSurfaceView extends GLSurfaceView {
           if (e.getHistorySize() > 0) {
             if (holdMode == HoldMode.VER_SCROLL && gameRenderer.getMenu().isScrollable())
               gameRenderer.getMenu().scroll(rawY[0] - e.getHistoricalY(0));
-            else if (holdMode == HoldMode.HOR_SCROLL && rawX[0] - e.getHistoricalX(0) > 20)
-              gameRenderer.getMenu().goBack();
+            else if (holdMode == HoldMode.HOR_SCROLL) {
+              if (rawX[0] - e.getHistoricalX(0) > 20) {
+                gameRenderer.getMenu().goBack();
+                // Reset everything as if the user has released the screen and pressed it again.
+                holdMode = HoldMode.NORMAL;
+                holdOriginX = e.getRawX();
+                holdOriginY = e.getRawY();
+              } else {
+                gameRenderer.getMenu().peekLeftScreen(rawX[0] - e.getHistoricalX(0));
+              }
+            }
           }
           break;
         case MotionEvent.ACTION_UP:
@@ -193,7 +204,10 @@ public class GameSurfaceView extends GLSurfaceView {
       }
 
       // Nullify the hold mode if the user releases their pointer.
-      if (e.getAction() == ACTION_UP) holdMode = HoldMode.NORMAL;
+      if (e.getAction() == ACTION_UP) {
+        holdMode = HoldMode.NORMAL;
+        gameRenderer.getMenu().snapToClosestHorizontalScreen();
+      }
       // Set the origin coordinates it the user presses the screen.
       else if (e.getAction() == ACTION_DOWN) {
         holdOriginX = e.getRawX();
