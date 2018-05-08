@@ -1,8 +1,10 @@
 package thusnake.snakemultiplayer;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.support.v4.app.ActivityCompat;
 import android.util.ArraySet;
 import android.util.Pair;
 
@@ -47,6 +49,7 @@ public class Menu {
   private final DeviceItemMap foundDevices = new DeviceItemMap();
   private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
   private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
+  private final MenuDrawable bluetoothStatusIcon;
 
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem, addSnakeButton;
@@ -130,8 +133,23 @@ public class Menu {
     this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
         screenHeight / 8, MenuItem.Alignment.CENTER);
 
+    this.bluetoothStatusIcon = new MenuItem(renderer, "none", screenWidth * 2 - 10,
+        menuItemsConnect[5].getY(), MenuItem.Alignment.RIGHT) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        switch(BluetoothAdapter.getDefaultAdapter().getScanMode()) {
+          case BluetoothAdapter.SCAN_MODE_CONNECTABLE: this.setText("c"); break;
+          case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE: this.setText("c d"); break;
+          case BluetoothAdapter.SCAN_MODE_NONE: this.setText("none"); break;
+          default: this.setText("idk"); break;
+        }
+      }
+    };
+
     bluetoothGuestMenu.add(menuItemsConnect[4]);
     bluetoothGuestMenu.add(menuItemsConnect[5]);
+    bluetoothGuestMenu.add(bluetoothStatusIcon);
     bluetoothHostMenu.add(menuItemsConnect[6]);
     updateConnectMenuContents();
 
@@ -268,6 +286,7 @@ public class Menu {
 
     drawablesConnect = new CopyOnWriteArrayList<>();
     drawablesConnect.addAll(Arrays.asList(menuItemsConnect));
+    drawablesConnect.add(bluetoothStatusIcon);
 
     drawablesBoard = new ArrayList<>();
     drawablesBoard.addAll(Arrays.asList(menuItemsBoard));
@@ -690,7 +709,9 @@ public class Menu {
   // Adds a newly found device to the list and displays it.
   public void addFoundDevice(BluetoothDevice device) {
     if (!foundDevices.has(device) && !pairedDevices.has(device)) {
-      MenuItem deviceItem = new MenuItem(renderer, device.getName(), screenWidth + 10,
+      MenuItem deviceItem = new MenuItem(renderer,
+          (device.getName() != null) ? device.getName() : device.getAddress(),
+          screenWidth + 10,
           menuItemsConnect[5].getY() - (pairedDevices.size() + foundDevices.size() + 1)
               * glText.getCharHeight() * 0.65f * 5 / 4, MenuItem.Alignment.LEFT);
       deviceItem.setDescription(device.getAddress());
@@ -731,6 +752,14 @@ public class Menu {
       }
       // Add all the already paired devices to the list.
       this.updatePairedDevices();
+      // Begin device discovery.
+      ActivityCompat.requestPermissions(originActivity,
+          new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
+      if (!adapter.startDiscovery()) {
+        menuItemsConnect[4].setDrawable(true);
+        menuItemsConnect[4].setText("Bluetooth error :/");
+      }
     }
   }
 
