@@ -709,6 +709,7 @@ public class Menu {
   // Adds a newly found device to the list and displays it.
   public void addFoundDevice(BluetoothDevice device) {
     if (!foundDevices.has(device) && !pairedDevices.has(device)) {
+      // Create a new item representing that device.
       MenuItem deviceItem = new MenuItem(renderer,
           (device.getName() != null) ? device.getName() : device.getAddress(),
           screenWidth + 10,
@@ -720,6 +721,16 @@ public class Menu {
       foundDevices.add(device, deviceItem);
       bluetoothGuestMenu.add(deviceItem);
       drawablesConnect.add(deviceItem);
+    } else {
+      // The device is already present in either foundDevices or pairedDevices, so update its
+      // information.
+      if (foundDevices.has(device)) {
+        foundDevices.getItem(device)
+            .setText((device.getName() != null) ? device.getName() : device.getAddress());
+      } else {
+        pairedDevices.getItem(device)
+            .setText((device.getName() != null) ? device.getName() : device.getAddress());
+      }
     }
   }
 

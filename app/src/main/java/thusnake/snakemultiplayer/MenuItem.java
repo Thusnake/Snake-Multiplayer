@@ -94,6 +94,8 @@ public class MenuItem extends MenuDrawable {
   public boolean isVisible() { return this.isDrawable() || this.text.equals(""); }
   public GameRenderer getRenderer() { return this.renderer; }
   public MenuValue getValue() { return this.value; }
+  public String getText() { return this.text; }
+  public String getDescription() { return this.description; }
 
   @Override
   public void setDestinationX(double destinationX) {
@@ -121,7 +123,3 @@ public class MenuItem extends MenuDrawable {
     this.easeOutInertia = inertia;
   }
 }
-
-
-// TODO Try to create different subclasses to get move functionality out of menu items.
-
