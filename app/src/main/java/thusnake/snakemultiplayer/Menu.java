@@ -847,7 +847,7 @@ public class Menu {
         && screenTransformX.getEndTime() % screenWidth != 0)
       this.goBack();
     else
-      this.setScreen(currentScreen);
+      this.screenTransformX.setEndTimeFromNow(-screenWidth * currentScreen);
   }
 
   // More getters.
