@@ -783,7 +783,7 @@ public class Menu {
     originActivity.startActivity(discoverableIntent);
     // Begin the thread for accepting devices.
     originActivity.acceptThread = new AcceptThread(originActivity);
-    originActivity.acceptThread.run();
+    originActivity.acceptThread.start();
   }
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
