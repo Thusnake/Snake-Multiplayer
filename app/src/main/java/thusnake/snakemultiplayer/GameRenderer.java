@@ -21,7 +21,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
   private Menu menu;
-  private BoardDrawer game;
+  private Game game;
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
@@ -89,7 +89,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public Context getContext() { return this.context; }
   public boolean isInGame() { return this.game != null; }
   public Menu getMenu() { return this.menu; }
-  public BoardDrawer getGame() { return this.game; }
+  public Game getGame() { return this.game; }
   public int[] getPairedDevices() { return new int[] {}; } // TODO: Make it actually return the connected devices.
   public void setMenuState(MenuDrawable origin, Menu.MenuState state) { menu.setState(origin, state); }
   public void setMenuStateToPlayerOptions(int playerIndex) {

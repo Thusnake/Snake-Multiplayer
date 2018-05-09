@@ -6,7 +6,7 @@ import android.util.Pair;
 import com.android.texample.GLText;
 import javax.microedition.khronos.opengles.GL10;
 
-public class GuestGame extends BoardDrawer {
+public class GuestGame extends Game {
   private final GameRenderer renderer;
   private final GL10 gl;
   private final GLText glText;
@@ -25,7 +25,7 @@ public class GuestGame extends BoardDrawer {
   private MissedMovesList missedMovesList;
 
   public GuestGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
-    super(renderer, screenWidth, screenHeight);
+    super(renderer, screenWidth, screenHeight, players);
 
     this.renderer = renderer;
     this.gl = renderer.getGl();
