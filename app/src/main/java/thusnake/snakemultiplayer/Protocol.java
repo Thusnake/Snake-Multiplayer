@@ -10,6 +10,8 @@ public class Protocol {
   // Guest codes
   public static final byte REQUEST_CONNECT = 0;
   public static final byte REQUEST_MOVE = 1; // Followed by the move's id.
+  public static final byte REQUEST_ADD_SNAKE = 2;
+  public static final byte REQUEST_CONTROLLED_SNAKES = 3;
 
   // Universal codes
   public static final byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
@@ -28,6 +30,8 @@ public class Protocol {
   public static final byte SPEED_CHANGED = 50; // Followed by 1 speed byte.
 
   // Host codes
+  public static final byte REQUEST_NAME = -1;
+  public static final byte CONTROLLED_SNAKES_LIST = -3; // Followed by 0-4 snake number bytes.
   public static final byte APPROVE_CONNECT = -10;
   public static final byte START_GAME = -20;
   public static final byte END_GAME = -30; // Followed by 1 winner byte.
@@ -102,5 +106,4 @@ public class Protocol {
   public static int decodeMoveID(byte firstByte, byte secondByte) {
     return firstByte + (secondByte << 8);
   }
-  
 }

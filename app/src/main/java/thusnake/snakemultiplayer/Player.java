@@ -29,6 +29,7 @@ public class Player {
   private Vibrator vibrator;
   private Mesh boardSquares;
   private int onlineIdentifier;
+  private ConnectedThread onlineControllerThread;
 
   // Constructor for a corner layout player.
   public Player() {
@@ -224,6 +225,9 @@ public class Player {
   }
 
   public int getOnlineIdentifier() { return this.onlineIdentifier; }
+
+  public void setControllerThread(ConnectedThread thread) { this.onlineControllerThread = thread; }
+  public ConnectedThread getControllerThread() { return this.onlineControllerThread; }
 
   // Setters
   public void setControlType(ControlType type) { this.controlType = type; }

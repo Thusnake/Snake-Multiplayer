@@ -9,11 +9,11 @@ import javax.microedition.khronos.opengles.GL10;
 public abstract class MenuDrawable {
   private SimpleTimer x, y;
   private float width, height, initialX, initialY;
-  private float[] colors = {1f, 1f, 1f, 1f};
+  private float[] colors = {1f, 1f, 1f, 1f}, disabledColors = {1f, 1f, 1f, 0.5f};
   private MenuAction action;
   public final GameRenderer renderer;
   public final GL10 gl;
-  private boolean drawableOutsideOfScreen = true, drawable = true;
+  private boolean drawableOutsideOfScreen = true, drawable = true, enabled = true;
 
   public MenuDrawable(GameRenderer renderer, float x, float y) {
     this.renderer = renderer;
@@ -39,15 +39,27 @@ public abstract class MenuDrawable {
   public void setAction(MenuAction action) {
     this.action = action;
   }
-  public void performAction() { if (this.action != null) this.action.perform(this.renderer, this); }
-
-  public void setColors(float[] rgba) {
-    if (rgba.length == 4)
-      for (int index = 0; index < 4; index++)
-        this.colors[index] = rgba[index];
+  public void performAction() {
+    if (this.action != null && this.isEnabled())
+      this.action.perform(this.renderer, this);
   }
 
-  public float[] getColors() { return this.colors; }
+  public void setColors(float[] rgba) {
+    if (rgba.length == 4) {
+      for (int index = 0; index < 4; index++)
+        this.colors[index] = rgba[index];
+      for (int index = 0; index < 3; index++)
+        this.disabledColors[index] = rgba[index];
+      this.disabledColors[3] = rgba[3] / 2;
+    }
+  }
+
+  public float[] getColors() {
+    if (this.isEnabled())
+      return this.colors;
+    else
+      return this.disabledColors;
+  }
 
   public void setOpacity(float opacity) {
     colors[3] = opacity;
@@ -86,6 +98,9 @@ public abstract class MenuDrawable {
 
   public void setDrawable(boolean drawable) { this.drawable = drawable; }
   public boolean isDrawable() { return this.drawable; }
+
+  public void setEnabled(boolean enabled) { this.enabled = enabled; }
+  public boolean isEnabled() { return this.enabled; }
 
   public int getScreenNumber() { return (int) (this.getX() / renderer.getScreenWidth());}
 }

@@ -49,6 +49,7 @@ public class Menu {
   private final DeviceItemMap foundDevices = new DeviceItemMap();
   private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
   private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
+  private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
   private final MenuDrawable bluetoothStatusIcon;
 
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
@@ -131,7 +132,19 @@ public class Menu {
     this.menuItemsConnect[5] = new MenuItem(renderer, "Devices:", screenWidth + 10,
         screenHeight / 8, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
-        screenHeight / 8, MenuItem.Alignment.CENTER);
+        screenHeight / 8, MenuItem.Alignment.CENTER) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (originActivity.acceptThread != null) {
+          int threads = 0;
+          for (ConnectedThread thread : originActivity.connectedThreads)
+            if (thread != null)
+              threads++;
+          this.setText("Connected: " + threads);
+        }
+      }
+    };
 
     this.bluetoothStatusIcon = new MenuItem(renderer, "none", screenWidth * 2 - 10,
         menuItemsConnect[5].getY(), MenuItem.Alignment.RIGHT) {
@@ -279,6 +292,21 @@ public class Menu {
         -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.UPPER_RIGHT));
     this.cornerSelectionSquare[3].setAction((action, origin)
         -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.LOWER_RIGHT));
+
+    // Some items should be disabled for online game guests.
+    guestDisabledDrawables.add(menuItemsMain[2]);     // The board menu button.
+    guestDisabledDrawables.add(menuItemsConnect[0]);  // The 4 connection specifiers.
+    guestDisabledDrawables.add(menuItemsConnect[1]);
+    guestDisabledDrawables.add(menuItemsConnect[2]);
+    guestDisabledDrawables.add(menuItemsConnect[3]);
+    guestDisabledDrawables.add(menuItemsPlayers[0]);  // The 4 player config buttons.
+    guestDisabledDrawables.add(menuItemsPlayers[1]);  // They can later be re-enabled (by removing
+    guestDisabledDrawables.add(menuItemsPlayers[2]);  // them from this list).
+    guestDisabledDrawables.add(menuItemsPlayers[3]);
+    guestDisabledDrawables.add(removeSnakeButtons[0]);// The 4 remove snakes buttons.
+    guestDisabledDrawables.add(removeSnakeButtons[1]);
+    guestDisabledDrawables.add(removeSnakeButtons[2]);
+    guestDisabledDrawables.add(removeSnakeButtons[3]);
 
     // Add items to the drawables list for each screen.
     drawablesMain = new ArrayList<>();
@@ -786,6 +814,34 @@ public class Menu {
     originActivity.acceptThread.start();
   }
 
+  // Sets up the menu to work as if you're a guest.
+  public void beginGuest() {
+    // Disable some items.
+    for (MenuDrawable drawable : guestDisabledDrawables)
+      if (drawable.isEnabled())
+        drawable.setEnabled(false);
+    // Set the new action for the add snake button.
+    addSnakeButton.setAction((action, origin)
+        -> originActivity.connectedThread.write(new byte[] {Protocol.REQUEST_ADD_SNAKE}));
+    // Make all players uncontrollable.
+    for (Player player : players)
+      player.setControlType(Player.ControlType.OFF);
+  }
+
+  // Sets up the menu to work as if you're not a guest anymore.
+  public void endGuest() {
+    // Re-enable the items.
+    for (MenuDrawable drawable : guestDisabledDrawables)
+      if (drawable.isEnabled())
+        drawable.setEnabled(true);
+    // Set the add snake button action back to the old one.
+    addSnakeButton.setAction((action, origin) -> renderer.getMenu().addSnake());
+    // Turn all players back to off (except the first one). TODO Make it revert to saved.
+    for (Player player : players)
+      player.setControlType(Player.ControlType.OFF);
+    players[0].setControlType(Player.ControlType.CORNER);
+  }
+
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
     switch(inputBytes[0]) {
       case Protocol.SNAKE1_COLOR_CHANGED: players[0].setColors(inputBytes[1]); break;
@@ -800,28 +856,34 @@ public class Menu {
           Protocol.decodeCorner(inputBytes[1])); break;
       case Protocol.SNAKE4_CORNER_CHANGED: players[3].setCornerLayout(renderer,
           Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.REQUEST_CONNECT:
-        if (connectionRole == ConnectionRole.HOST) {
-          // Check what would be the smallest unique ID you could give the new device.
-          byte id;
-          for (id = 0; true; id++) {
-            boolean idUnique = true;
-            for (int index = 0; index < players.length; index++)
-              if (players[index] != null && players[index].getOnlineIdentifier() == id)
-                idUnique = false;
-            if (idUnique) break;
+
+          // Host-only
+      case Protocol.REQUEST_ADD_SNAKE:
+        if (!this.isGuest()) {
+          for (Player player : players) {
+            if (player != null && player.getControlType() == Player.ControlType.OFF) {
+              player.setControlType(Player.ControlType.BLUETOOTH);
+              player.setControllerThread(sourceThread);
+            }
           }
-          sourceThread.write(new byte[] {Protocol.APPROVE_CONNECT, id});
+          sourceThread.write(this.getControlledSnakesList(sourceThread));
         }
         break;
-      case Protocol.APPROVE_CONNECT:
-        if (connectionRole == ConnectionRole.GUEST) {
-          // Clear the players and set the unique identifier for this device.
-          for (int index = 0; index < players.length; index++) players[index] = null;
-          this.onlineIdentifier = inputBytes[1];
-          // TODO Set this online identifier for all local snakes.
+
+        // Guest-only
+      case Protocol.CONTROLLED_SNAKES_LIST:
+        if (this.isGuest()) {
+          // Disable all.
+          for (Player player : players)
+            player.setControlType(Player.ControlType.OFF);
+          // Enable only the ones specified in the list.
+          for (int byteIndex = 1; byteIndex < inputBytes.length; byteIndex++)
+            for (Player player : players)
+              if (player.getNumber() == inputBytes[byteIndex])
+                player.setControlType(Player.ControlType.CORNER);
         }
         break;
+      default: break;
     }
 
     // Tell everyone what happened if the message was some change in settings.
@@ -898,6 +960,21 @@ public class Menu {
   public MenuImage[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
   public GameRenderer getRenderer() { return this.renderer; }
   public Player[] getPlayers() { return this.players; }
+  // Protocol simplifier getters.
+  public boolean isGuest() { return originActivity.connectedThread != null; }
+  private byte[] getControlledSnakesList(ConnectedThread thread) {
+    int controlledSnakes = 0;
+    for (Player player : players)
+      if (player.getControllerThread().equals(thread))
+        controlledSnakes++;
+    byte[] output = new byte[controlledSnakes + 1];
+    output[0] = Protocol.CONTROLLED_SNAKES_LIST;
+    int outputIndex = 1;
+    for (Player player : players)
+      if (player.getControllerThread().equals(thread))
+        output[outputIndex++] = (byte) player.getNumber();
+    return output;
+  }
 }
 
 

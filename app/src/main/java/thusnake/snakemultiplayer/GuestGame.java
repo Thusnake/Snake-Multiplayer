@@ -117,7 +117,7 @@ public class GuestGame extends BoardDrawer {
   @Override
   public Player[] getPlayers() { return this.players; }
 
-  public void handleInputBytes(byte[] inputBytes) {
+  public void handleInputBytes(byte[] inputBytes, ConnectedThread source) {
     switch (inputBytes[0]) {
       case Protocol.GAME_MOVEMENT_OCCURRED:
         int moveId = inputBytes[1] + (inputBytes[2] << 8);
@@ -155,6 +155,10 @@ public class GuestGame extends BoardDrawer {
       default:
         break;
     }
+  }
+
+  public void handleInputBytes(byte[] inputBytes) {
+    this.handleInputBytes(inputBytes, originActivity.connectedThread);
   }
 
   public void sendBytes(byte[] bytes) {

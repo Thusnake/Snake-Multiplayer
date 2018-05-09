@@ -35,6 +35,15 @@ public class ConnectedThread extends Thread {
     outStream = tmpOut;
   }
 
+  @Override
+  public void start() {
+    super.start();
+    // Call the method for setting up the guest menu.
+    if (originActivity.getRenderer().getMenu().isGuest())
+      originActivity.getRenderer().getMenu().beginGuest();
+  }
+
+  @Override
   public void run() {
     byte[] buffer = new byte[1024];  // buffer store for the stream
 
@@ -62,6 +71,10 @@ public class ConnectedThread extends Thread {
     try {
       socket.close();
     } catch (IOException e) { }
+    finally {
+      // End the guest menu mode.
+      originActivity.getRenderer().getMenu().endGuest();
+    }
   }
 
   public int getCurrentState() {

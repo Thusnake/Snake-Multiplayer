@@ -103,6 +103,8 @@ public abstract class BoardDrawer {
     gl.glPopMatrix();
   }
 
+  public abstract void handleInputBytes(byte[] inputBytes, ConnectedThread source);
+
   // Getters.
   public int getScreenWidth() { return this.screenWidth; }
   public int getScreenHeight() { return this.screenHeight; }

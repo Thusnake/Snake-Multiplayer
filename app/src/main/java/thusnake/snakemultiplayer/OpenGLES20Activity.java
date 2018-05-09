@@ -38,13 +38,11 @@ public class OpenGLES20Activity extends Activity {
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
-      System.out.println("I've received something!");
       String action = intent.getAction();
       // When discovery finds a device
       if (BluetoothDevice.ACTION_FOUND.equals(action)) {
         // Get the BluetoothDevice object from the Intent
         BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-        System.out.println(device.getName());
         if (!bluetoothDevices.contains(device)) bluetoothDevices.add(device);
         // Add the name and address to an array adapter to show in a ListView
         arrayAdapter.add(device.getName() + "\n" + device.getAddress());
@@ -85,8 +83,6 @@ public class OpenGLES20Activity extends Activity {
     // Register the BroadcastReceiver
     IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
     registerReceiver(broadcastReceiver, filter); // Don't forget to unregister during onDestroy
-
-    if (bluetoothAdapter != null) acceptThread = new AcceptThread(this);
   }
 
   @Override
