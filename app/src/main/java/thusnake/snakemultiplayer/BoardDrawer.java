@@ -1,7 +1,5 @@
 package thusnake.snakemultiplayer;
 
-import android.content.Context;
-
 import com.android.texample.GLText;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -67,14 +65,14 @@ public abstract class BoardDrawer {
     boardFill.draw(gl);
   }
 
-  public void drawCornerLayout(Player player) {
+  public void drawControllerLayout(Player player) {
     gl.glColor4f(player.getColors()[0], player.getColors()[1],
         player.getColors()[2], player.getColors()[3]);
     // For some unknown reason I can not load the texture inside the constructor properly.
     // This is my band-aid fix.
-    if (!player.getCornerLayout().textureIsLoaded())
-      player.getCornerLayout().loadGLTexture(this.renderer.getContext());
-    player.getCornerLayout().draw(gl);
+    if (!player.getPlayerController().textureIsLoaded())
+      player.getPlayerController().loadGLTexture(this.renderer.getContext());
+    player.getPlayerController().draw(gl);
   }
 
   public void drawPlayerSnake(Player player) {

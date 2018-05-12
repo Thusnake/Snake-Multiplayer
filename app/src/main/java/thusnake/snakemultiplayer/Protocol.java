@@ -89,7 +89,7 @@ public class Protocol {
     }
   }
 
-  public static byte encodeCorner(CornerLayout.Corner corner) {
+  public static byte encodeCorner(PlayerController.Corner corner) {
     switch (corner) {
       case LOWER_LEFT: return 0;
       case UPPER_LEFT: return 1;
@@ -99,13 +99,13 @@ public class Protocol {
     }
   }
 
-  public static CornerLayout.Corner decodeCorner(byte code) {
+  public static PlayerController.Corner decodeCorner(byte code) {
     switch (code) {
-      case 0: return CornerLayout.Corner.LOWER_LEFT;
-      case 1: return CornerLayout.Corner.UPPER_LEFT;
-      case 2: return CornerLayout.Corner.UPPER_RIGHT;
-      case 3: return CornerLayout.Corner.LOWER_RIGHT;
-      default: return CornerLayout.Corner.LOWER_LEFT;
+      case 0: return PlayerController.Corner.LOWER_LEFT;
+      case 1: return PlayerController.Corner.UPPER_LEFT;
+      case 2: return PlayerController.Corner.UPPER_RIGHT;
+      case 3: return PlayerController.Corner.LOWER_RIGHT;
+      default: return PlayerController.Corner.LOWER_LEFT;
     }
   }
 

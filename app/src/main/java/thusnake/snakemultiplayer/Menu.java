@@ -5,18 +5,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.support.v4.app.ActivityCompat;
-import android.util.ArraySet;
 import android.util.Pair;
 
 import com.android.texample.GLText;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -102,10 +98,10 @@ public class Menu {
     this.players[1].setName("Player 2");
     this.players[2].setName("Player 3");
     this.players[3].setName("Player 4");
-    this.players[0].setCornerLayout(renderer, CornerLayout.Corner.LOWER_LEFT);
-    this.players[1].setCornerLayout(renderer, CornerLayout.Corner.LOWER_RIGHT);
-    this.players[2].setCornerLayout(renderer, CornerLayout.Corner.UPPER_LEFT);
-    this.players[3].setCornerLayout(renderer, CornerLayout.Corner.UPPER_RIGHT);
+    this.players[0].setCorner(PlayerController.Corner.LOWER_LEFT);
+    this.players[1].setCorner(PlayerController.Corner.LOWER_RIGHT);
+    this.players[2].setCorner(PlayerController.Corner.UPPER_LEFT);
+    this.players[3].setCorner(PlayerController.Corner.UPPER_RIGHT);
 
     // Create menuItem instances for each button.
     // Main screen buttons.
@@ -285,13 +281,13 @@ public class Menu {
     this.cornerSelectionSquare[2].setGraphic(R.drawable.upperright);
     this.cornerSelectionSquare[3].setGraphic(R.drawable.lowerright);
     this.cornerSelectionSquare[0].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.LOWER_LEFT));
+        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.LOWER_LEFT));
     this.cornerSelectionSquare[1].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.UPPER_LEFT));
+        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.UPPER_LEFT));
     this.cornerSelectionSquare[2].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.UPPER_RIGHT));
+        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.UPPER_RIGHT));
     this.cornerSelectionSquare[3].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(CornerLayout.Corner.LOWER_RIGHT));
+        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.LOWER_RIGHT));
 
     // Some items should be disabled for online game guests.
     guestDisabledDrawables.add(menuItemsMain[2]);     // The board menu button.
@@ -660,15 +656,15 @@ public class Menu {
     this.menuStateItem.setColors(getColorFromIndex(index));
   }
 
-  // Sets the currently selected player's control corner to a given CornerLayout.
-  public void setPlayerControlCorner(CornerLayout.Corner corner) {
+  // Sets the currently selected player's control corner to a given PlayerController.
+  public void setPlayerControlCorner(PlayerController.Corner corner) {
     // Find the other player that uses the selected corner and set it to the current player's.
     for (int index = 0; index < this.players.length; index++)
       if (index != this.playersOptionsIndex && this.players[index].getControlCorner() == corner)
         this.players[index]
-            .setCornerLayout(renderer, players[playersOptionsIndex].getControlCorner());
+            .setCorner(players[playersOptionsIndex].getControlCorner());
     // Then set the current player's corner to the selected one.
-    this.players[this.playersOptionsIndex].setCornerLayout(renderer, corner);
+    this.players[this.playersOptionsIndex].setCorner(corner);
   }
 
   // Sets the connection type to a given value and handles the connection menu animation.
@@ -850,14 +846,14 @@ public class Menu {
       case Protocol.SNAKE2_COLOR_CHANGED: players[1].setColors(inputBytes[1]); break;
       case Protocol.SNAKE3_COLOR_CHANGED: players[2].setColors(inputBytes[1]); break;
       case Protocol.SNAKE4_COLOR_CHANGED: players[3].setColors(inputBytes[1]); break;
-      case Protocol.SNAKE1_CORNER_CHANGED: players[0].setCornerLayout(renderer,
-          Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE2_CORNER_CHANGED: players[1].setCornerLayout(renderer,
-          Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE3_CORNER_CHANGED: players[2].setCornerLayout(renderer,
-          Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE4_CORNER_CHANGED: players[3].setCornerLayout(renderer,
-          Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE1_CORNER_CHANGED: players[0]
+          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE2_CORNER_CHANGED: players[1]
+          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE3_CORNER_CHANGED: players[2]
+          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE4_CORNER_CHANGED: players[3]
+          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
 
           // Host-only
       case Protocol.REQUEST_ADD_SNAKE:

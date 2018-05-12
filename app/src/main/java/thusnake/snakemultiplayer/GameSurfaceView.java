@@ -54,32 +54,12 @@ public class GameSurfaceView extends GLSurfaceView {
     }
 
     if (this.gameRenderer.isInGame()) {
+      // Send all the alive players the motion event.
+      for (Player player : gameRenderer.getGame().getPlayers())
+        if (player != null && player.isAlive())
+          player.onMotionEvent(e);
+
       switch (e.getActionMasked()) {
-        case ACTION_DOWN:
-          // Handle touching down on a cornerLayout button.
-          for (Player player : gameRenderer.getGame().getPlayers())
-            if (player.isAlive() && player.getCornerLayout()
-                                    .changeDirectionBasedOnCoordinates(pointerX[0], pointerY[0]))
-              break;
-          break;
-        case MotionEvent.ACTION_POINTER_DOWN:
-          for (Player player : gameRenderer.getGame().getPlayers())
-            if (player.isAlive() && player.getCornerLayout()
-                                    .changeDirectionBasedOnCoordinates(pointerX[e.getActionIndex()],
-                                        pointerY[e.getActionIndex()]))
-              break;
-          break;
-        case ACTION_MOVE:
-          // Handle moving onto a cornerLayout button.
-          for (int pointerIndex = 0; pointerIndex < pointerX.length; pointerIndex++) {
-            for (Player player : gameRenderer.getGame().getPlayers())
-              if (player.isAlive() &&
-                  player.getCornerLayout().changeDirectionBasedOnCoordinates(pointerX[pointerIndex],
-                      pointerY[pointerIndex]))
-                // We have found what this pointer changes so break out of the loop.
-                break;
-          }
-          break;
         case MotionEvent.ACTION_UP:
           // Handle the game over screen inputs.
           if (gameRenderer.getGame().isOver() && e.getEventTime() - e.getDownTime() < 500

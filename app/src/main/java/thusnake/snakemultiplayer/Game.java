@@ -2,7 +2,6 @@ package thusnake.snakemultiplayer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.opengl.GLES11;
 
 import com.android.texample.GLText;
 
@@ -139,7 +138,7 @@ class Game extends BoardDrawer {
     // Draw the display controllers.
     for (Player player : players) {
       if (player != null && player.getControlType() == Player.ControlType.CORNER) {
-        this.drawCornerLayout(player);
+        this.drawControllerLayout(player);
       }
     }
 

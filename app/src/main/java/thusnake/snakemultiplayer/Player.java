@@ -2,6 +2,7 @@ package thusnake.snakemultiplayer;
 
 import android.content.Context;
 import android.os.Vibrator;
+import android.view.MotionEvent;
 
 import static thusnake.snakemultiplayer.Player.Direction.DOWN;
 import static thusnake.snakemultiplayer.Player.Direction.LEFT;
@@ -19,8 +20,9 @@ public class Player {
   private int number, score;
   private String name;
   private ControlType controlType;
+  private PlayerController.Corner corner;
   public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
-  private CornerLayout cornerLayout;
+  private PlayerController playerController;
   private BodyPart[] bodyParts = new BodyPart[0];
   private int bodyLength = 0;
   private float[] colors = new float[4];
@@ -44,14 +46,22 @@ public class Player {
     this.vibrator = (Vibrator) game.getRenderer().getContext()
         .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
-    if (this.getControlCorner() == CornerLayout.Corner.UPPER_LEFT
-        || this.getControlCorner() == CornerLayout.Corner.UPPER_RIGHT) this.direction = DOWN;
+    if (this.getControlCorner() == PlayerController.Corner.UPPER_LEFT
+        || this.getControlCorner() == PlayerController.Corner.UPPER_RIGHT) this.direction = DOWN;
     else                                                               this.direction = UP;
     this.previousDirection = this.direction;
     this.alive = true;
     this.drawable = true;
     this.flashing = false;
     this.score = 0;
+
+    switch(this.controlType) {
+      case CORNER:
+        this.playerController = new CornerLayoutController(game.getRenderer(), this);
+        break;
+      case OFF: break;
+      default: break;
+    }
 
     this.bodyParts = new BodyPart[0];
     this.bodyLength = 0;
@@ -97,6 +107,8 @@ public class Player {
     this.previousDirection = this.direction;
     return true;
   }
+
+  public void onMotionEvent(MotionEvent event) { this.playerController.onMotionEvent(event); }
 
   public boolean changeDirection(Direction pressedDirection) {
     // Check if the direction inputted is useless (will not change the snake's next direction).
@@ -205,8 +217,8 @@ public class Player {
 
   public int getScore() { return this.score; }
   public ControlType getControlType() { return this.controlType; }
-  public CornerLayout getCornerLayout() { return this.cornerLayout; }
-  public CornerLayout.Corner getControlCorner() { return this.cornerLayout.getCorner(); }
+  public PlayerController getPlayerController() { return this.playerController; }
+  public PlayerController.Corner getControlCorner() { return this.corner; }
 
   public BodyPart getBodyPart(int bodyPartIndex) {
     if (bodyPartIndex >= 0)
@@ -233,9 +245,8 @@ public class Player {
 
   // Setters
   public void setControlType(ControlType type) { this.controlType = type; }
-  public void setCornerLayout(GameRenderer renderer, CornerLayout.Corner corner) {
-    this.cornerLayout = new CornerLayout(renderer, this, corner);
-  }
+  public void setController(PlayerController controller) { this.playerController = controller; }
+  public void setCorner(PlayerController.Corner corner) { this.corner = corner; }
   public void setName(String name) { this.name = name; }
   public void setColors(int colorIndex) {
     this.colors = Menu.getColorFromIndex(colorIndex);
