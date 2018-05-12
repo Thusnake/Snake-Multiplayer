@@ -23,7 +23,7 @@ public class MissedMovesList {
     this.movesList.add(lastMove);
   }
 
-  public byte[] extractFirst() { return movesList.remove(0); }
+  public byte extractFirst() { return movesList.remove(0)[3]; }
 
   public boolean firstIsReady() { return movesList.get(0) != null; }
 
@@ -36,12 +36,20 @@ public class MissedMovesList {
 
   public int size() { return movesList.size(); }
 
-  public List<Integer> missingMovesIndeces() {
-    List<Integer> indeces = new ArrayList<>();
+  public List<Integer> missingMovesIndices() {
+    List<Integer> indices = new ArrayList<>();
     for (int index = 0; index < movesList.size(); index++)
       if (movesList.get(index) == null)
-        indeces.add(firstMoveIndex + index);
-    return indeces;
+        indices.add(firstMoveIndex + index);
+    return indices;
   }
 
+  public boolean insert(int moveNumber, byte[] move) {
+    int relativeMoveNumber = moveNumber + firstMoveIndex;
+    if (movesList.get(relativeMoveNumber) == null) {
+      movesList.set(relativeMoveNumber, move);
+      return true;
+    }
+    return false;
+  }
 }
