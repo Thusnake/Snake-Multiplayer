@@ -195,6 +195,8 @@ public class Player {
   public int getX() { return this.bodyParts[0].getX(); }
   public int getY() { return this.bodyParts[0].getY(); }
   public Direction getDirection() { return this.direction; }
+  public Direction getPreviousDirection() { return this.previousDirection; }
+  public Vibrator getVibrator() { return this.vibrator; }
 
   public int getNumber() { return this.number; }
   public String getName() { return this.name; }

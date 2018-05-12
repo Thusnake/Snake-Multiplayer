@@ -41,7 +41,7 @@ public class Protocol {
   public static final byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
 
   // Movement code methods.
-  public static final byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
+  public static byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
                                      Player.Direction direction3, Player.Direction direction4) {
     byte dir1 = encodeDirection(direction1);
     byte dir2 = encodeDirection(direction2);
@@ -51,6 +51,16 @@ public class Protocol {
     dir3 = (byte) (dir3 << 4);
     dir4 = (byte) (dir4 << 6);
     return (byte) (dir1 | dir2 | dir3 | dir4);
+  }
+
+  public static byte getMovementCode(int playerNumber, Player.Direction direction) {
+    switch (playerNumber) {
+      case 0: return getMovementCode(direction, null, null, null);
+      case 1: return getMovementCode(null, direction, null, null);
+      case 2: return getMovementCode(null, null, direction, null);
+      case 3: return getMovementCode(null, null, null, direction);
+      default: throw new RuntimeException("Players are not counted from zero");
+    }
   }
   
   public static void decodeMovementCode(byte code, Player.Direction[] array) {

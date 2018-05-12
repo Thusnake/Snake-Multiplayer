@@ -17,6 +17,7 @@ public class CornerLayout {
   private final Player player;
   private final GL10 gl;
   private boolean textureLoaded = false;
+  private ConnectedThread inputTargetThread;
 
   public CornerLayout(GameRenderer renderer, Player player, Corner corner) {
     this.player = player;
@@ -70,20 +71,35 @@ public class CornerLayout {
   public boolean changeDirectionBasedOnCoordinates (float x, float y) {
     float originX = this.x + this.width / 2f;
     float originY = this.y + this.width / 2f;
+    boolean success;
 
     // Check if the pointer is in the square layout.
     if (x > this.x && x < this.x + this.width && y > this.y && y < this.y + this.width) {
       // Check which triangle the pointer is in and change the direction accordingly.
       if (Math.abs(y - originY) > Math.abs(x - originX)) {
-        if (y - originY < 0) return player.changeDirection(Player.Direction.UP);
-        else                 return player.changeDirection(Player.Direction.DOWN);
+        if (y - originY < 0) success = player.changeDirection(Player.Direction.UP);
+        else                 success =  player.changeDirection(Player.Direction.DOWN);
       } else {
-        if (x - originX < 0) return player.changeDirection(Player.Direction.LEFT);
-        else                 return player.changeDirection(Player.Direction.RIGHT);
+        if (x - originX < 0) success = player.changeDirection(Player.Direction.LEFT);
+        else                 success = player.changeDirection(Player.Direction.RIGHT);
       }
+
+      // If there is a remote thread, send the information to it.
+      if (inputTargetThread != null) inputTargetThread.write(new byte[] {
+          Protocol.DIRECTION_CHANGE,
+          Protocol.getMovementCode(player.getNumber(), player.getDirection())
+      });
+
+      return success;
     }
     return false;
   }
 
   public Corner getCorner() { return this.corner; }
+
+  public void setInputTargetThread(ConnectedThread inputTargetThread) {
+    this.inputTargetThread = inputTargetThread;
+  }
+
+  public ConnectedThread getInputTargetThread() { return inputTargetThread; }
 }

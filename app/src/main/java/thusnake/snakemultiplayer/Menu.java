@@ -824,8 +824,10 @@ public class Menu {
     addSnakeButton.setAction((action, origin)
         -> originActivity.connectedThread.write(new byte[] {Protocol.REQUEST_ADD_SNAKE}));
     // Make all players uncontrollable.
-    for (Player player : players)
+    for (Player player : players) {
+
       player.setControlType(Player.ControlType.OFF);
+    }
   }
 
   // Sets up the menu to work as if you're not a guest anymore.
@@ -959,6 +961,7 @@ public class Menu {
   public MenuImage[] getColorSelectionSquares() { return this.colorSelectionSquare; }
   public MenuImage[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
   public GameRenderer getRenderer() { return this.renderer; }
+  public OpenGLES20Activity getOriginActivity() { return this.originActivity; }
   public Player[] getPlayers() { return this.players; }
   // Protocol simplifier getters.
   public boolean isGuest() { return originActivity.connectedThread != null; }

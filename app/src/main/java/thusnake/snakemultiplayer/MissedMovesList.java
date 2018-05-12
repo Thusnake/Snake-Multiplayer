@@ -1,6 +1,7 @@
 package thusnake.snakemultiplayer;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MissedMovesList {
   private ArrayList<byte[]> movesList = new ArrayList<>();
@@ -31,6 +32,16 @@ public class MissedMovesList {
       if (move == null)
         return false;
     return true;
+  }
+
+  public int size() { return movesList.size(); }
+
+  public List<Integer> missingMovesIndeces() {
+    List<Integer> indeces = new ArrayList<>();
+    for (int index = 0; index < movesList.size(); index++)
+      if (movesList.get(index) == null)
+        indeces.add(firstMoveIndex + index);
+    return indeces;
   }
 
 }
