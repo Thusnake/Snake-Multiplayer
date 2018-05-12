@@ -85,7 +85,7 @@ public class CornerLayout {
       }
 
       // If there is a remote thread, send the information to it.
-      if (inputTargetThread != null) inputTargetThread.write(new byte[] {
+      if (success && inputTargetThread != null) inputTargetThread.write(new byte[] {
           Protocol.DIRECTION_CHANGE,
           Protocol.getMovementCode(player.getNumber(), player.getDirection())
       });
