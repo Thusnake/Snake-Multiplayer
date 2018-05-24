@@ -59,6 +59,9 @@ public class Player {
       case CORNER:
         this.playerController = new CornerLayoutController(game.getRenderer(), this);
         break;
+      case SWIPE:
+        this.playerController = new SwipeController(game.getRenderer(), this);
+        break;
       case GAMEPAD:
         this.playerController = new GamepadController(game.getRenderer(), this);
         break;

@@ -627,7 +627,15 @@ public class Menu {
       case OFF:
         break;
       case CORNER:
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.SWIPE);
+        boolean swipeTaken = false;
+        for (Player player : players)
+          if (player.getControlType() == Player.ControlType.SWIPE)
+            swipeTaken = true;
+
+        if (!swipeTaken)
+          this.players[this.playersOptionsIndex].setControlType(Player.ControlType.SWIPE);
+        else
+          this.players[this.playersOptionsIndex].setControlType(Player.ControlType.GAMEPAD);
         break;
       case SWIPE:
         // TODO the next one would be keyboard and then gamepad, but they're not implemented
