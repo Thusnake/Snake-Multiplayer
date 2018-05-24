@@ -137,7 +137,7 @@ class Game extends BoardDrawer {
 
     // Draw the display controllers.
     for (Player player : players) {
-      if (player != null && player.getControlType() == Player.ControlType.CORNER) {
+      if (player != null && player.getPlayerController() != null) {
         this.drawControllerLayout(player);
       }
     }

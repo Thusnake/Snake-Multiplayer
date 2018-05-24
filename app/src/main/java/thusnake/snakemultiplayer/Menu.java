@@ -631,7 +631,7 @@ public class Menu {
         break;
       case SWIPE:
         // TODO the next one would be keyboard and then gamepad, but they're not implemented
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
+        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.GAMEPAD);
         break;
       case KEYBOARD:
         this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
