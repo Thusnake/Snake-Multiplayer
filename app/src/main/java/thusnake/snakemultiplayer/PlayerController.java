@@ -76,4 +76,12 @@ public abstract class PlayerController {
   }
 
   public ConnectedThread getInputTargetThread() { return inputTargetThread; }
+
+  public void setDirectionRemote() {
+    if (this.inputTargetThread != null)
+      inputTargetThread.write(new byte[] {
+          Protocol.DIRECTION_CHANGE,
+          Protocol.getMovementCode(player.getNumber(), player.getDirection())
+      });
+  }
 }

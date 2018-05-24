@@ -52,10 +52,7 @@ public class CornerLayoutController extends PlayerController {
       }
 
       // If there is a remote thread, send the information to it.
-      if (success && getInputTargetThread() != null) getInputTargetThread().write(new byte[] {
-          Protocol.DIRECTION_CHANGE,
-          Protocol.getMovementCode(player.getNumber(), player.getDirection())
-      });
+      if (success) this.setDirectionRemote();
 
       return success;
     }
