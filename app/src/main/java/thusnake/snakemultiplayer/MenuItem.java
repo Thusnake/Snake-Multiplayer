@@ -33,7 +33,8 @@ public class MenuItem extends MenuDrawable {
     this.easeOutInertia = this.getHeight() * 2;
 
     if (align == Alignment.LEFT) this.setX(x);
-    else this.setX(x - this.getWidth());
+    else if (align == Alignment.RIGHT) this.setX(x - this.getWidth());
+    else this.setX(x - this.getWidth() / 2);
   }
 
   // Simply draws the text representation of the button. Has to be called inside a block of

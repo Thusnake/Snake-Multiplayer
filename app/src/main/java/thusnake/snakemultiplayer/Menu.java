@@ -124,7 +124,7 @@ public class Menu {
     this.menuItemsConnect[3] = new MenuItem(renderer, "Wi-Fi", screenWidth * 2 - 10,
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuItem.Alignment.RIGHT);
     this.menuItemsConnect[4] = new MenuItem(renderer, "Search", screenWidth*1.5f,
-        screenHeight / 8, MenuItem.Alignment.CENTER);
+        screenHeight / 8 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.CENTER);
     this.menuItemsConnect[5] = new MenuItem(renderer, "Devices:", screenWidth + 10,
         screenHeight / 8, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
@@ -158,7 +158,7 @@ public class Menu {
 
     bluetoothGuestMenu.add(menuItemsConnect[4]);
     bluetoothGuestMenu.add(menuItemsConnect[5]);
-    bluetoothGuestMenu.add(bluetoothStatusIcon);
+    bluetoothHostMenu.add(bluetoothStatusIcon);
     bluetoothHostMenu.add(menuItemsConnect[6]);
     updateConnectMenuContents();
 
