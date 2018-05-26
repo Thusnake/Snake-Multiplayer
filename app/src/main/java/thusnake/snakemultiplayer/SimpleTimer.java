@@ -30,13 +30,8 @@ public class SimpleTimer {
   public double getInitialTime() { return this.initialTime; }
   public double getEndTime() { return this.endTime; }
 
-  public boolean countDown(double time) {
-    try {
-      this.time -= time;
-    } catch (Exception exception) {
-      return false;
-    }
-    return true;
+  public void countDown(double time) {
+    this.time -= time;
   }
 
   public boolean countUp(double time) {
@@ -78,6 +73,7 @@ public class SimpleTimer {
   }
 
   public void setTime(double time) { this.time = time; this.endTime = time; }
+  public void offsetTime(double offset) { this.time += offset; this.endTime += offset; }
 
   public void setEndTime(double time) {
     this.endTime = time;

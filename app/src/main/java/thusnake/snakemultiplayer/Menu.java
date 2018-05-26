@@ -114,7 +114,7 @@ public class Menu {
           MenuItem.Alignment.LEFT);
 
     // Connect screen buttons.
-    this.menuItemsConnect = new MenuItem[7];
+    this.menuItemsConnect = new MenuItem[8];
     this.menuItemsConnect[0] = new MenuItem(renderer, "Host", 10 + screenWidth,
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[1] = new MenuItem(renderer, "Join", 10 + screenWidth,
@@ -128,6 +128,8 @@ public class Menu {
     this.menuItemsConnect[5] = new MenuItem(renderer, "Devices:", screenWidth + 10,
         screenHeight / 8, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
+        screenHeight / 8, MenuItem.Alignment.CENTER);
+    this.menuItemsConnect[7] = new MenuItem(renderer, "", screenWidth*1.5f,
         screenHeight / 8, MenuItem.Alignment.CENTER) {
       @Override
       public void move(double dt) {
@@ -137,21 +139,30 @@ public class Menu {
           for (ConnectedThread thread : originActivity.connectedThreads)
             if (thread != null)
               threads++;
-          this.setText("Connected: " + threads);
+          if (!this.getText().equals("Connected: " + threads))
+            this.setText("Connected: " + threads);
+        } else {
+          if (!this.getText().equals("")) this.setText("");
         }
       }
     };
 
     this.bluetoothStatusIcon = new MenuItem(renderer, "none", screenWidth * 2 - 10,
         menuItemsConnect[5].getY(), MenuItem.Alignment.RIGHT) {
+      private BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+
       @Override
       public void move(double dt) {
         super.move(dt);
-        switch(BluetoothAdapter.getDefaultAdapter().getScanMode()) {
-          case BluetoothAdapter.SCAN_MODE_CONNECTABLE: this.setText("c"); break;
-          case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE: this.setText("c d"); break;
-          case BluetoothAdapter.SCAN_MODE_NONE: this.setText("none"); break;
-          default: this.setText("idk"); break;
+        switch(adapter.getScanMode()) {
+          case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
+            if (!this.getText().equals("c")) this.setText("c"); break;
+          case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
+            if (!this.getText().equals("c d")) this.setText("c d"); break;
+          case BluetoothAdapter.SCAN_MODE_NONE:
+            if (!this.getText().equals("none")) this.setText("none"); break;
+          default:
+            if (!this.getText().equals("idk")) this.setText("idk"); break;
         }
       }
     };
@@ -160,6 +171,7 @@ public class Menu {
     bluetoothGuestMenu.add(menuItemsConnect[5]);
     bluetoothHostMenu.add(bluetoothStatusIcon);
     bluetoothHostMenu.add(menuItemsConnect[6]);
+    bluetoothHostMenu.add(menuItemsConnect[7]);
     updateConnectMenuContents();
 
     // Board screen buttons.
@@ -808,14 +820,33 @@ public class Menu {
 
   // Begins the hosting of a bluetooth game.
   public void beginHost() {
-    // Make discoverable for 5 minutes.
-    Intent discoverableIntent =
-        new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-    discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-    originActivity.startActivity(discoverableIntent);
+    if (BluetoothAdapter.getDefaultAdapter().getScanMode()
+        != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+      // Make discoverable for 5 minutes if not discoverable already.
+      Intent discoverableIntent =
+          new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+      discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+      originActivity.startActivity(discoverableIntent);
+    }
     // Begin the thread for accepting devices.
     originActivity.acceptThread = new AcceptThread(originActivity);
     originActivity.acceptThread.start();
+
+    menuItemsConnect[6].setText("Stop server");
+    menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().stopHost());
+    menuItemsConnect[6].setDestinationYFromOrigin(-glText.getCharHeight() * 0.65f);
+  }
+
+  // Cancels the hosting of a bluetooth game.
+  public void stopHost() {
+    if (originActivity.acceptThread != null) {
+      originActivity.acceptThread.cancel();
+      originActivity.acceptThread = null;
+
+      menuItemsConnect[6].setText("Start server");
+      menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().beginHost());
+      menuItemsConnect[6].setDestinationToInitial();
+    }
   }
 
   // Sets up the menu to work as if you're a guest.

@@ -73,7 +73,9 @@ public class MenuItem extends MenuDrawable {
 
   public void setText(String text) {
     if (this.align == Alignment.RIGHT)
-      this.getXTimer().countDown(glText.getLength(text) - glText.getLength(this.text));
+      this.getXTimer().offsetTime(glText.getLength(this.text) - glText.getLength(text));
+    else if (this.align == Alignment.CENTER);
+      this.getXTimer().offsetTime((glText.getLength(this.text) - glText.getLength(text)) / 2f);
     this.setWidth(glText.getLength(text));
     this.text = text;
   }
@@ -100,22 +102,33 @@ public class MenuItem extends MenuDrawable {
 
   @Override
   public void setDestinationX(double destinationX) {
-    if (this.align == Alignment.RIGHT) super.setDestinationX(destinationX - this.getWidth());
-    else super.setDestinationX(destinationX);
+    if (this.align == Alignment.RIGHT)
+      super.setDestinationX(destinationX - this.getWidth());
+    else if (this.align == Alignment.CENTER)
+      super.setDestinationX(destinationX - this.getWidth() / 2);
+    else
+      super.setDestinationX(destinationX);
   }
 
   @Override
   public void setDestinationXFromOrigin(double offsetX) {
-    if (this.align == Alignment.RIGHT) super.setDestinationXFromOrigin(offsetX - this.getWidth());
-    else super.setDestinationXFromOrigin(offsetX);
+    if (this.align == Alignment.RIGHT)
+      super.setDestinationXFromOrigin(offsetX - this.getWidth());
+    else if (this.align == Alignment.CENTER)
+      super.setDestinationXFromOrigin(offsetX - this.getWidth() / 2);
+    else
+      super.setDestinationXFromOrigin(offsetX);
   }
 
   @Override
   public void setDestinationToInitial() {
     if (this.align == Alignment.RIGHT)
       this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth());
+    else if (this.align == Alignment.CENTER)
+      this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth() / 2);
     else
       this.getXTimer().setEndTimeFromNow(this.getInitialX());
+
     this.getYTimer().setEndTimeFromNow(this.getInitialY());
   }
 
