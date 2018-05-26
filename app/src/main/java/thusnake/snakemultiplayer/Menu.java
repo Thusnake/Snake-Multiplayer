@@ -189,8 +189,8 @@ public class Menu {
           10 + screenWidth, screenHeight * 4/5f - glText.getCharHeight() * (i * 5/4f + 1) * 0.65f,
           MenuItem.Alignment.LEFT);
 
-    this.addSnakeButton = new MenuItem(renderer, "+", screenWidth*2 - 10,
-        menuItemsPlayers[1].getY(), MenuItem.Alignment.RIGHT);
+    this.addSnakeButton = new MenuItem(renderer, "+", screenWidth*2 - screenWidth*0.0425f,
+        menuItemsPlayers[1].getY(), MenuItem.Alignment.CENTER);
     for (int index = 0; index < removeSnakeButtons.length; index++)
       this.removeSnakeButtons[index]
           = new MenuButtonRemoveSnake(renderer, menuItemsPlayers[index]);

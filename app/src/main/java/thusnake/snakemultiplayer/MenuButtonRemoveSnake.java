@@ -6,17 +6,20 @@ package thusnake.snakemultiplayer;
 public class MenuButtonRemoveSnake extends MenuItem {
   private final GameRenderer renderer;
   private final MenuItem playerButton;
+  private final float hideDistance;
 
   public MenuButtonRemoveSnake(GameRenderer renderer, MenuItem playerButton) {
-    super(renderer, "-", (playerButton.getScreenNumber() + 1) * renderer.getScreenWidth() - 10,
-          playerButton.getY(), Alignment.RIGHT);
+    super(renderer, "-", (playerButton.getScreenNumber() + 1) * renderer.getScreenWidth()
+            - renderer.getScreenWidth() * 0.0425f, playerButton.getY(), Alignment.CENTER);
+    this.hideDistance = renderer.getScreenWidth() * 0.0425f * 2;
     this.hide();
     this.renderer = renderer;
     this.playerButton = playerButton;
+
   }
 
   public void hide() {
-    this.setDestinationXFromOrigin(this.getWidth() + 10);
+    this.setDestinationXFromOrigin(this.getWidth() + hideDistance);
     this.setDrawableOutsideOfScreen(false);
   }
 
