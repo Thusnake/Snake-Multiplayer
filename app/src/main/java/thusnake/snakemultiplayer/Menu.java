@@ -372,7 +372,7 @@ public class Menu {
     // Also draw the menu items for the previous screen.
     if (menuStatePrevious != menuState)
       for (MenuDrawable drawable : getPreviousDrawables()) {
-        if (drawable.isDrawableOutsideOfScreen())
+        if (drawable.isDrawable() && drawable.isDrawableOutsideOfScreen())
           drawable.draw();
         drawable.move(dt);
       }
