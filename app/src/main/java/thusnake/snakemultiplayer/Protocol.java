@@ -12,6 +12,10 @@ public class Protocol {
   public static final byte REQUEST_MOVE = 1; // Followed by the move's id.
   public static final byte REQUEST_ADD_SNAKE = 2;
   public static final byte REQUEST_CONTROLLED_SNAKES = 3;
+  public static final byte IS_READY = 4;
+  public static final byte IS_NOT_READY = 5;
+  public static final byte REQUEST_NUMBER_OF_READY = 6;
+  public static final byte REQUEST_NUMBER_OF_DEVICES = 7;
 
   // Universal codes
   public static final byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
@@ -32,6 +36,9 @@ public class Protocol {
   // Host codes
   public static final byte REQUEST_NAME = -1;
   public static final byte CONTROLLED_SNAKES_LIST = -3; // Followed by 0-4 snake number bytes.
+  public static final byte NUMBER_OF_READY = -4; // Followed by number of ready devices.
+  public static final byte NUMBER_OF_DEVICES = -5; // Followed by number of devices.
+  public static final byte READY_STATUS = -6; // Followed by a device's personal boolean ready value.
   public static final byte APPROVE_CONNECT = -10;
   public static final byte START_GAME = -20;
   public static final byte END_GAME = -30; // Followed by 1 winner byte.

@@ -14,9 +14,7 @@ public class ConnectedThread extends Thread {
   private final OpenGLES20Activity originActivity;
   private final InputStream inStream;
   private final OutputStream outStream;
-  private int state = 1;
-  private final int STATE_NOT_CONNECTED = 1;
-  private final int STATE_CONNECTED = 2;
+  private boolean isReady = false;
 
   public ConnectedThread(OpenGLES20Activity activity, BluetoothSocket socket) {
     this.socket = socket;
@@ -28,7 +26,6 @@ public class ConnectedThread extends Thread {
     try {
       tmpIn = socket.getInputStream();
       tmpOut = socket.getOutputStream();
-      state = 2;
     } catch (IOException e) { }
 
     inStream = tmpIn;
@@ -77,7 +74,7 @@ public class ConnectedThread extends Thread {
     }
   }
 
-  public int getCurrentState() {
-    return state;
-  }
+  public void setReady(boolean ready) { this.isReady = ready; }
+
+  public boolean isReady() { return isReady; }
 }

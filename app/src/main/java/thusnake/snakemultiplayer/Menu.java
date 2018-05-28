@@ -46,7 +46,7 @@ public class Menu {
   private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
   private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
   private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
-  private final MenuDrawable bluetoothStatusIcon;
+  private final MenuDrawable bluetoothStatusIcon, readyDevicesCounter;
 
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem, addSnakeButton;
@@ -107,11 +107,53 @@ public class Menu {
     // Main screen buttons.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
     this.menuItemsMain = new MenuItem[menuItemsMainText.length];
-    for (int i = 0; i < menuItemsMainText.length; i++)
+    this.menuItemsMain[0] = new MenuItem(renderer, menuItemsMainText[0], 10,
+        screenHeight - glText.getCharHeight() * 0.65f
+            - (screenHeight - glText.getCharHeight() * menuItemsMain.length * 0.65f) / 2,
+        MenuItem.Alignment.LEFT) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (originActivity.isGuest() || originActivity.isHost())
+          if (originActivity.isReady()) {
+            if (!this.getText().equals("Cancel")) this.setText("Cancel");
+          } else {
+            if (!this.getText().equals("Ready")) this.setText("Ready");
+          }
+        else
+          if (!this.getText().equals(menuItemsMainText[0])) this.setText(menuItemsMainText[0]);
+      }
+    };
+    for (int i = 1; i < menuItemsMainText.length; i++)
       this.menuItemsMain[i] = new MenuItem(renderer, menuItemsMainText[i], 10,
           screenHeight - glText.getCharHeight() * (i + 1) * 0.65f
               - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
           MenuItem.Alignment.LEFT);
+
+    this.readyDevicesCounter = new MenuItem(renderer, "", screenWidth - 10,
+        menuItemsMain[0].getY(), MenuItem.Alignment.RIGHT) {
+      private int readyDevices = 0;
+      private int connectedDevices = 0;
+
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (originActivity.isGuest() || originActivity.isHost()) {
+          if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
+              || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
+            this.setText(originActivity.getNumberOfReadyRemoteDevices() + " / "
+                + originActivity.getNumberOfRemoteDevices());
+
+            if (readyDevices == connectedDevices && readyDevices > 1) {
+              // Everyone is ready - begin game.
+              renderer.startGame(players);
+            }
+          }
+        } else {
+          if (!this.getText().equals("")) this.setText("");
+        }
+      }
+    };
 
     // Connect screen buttons.
     this.menuItemsConnect = new MenuItem[8];
@@ -205,7 +247,14 @@ public class Menu {
           MenuItem.Alignment.LEFT);
 
     // Set functionality for each menuItem.
-    this.menuItemsMain[0].setAction((action, origin) -> renderer.startGame(renderer.getMenu().getPlayers()));
+    this.menuItemsMain[0].setAction((action, origin) -> {
+      OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
+      if (originActivity.isGuest() || originActivity.isHost())
+        originActivity.setReady(!originActivity.isReady());
+      else
+        renderer.startGame(renderer.getMenu().getPlayers());
+    });
+
     this.menuItemsMain[1].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.CONNECT));
     this.menuItemsMain[2].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.BOARD));
     this.menuItemsMain[3].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.PLAYERS));
@@ -319,6 +368,7 @@ public class Menu {
     // Add items to the drawables list for each screen.
     drawablesMain = new ArrayList<>();
     drawablesMain.addAll(Arrays.asList(menuItemsMain));
+    drawablesMain.add(readyDevicesCounter);
 
     drawablesConnect = new CopyOnWriteArrayList<>();
     drawablesConnect.addAll(Arrays.asList(menuItemsConnect));
@@ -860,7 +910,6 @@ public class Menu {
         -> originActivity.connectedThread.write(new byte[] {Protocol.REQUEST_ADD_SNAKE}));
     // Make all players uncontrollable.
     for (Player player : players) {
-
       player.setControlType(Player.ControlType.OFF);
     }
   }
@@ -894,7 +943,7 @@ public class Menu {
       case Protocol.SNAKE4_CORNER_CHANGED: players[3]
           .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
 
-          // Host-only
+      // HOST ONLY
       case Protocol.REQUEST_ADD_SNAKE:
         if (!this.isGuest()) {
           for (Player player : players) {
@@ -907,7 +956,7 @@ public class Menu {
         }
         break;
 
-        // Guest-only
+      // GUEST ONLY
       case Protocol.CONTROLLED_SNAKES_LIST:
         if (this.isGuest()) {
           // Disable all.
@@ -920,6 +969,7 @@ public class Menu {
                 player.setControlType(Player.ControlType.CORNER);
         }
         break;
+
       default: break;
     }
 
@@ -997,9 +1047,11 @@ public class Menu {
   public MenuImage[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
   public GameRenderer getRenderer() { return this.renderer; }
   public OpenGLES20Activity getOriginActivity() { return this.originActivity; }
+
   public Player[] getPlayers() { return this.players; }
+
   // Protocol simplifier getters.
-  public boolean isGuest() { return originActivity.connectedThread != null; }
+  public boolean isGuest() { return originActivity.isGuest(); }
   private byte[] getControlledSnakesList(ConnectedThread thread) {
     int controlledSnakes = 0;
     for (Player player : players)

@@ -13,6 +13,7 @@ public class OnlineHostGame extends Game {
   public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
     super(renderer, screenWidth, screenHeight, players);
     this.sendBytes(new byte[] {Protocol.START_GAME});
+    // TODO Have it start everybody else's game before starting the countdown.
   }
 
   @Override

@@ -34,6 +34,13 @@ public class OpenGLES20Activity extends Activity {
   public ArrayList<String> arrayAdapter = new ArrayList<>();
   public ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
 
+  // Bluetooth related variables
+  private boolean isReady = false;
+
+  // Guest-only
+  public int numberOfRemoteDevices = 0;
+  public int numberOfReadyRemoteDevices = 0;
+
   // Create a BroadcastReceiver for ACTION_FOUND
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
     @Override
@@ -132,8 +139,62 @@ public class OpenGLES20Activity extends Activity {
     return rand.nextInt((max-min)+1) + min;
   }
 
-  static float randomf(float min, float max) {
-    Random rand = new Random();
-    return rand.nextFloat() * (max - min) + min;
+  public boolean isGuest() { return this.connectedThread != null; }
+
+  public boolean isHost() {
+    if (this.acceptThread != null)
+      return true;
+    else
+      for (ConnectedThread thread : connectedThreads)
+        if (thread != null)
+          return true;
+    return false;
+  }
+
+  public void setReady(boolean ready) {
+    this.isReady = ready;
+
+    // Tell the host if you're a guest.
+    if (this.isGuest())
+      connectedThread.write(new byte[] {(ready) ? Protocol.IS_READY : Protocol.IS_NOT_READY});
+    // If you're a host yourself tell everyone how many are ready.
+    else {
+      int readyDevices = 0;
+      for (ConnectedThread thread : connectedThreads)
+        if (thread != null && thread.isReady())
+          readyDevices++;
+
+      if (ready) readyDevices++;
+
+      for (ConnectedThread thread : connectedThreads)
+        if (thread != null)
+          thread.write(new byte[]{Protocol.NUMBER_OF_READY, (byte) readyDevices});
+    }
+
+  }
+
+  public boolean isReady() { return this.isReady; }
+
+
+  public int getNumberOfRemoteDevices() {
+    if (this.isGuest()) return numberOfRemoteDevices;
+    else {
+      int connected = 1;
+      for (ConnectedThread thread : connectedThreads)
+        if (thread != null)
+          connected++;
+      return connected;
+    }
+  }
+
+  public int getNumberOfReadyRemoteDevices() {
+    if (this.isGuest()) return numberOfReadyRemoteDevices;
+    else {
+      int ready = (isReady) ? 1 : 0;
+      for (ConnectedThread thread : connectedThreads)
+        if (thread != null && thread.isReady())
+          ready++;
+      return ready;
+    }
   }
 }

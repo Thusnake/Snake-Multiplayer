@@ -14,6 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class GameRenderer implements GLSurfaceView.Renderer {
   private Context context;
+  private OpenGLES20Activity originActivity;
   private int fontSize;
   private int screenWidth, screenHeight;
   private GL10 gl;
@@ -29,6 +30,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public GameRenderer(Context context) {
     super();
     this.context = context;
+    this.originActivity = (OpenGLES20Activity) context;
   }
 
   @Override
@@ -100,9 +102,13 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public float getScreenHeight() { return this.screenHeight; }
 
   public void startGame(Player[] players) {
-    if (menu.isGuest())
+    if (originActivity.isGuest())
       game = new GuestGame(this, screenWidth, screenHeight, players);
-    else
+    else if (originActivity.isHost()) {
+      game = new OnlineHostGame(this, screenWidth, screenHeight, players);
+      originActivity.acceptThread.cancel();
+      originActivity.acceptThread = null;
+    } else
       game = new Game(this, screenWidth, screenHeight, players);
   }
   public void quitGame() {
@@ -124,6 +130,78 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public double getPointerDownTime() { return this.pointerDownTime; }
 
   public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
+    // Universal input byte handlers.
+    switch (bytes[0]) {
+      case Protocol.REQUEST_NUMBER_OF_DEVICES:
+        sourceThread.write(new byte[]
+            {Protocol.NUMBER_OF_DEVICES, (byte) originActivity.getNumberOfRemoteDevices()});
+        break;
+      case Protocol.REQUEST_NUMBER_OF_READY:
+        sourceThread.write(new byte[]
+            {Protocol.NUMBER_OF_READY, (byte) originActivity.getNumberOfReadyRemoteDevices()});
+        break;
+      case Protocol.IS_READY:
+        if (!originActivity.isGuest()) {
+          sourceThread.setReady(true);
+
+          // Count the ready devices.
+          int readyDevices = 0;
+          for (ConnectedThread thread : originActivity.connectedThreads)
+            if (thread != null && thread.isReady())
+              readyDevices++;
+
+          // Tell everyone how many devices are ready.
+          for (ConnectedThread thread : originActivity.connectedThreads)
+            if (thread != null)
+              thread.write(new byte[]{Protocol.NUMBER_OF_READY, (byte) readyDevices});
+
+          // Tell the source device its last known ready status.
+          sourceThread.write(new byte[]{Protocol.READY_STATUS, 1});
+        }
+        break;
+      case Protocol.IS_NOT_READY:
+        if (!originActivity.isGuest()) {
+          sourceThread.setReady(false);
+
+          // Count the ready devices.
+          int readyDevices = 0;
+          for (ConnectedThread thread : originActivity.connectedThreads)
+            if (thread != null && thread.isReady())
+              readyDevices++;
+
+          // Tell everyone how many devices are ready.
+          for (ConnectedThread thread : originActivity.connectedThreads)
+            if (thread != null)
+              thread.write(new byte[]{Protocol.NUMBER_OF_READY, (byte) readyDevices});
+
+          // Tell the source device its last known ready status.
+          sourceThread.write(new byte[]{Protocol.READY_STATUS, 0});
+        }
+        break;
+
+      case Protocol.NUMBER_OF_READY:
+        if (originActivity.isGuest()) {
+          originActivity.numberOfReadyRemoteDevices = bytes[1];
+        }
+        break;
+      case Protocol.NUMBER_OF_DEVICES:
+        if (originActivity.isGuest()) {
+          originActivity.numberOfRemoteDevices = bytes[1];
+        }
+        break;
+      case Protocol.READY_STATUS:
+        if (originActivity.isGuest()) {
+          boolean receivedReady = bytes[1] == 1;
+
+          // If we received the wrong ready status, tell the host the correct one.
+          if (receivedReady != originActivity.isReady())
+            sourceThread.write(new byte[]
+                {originActivity.isReady() ? Protocol.IS_READY : Protocol.IS_NOT_READY});
+        }
+        break;
+    }
+
+    // Pass to the menu or game.
     if (this.game == null) this.menu.handleInputBytes(bytes, sourceThread);
     else this.game.handleInputBytes(bytes, sourceThread);
   }

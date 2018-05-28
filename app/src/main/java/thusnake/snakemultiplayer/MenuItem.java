@@ -74,7 +74,7 @@ public class MenuItem extends MenuDrawable {
   public void setText(String text) {
     if (this.align == Alignment.RIGHT)
       this.getXTimer().offsetTime(glText.getLength(this.text) - glText.getLength(text));
-    else if (this.align == Alignment.CENTER);
+    else if (this.align == Alignment.CENTER)
       this.getXTimer().offsetTime((glText.getLength(this.text) - glText.getLength(text)) / 2f);
     this.setWidth(glText.getLength(text));
     this.text = text;
