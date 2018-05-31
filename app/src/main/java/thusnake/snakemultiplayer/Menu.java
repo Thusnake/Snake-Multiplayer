@@ -1052,17 +1052,35 @@ public class Menu {
 
   // Protocol simplifier getters.
   public boolean isGuest() { return originActivity.isGuest(); }
-  private byte[] getControlledSnakesList(ConnectedThread thread) {
+  public byte[] getControlledSnakesList(ConnectedThread thread) {
     int controlledSnakes = 0;
     for (Player player : players)
       if (player.getControllerThread().equals(thread))
         controlledSnakes++;
+
     byte[] output = new byte[controlledSnakes + 1];
     output[0] = Protocol.CONTROLLED_SNAKES_LIST;
     int outputIndex = 1;
     for (Player player : players)
       if (player.getControllerThread().equals(thread))
         output[outputIndex++] = (byte) player.getNumber();
+
+    return output;
+  }
+
+  public byte[] getAvailableSnakesList() {
+    int availableSlots = 4;
+    for (Player player : players)
+      if (player.getControlType() == Player.ControlType.OFF)
+        availableSlots--;
+
+    byte[] output = new byte[availableSlots + 1];
+    output[0] = Protocol.AVAILABLE_SNAKES_LIST;
+    int outputIndex = 1;
+    for (Player player : players)
+      if (player.getControlType() == Player.ControlType.OFF)
+        output[outputIndex++] = (byte) player.getNumber();
+
     return output;
   }
 }

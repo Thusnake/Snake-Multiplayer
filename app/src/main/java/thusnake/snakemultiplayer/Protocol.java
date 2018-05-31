@@ -2,6 +2,10 @@ package thusnake.snakemultiplayer;
 
 import android.util.Pair;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by Nick on 22/02/2018.
  */
@@ -11,11 +15,12 @@ public class Protocol {
   public static final byte REQUEST_CONNECT = 0;
   public static final byte REQUEST_MOVE = 1; // Followed by the move's id.
   public static final byte REQUEST_ADD_SNAKE = 2;
-  public static final byte REQUEST_CONTROLLED_SNAKES = 3;
-  public static final byte IS_READY = 4;
-  public static final byte IS_NOT_READY = 5;
-  public static final byte REQUEST_NUMBER_OF_READY = 6;
-  public static final byte REQUEST_NUMBER_OF_DEVICES = 7;
+  public static final byte REQUEST_AVAILABLE_SNAKES = 3;
+  public static final byte REQUEST_CONTROLLED_SNAKES = 4;
+  public static final byte IS_READY = 5;
+  public static final byte IS_NOT_READY = 6;
+  public static final byte REQUEST_NUMBER_OF_READY = 7;
+  public static final byte REQUEST_NUMBER_OF_DEVICES = 8;
 
   // Universal codes
   public static final byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
@@ -33,8 +38,12 @@ public class Protocol {
   public static final byte SNAKE4_NAME_CHANGED = 43; // Followed by 1 length byte and a string of chars.
   public static final byte SPEED_CHANGED = 50; // Followed by 1 speed byte.
 
+  public static final byte AGGREGATE_CALL = 60; // Followed by series of calls and NEXT_CALL bytes.
+  public static final byte NEXT_CALL = 61;
+
   // Host codes
   public static final byte REQUEST_NAME = -1;
+  public static final byte AVAILABLE_SNAKES_LIST = -2; // Followed by 0-4 snake number bytes.
   public static final byte CONTROLLED_SNAKES_LIST = -3; // Followed by 0-4 snake number bytes.
   public static final byte NUMBER_OF_READY = -4; // Followed by number of ready devices.
   public static final byte NUMBER_OF_DEVICES = -5; // Followed by number of devices.
@@ -122,5 +131,44 @@ public class Protocol {
 
   public static int decodeMoveID(byte firstByte, byte secondByte) {
     return firstByte + (secondByte << 8);
+  }
+
+  public static byte[] encodeSeveralCalls(List<byte[]> callsList) {
+    int totalLength = 1;
+    for (byte[] call : callsList)
+      totalLength += call.length + 1;
+
+    byte[] outputCall = new byte[totalLength];
+    outputCall[0] = AGGREGATE_CALL;
+    int outputIndex = 1;
+    for (byte[] call : callsList) {
+      for (byte callByte : call)
+        outputCall[outputIndex++] = callByte;
+      outputCall[outputIndex++] = NEXT_CALL;
+    }
+
+    return outputCall;
+  }
+
+  public static List<byte[]> decodeSeveralCalls(byte[] aggregateCall) {
+    List<byte[]> callsList = new ArrayList<>();
+
+    List<Byte> currentCall = new ArrayList<>();
+    for (byte inputByte : aggregateCall) {
+      if (inputByte != NEXT_CALL && inputByte != AGGREGATE_CALL) {
+        currentCall.add(inputByte);
+      } else if (inputByte != AGGREGATE_CALL) {
+        byte[] currentCallArray = new byte[currentCall.size()];
+        int index = 0;
+        for (Byte currentCallByte : currentCall)
+          currentCallArray[index++] = currentCallByte;
+
+        callsList.add(currentCallArray);
+
+        currentCall = new ArrayList<>();
+      }
+    }
+
+    return callsList;
   }
 }

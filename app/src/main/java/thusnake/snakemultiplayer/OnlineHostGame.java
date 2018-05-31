@@ -1,6 +1,9 @@
 package thusnake.snakemultiplayer;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import static thusnake.snakemultiplayer.Protocol.*;
 
 /**
  * Created by Nick on 24/02/2018.
@@ -12,8 +15,28 @@ public class OnlineHostGame extends Game {
   // Constructor.
   public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
     super(renderer, screenWidth, screenHeight, players);
-    this.sendBytes(new byte[] {Protocol.START_GAME});
-    // TODO Have it start everybody else's game before starting the countdown.
+
+    OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
+    for (ConnectedThread thread : originActivity.connectedThreads)
+      if (thread != null)
+        thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
+    //this.sendBytes(new byte[] {Protocol.START_GAME});
+  }
+
+  public List<byte[]> createInitializationCalls(ConnectedThread thread) {
+    List<byte[]> allInformation = new ArrayList<>();
+    allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers()[0].getColorIndex()});
+    allInformation.add(new byte[] {SNAKE2_COLOR_CHANGED, (byte) getPlayers()[1].getColorIndex()});
+    allInformation.add(new byte[] {SNAKE3_COLOR_CHANGED, (byte) getPlayers()[2].getColorIndex()});
+    allInformation.add(new byte[] {SNAKE4_COLOR_CHANGED, (byte) getPlayers()[3].getColorIndex()});
+    allInformation.add(new byte[] {SNAKE1_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[0].getControlCorner())});
+    allInformation.add(new byte[] {SNAKE2_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[1].getControlCorner())});
+    allInformation.add(new byte[] {SNAKE3_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[2].getControlCorner())});
+    allInformation.add(new byte[] {SNAKE4_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[3].getControlCorner())});
+    allInformation.add(getRenderer().getMenu().getAvailableSnakesList());
+    allInformation.add(getRenderer().getMenu().getControlledSnakesList(thread));
+
+    return allInformation;
   }
 
   @Override
