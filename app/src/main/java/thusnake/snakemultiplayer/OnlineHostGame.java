@@ -2,6 +2,8 @@ package thusnake.snakemultiplayer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static thusnake.snakemultiplayer.Protocol.*;
 
@@ -11,6 +13,8 @@ import static thusnake.snakemultiplayer.Protocol.*;
 
 public class OnlineHostGame extends Game {
   private ArrayList<Byte> moveCodes = new ArrayList<>();
+  private final List<ConnectedThread> awaitingAggregateReceive = new ArrayList<>();
+  private boolean running = false;
 
   // Constructor.
   public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
@@ -18,9 +22,10 @@ public class OnlineHostGame extends Game {
 
     OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
     for (ConnectedThread thread : originActivity.connectedThreads)
-      if (thread != null)
+      if (thread != null) {
         thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
-    //this.sendBytes(new byte[] {Protocol.START_GAME});
+        awaitingAggregateReceive.add(thread);
+      }
   }
 
   public List<byte[]> createInitializationCalls(ConnectedThread thread) {
@@ -41,6 +46,12 @@ public class OnlineHostGame extends Game {
     allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) (stageBorders ? 1 : 0)});
 
     return allInformation;
+  }
+
+  @Override
+  public void run(double dt) {
+    if (running)
+      super.run(dt);
   }
 
   @Override
@@ -94,6 +105,13 @@ public class OnlineHostGame extends Game {
           });
         }
         break;
+
+      case AGGREGATE_CALL_RECEIVED:
+        awaitingAggregateReceive.remove(sourceThread);
+        if (awaitingAggregateReceive.isEmpty())
+          running = true;
+        break;
+
       default:
         break;
     }

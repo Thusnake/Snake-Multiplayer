@@ -43,6 +43,7 @@ public class Protocol {
 
   public static final byte AGGREGATE_CALL = 60; // Followed by series of calls and NEXT_CALL bytes.
   public static final byte NEXT_CALL = 61;
+  public static final byte AGGREGATE_CALL_RECEIVED = 62;
 
   // Host codes
   public static final byte REQUEST_NAME = -1;
