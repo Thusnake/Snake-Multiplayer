@@ -35,6 +35,10 @@ public class OnlineHostGame extends Game {
     allInformation.add(new byte[] {SNAKE4_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[3].getControlCorner())});
     allInformation.add(getRenderer().getMenu().getAvailableSnakesList());
     allInformation.add(getRenderer().getMenu().getControlledSnakesList(thread));
+    allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) horizontalSquares});
+    allInformation.add(new byte[] {VER_SQUARES_CHANGED, (byte) verticalSquares});
+    allInformation.add(new byte[] {SPEED_CHANGED, (byte) getSpeed()});
+    allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) (stageBorders ? 1 : 0)});
 
     return allInformation;
   }

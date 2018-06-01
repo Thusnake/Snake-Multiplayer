@@ -151,6 +151,16 @@ public class OpenGLES20Activity extends Activity {
     return false;
   }
 
+  // Sends a byte array to the host or to all the guests determined automatically.
+  public void writeBytesAuto(byte[] bytes) {
+    if (this.isGuest())
+      connectedThread.write(bytes);
+    else
+      for (ConnectedThread thread : connectedThreads)
+        if (thread != null)
+          thread.write(bytes);
+  }
+
   public void setReady(boolean ready) {
     this.isReady = ready;
 

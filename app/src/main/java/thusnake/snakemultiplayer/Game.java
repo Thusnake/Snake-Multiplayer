@@ -249,6 +249,7 @@ class Game extends BoardDrawer {
 
   public GameRenderer getRenderer() { return this.renderer; }
   public GameMode getGameMode() { return this.gameMode; }
+  public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
   public int getMoveCount() { return this.moveCount; }
   public Player[] getPlayers() { return this.players; }

@@ -277,16 +277,49 @@ public class Menu {
 
     this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, this.horizontalSquares,
         screenWidth * 2 - 10,
-        this.menuItemsBoard[0].getY(), MenuItem.Alignment.RIGHT));
+        this.menuItemsBoard[0].getY(), MenuItem.Alignment.RIGHT) {
+      @Override
+      public void setValue(int value) {
+        super.setValue(value);
+
+        if (originActivity.isHost())
+          originActivity.writeBytesAuto(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) value});
+      }
+    });
     this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, this.verticalSquares,
         screenWidth * 2 - 10,
-        this.menuItemsBoard[1].getY(), MenuItem.Alignment.RIGHT));
+        this.menuItemsBoard[1].getY(), MenuItem.Alignment.RIGHT) {
+      @Override
+      public void setValue(int value) {
+        super.setValue(value);
+
+        if (originActivity.isHost())
+          originActivity.writeBytesAuto(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) value});
+      }
+    });
     this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, this.speed,
         screenWidth * 2 - 10,
-        this.menuItemsBoard[2].getY(), MenuItem.Alignment.RIGHT));
+        this.menuItemsBoard[2].getY(), MenuItem.Alignment.RIGHT) {
+      @Override
+      public void setValue(int value) {
+        super.setValue(value);
+
+        if (originActivity.isHost())
+          originActivity.writeBytesAuto(new byte[] {Protocol.SPEED_CHANGED, (byte) value});
+      }
+    });
     this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, this.stageBorders,
         screenWidth * 2 - 10,
-        this.menuItemsBoard[3].getY(), MenuItem.Alignment.RIGHT));
+        this.menuItemsBoard[3].getY(), MenuItem.Alignment.RIGHT) {
+      @Override
+      public void setValue(boolean newValue) {
+        super.setValue(newValue);
+
+        if (originActivity.isHost())
+          originActivity.writeBytesAuto(
+              new byte[] {Protocol.STAGE_BORDERS_CHANGED, (byte) (newValue ? 1 : 0)});
+      }
+    });
 
     this.menuItemsBoard[0].getValue().setBoundaries(1, 100);
     this.menuItemsBoard[1].getValue().setBoundaries(1, 100);
@@ -319,14 +352,14 @@ public class Menu {
           screenHeight - glText.getCharHeight()*0.65f - squareSize, squareSize, squareSize);
       this.colorSelectionSquare[index].setColors(getColorFromIndex(index));
     }
-    this.colorSelectionSquare[0].setAction((action, origin)-> renderer.getMenu().setPlayerColor(0));
-    this.colorSelectionSquare[1].setAction((action, origin)-> renderer.getMenu().setPlayerColor(1));
-    this.colorSelectionSquare[2].setAction((action, origin)-> renderer.getMenu().setPlayerColor(2));
-    this.colorSelectionSquare[3].setAction((action, origin)-> renderer.getMenu().setPlayerColor(3));
-    this.colorSelectionSquare[4].setAction((action, origin)-> renderer.getMenu().setPlayerColor(4));
-    this.colorSelectionSquare[5].setAction((action, origin)-> renderer.getMenu().setPlayerColor(5));
-    this.colorSelectionSquare[6].setAction((action, origin)-> renderer.getMenu().setPlayerColor(6));
-    this.colorSelectionSquare[7].setAction((action, origin)-> renderer.getMenu().setPlayerColor(7));
+    this.colorSelectionSquare[0].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(0));
+    this.colorSelectionSquare[1].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(1));
+    this.colorSelectionSquare[2].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(2));
+    this.colorSelectionSquare[3].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(3));
+    this.colorSelectionSquare[4].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(4));
+    this.colorSelectionSquare[5].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(5));
+    this.colorSelectionSquare[6].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(6));
+    this.colorSelectionSquare[7].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(7));
 
     this.cornerSelectionSquare = new MenuImage[4];
     squareSize = (screenWidth*0.6f - 10 - 10*this.cornerSelectionSquare.length)
@@ -342,13 +375,13 @@ public class Menu {
     this.cornerSelectionSquare[2].setGraphic(R.drawable.upperright);
     this.cornerSelectionSquare[3].setGraphic(R.drawable.lowerright);
     this.cornerSelectionSquare[0].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.LOWER_LEFT));
+        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_LEFT));
     this.cornerSelectionSquare[1].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.UPPER_LEFT));
+        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_LEFT));
     this.cornerSelectionSquare[2].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.UPPER_RIGHT));
+        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_RIGHT));
     this.cornerSelectionSquare[3].setAction((action, origin)
-        -> renderer.getMenu().setPlayerControlCorner(PlayerController.Corner.LOWER_RIGHT));
+        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_RIGHT));
 
     // Some items should be disabled for online game guests.
     guestDisabledDrawables.add(menuItemsMain[2]);     // The board menu button.
@@ -720,21 +753,65 @@ public class Menu {
         .setValue(this.players[this.playersOptionsIndex].getControlType().toString());
   }
 
-  // Sets the currently selected player's color to a color from a given index.
-  public void setPlayerColor(int index) {
-    this.players[this.playersOptionsIndex].setColors(index);
-    this.menuStateItem.setColors(getColorFromIndex(index));
+  // Sets the currently selected player's color to a color from a given color square index.
+  private void onColorSquareTouch(int index) {
+    // Only guests have to wait for a signal from somewhere else before setting the color.
+    if (!this.isGuest())
+      this.setPlayerColor(playersOptionsIndex, index);
+
+    // If it's an online user have it send the information.
+    if (originActivity.isGuest() || originActivity.isHost()) {
+      byte protocolId;
+      switch (playersOptionsIndex) {
+        case 0: protocolId = Protocol.SNAKE1_COLOR_CHANGED; break;
+        case 1: protocolId = Protocol.SNAKE2_COLOR_CHANGED; break;
+        case 2: protocolId = Protocol.SNAKE3_COLOR_CHANGED; break;
+        case 3: protocolId = Protocol.SNAKE4_COLOR_CHANGED; break;
+        default: return;
+      }
+
+      originActivity.writeBytesAuto(
+          new byte[] {protocolId, (byte) players[playersOptionsIndex].getColorIndex()});
+    }
   }
 
-  // Sets the currently selected player's control corner to a given PlayerController.
-  public void setPlayerControlCorner(PlayerController.Corner corner) {
+  public void setPlayerColor(int playerIndex, int index) {
+    this.players[playerIndex].setColors(index);
+    if (playerIndex == playersOptionsIndex)
+      this.menuStateItem.setColors(getColorFromIndex(index));
+  }
+
+  // Sets the currently selected player's control corner to a Corner represented by a corner square.
+  private void onCornerSquareTouch(PlayerController.Corner representedCorner) {
+    // Only guests have to wait for a signal from somewhere else before setting the corner.
+    if (!this.isGuest())
+      this.setPlayerCorner(playersOptionsIndex, representedCorner);
+
+    // If it's an online user have it send the information.
+    if (originActivity.isGuest() || originActivity.isHost()) {
+      byte protocolId;
+      switch (playersOptionsIndex) {
+        case 0: protocolId = Protocol.SNAKE1_CORNER_CHANGED; break;
+        case 1: protocolId = Protocol.SNAKE2_CORNER_CHANGED; break;
+        case 2: protocolId = Protocol.SNAKE3_CORNER_CHANGED; break;
+        case 3: protocolId = Protocol.SNAKE4_CORNER_CHANGED; break;
+        default: return;
+      }
+
+      originActivity.writeBytesAuto(
+          new byte[] {protocolId, Protocol.encodeCorner(representedCorner)});
+    }
+  }
+
+  public void setPlayerCorner(int playerIndex, PlayerController.Corner corner) {
     // Find the other player that uses the selected corner and set it to the current player's.
     for (int index = 0; index < this.players.length; index++)
-      if (index != this.playersOptionsIndex && this.players[index].getControlCorner() == corner)
+      if (index != playerIndex && this.players[index].getControlCorner() == corner)
         this.players[index]
-            .setCorner(players[playersOptionsIndex].getControlCorner());
+            .setCorner(players[playerIndex].getControlCorner());
+
     // Then set the current player's corner to the selected one.
-    this.players[this.playersOptionsIndex].setCorner(corner);
+    this.players[playerIndex].setCorner(corner);
   }
 
   // Sets the connection type to a given value and handles the connection menu animation.
@@ -930,22 +1007,22 @@ public class Menu {
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
     switch(inputBytes[0]) {
-      case Protocol.SNAKE1_COLOR_CHANGED: players[0].setColors(inputBytes[1]); break;
-      case Protocol.SNAKE2_COLOR_CHANGED: players[1].setColors(inputBytes[1]); break;
-      case Protocol.SNAKE3_COLOR_CHANGED: players[2].setColors(inputBytes[1]); break;
-      case Protocol.SNAKE4_COLOR_CHANGED: players[3].setColors(inputBytes[1]); break;
-      case Protocol.SNAKE1_CORNER_CHANGED: players[0]
-          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE2_CORNER_CHANGED: players[1]
-          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE3_CORNER_CHANGED: players[2]
-          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE4_CORNER_CHANGED: players[3]
-          .setCorner(Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE1_COLOR_CHANGED: setPlayerColor(0, inputBytes[1]); break;
+      case Protocol.SNAKE2_COLOR_CHANGED: setPlayerColor(1, inputBytes[1]); break;
+      case Protocol.SNAKE3_COLOR_CHANGED: setPlayerColor(2, inputBytes[1]); break;
+      case Protocol.SNAKE4_COLOR_CHANGED: setPlayerColor(3, inputBytes[1]); break;
+      case Protocol.SNAKE1_CORNER_CHANGED: setPlayerCorner(0, Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE2_CORNER_CHANGED: setPlayerCorner(1, Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE3_CORNER_CHANGED: setPlayerCorner(2, Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.SNAKE4_CORNER_CHANGED: setPlayerCorner(3, Protocol.decodeCorner(inputBytes[1])); break;
+      case Protocol.HOR_SQUARES_CHANGED: horizontalSquares = inputBytes[1]; break;
+      case Protocol.VER_SQUARES_CHANGED: verticalSquares = inputBytes[1]; break;
+      case Protocol.SPEED_CHANGED: speed = inputBytes[1]; break;
+      case Protocol.STAGE_BORDERS_CHANGED: stageBorders = inputBytes[1] == 1; break;
 
       // HOST ONLY
       case Protocol.REQUEST_ADD_SNAKE:
-        if (!this.isGuest()) {
+        if (originActivity.isHost()) {
           for (Player player : players) {
             if (player != null && player.getControlType() == Player.ControlType.OFF) {
               player.setControlType(Player.ControlType.BLUETOOTH);
@@ -972,11 +1049,6 @@ public class Menu {
 
       default: break;
     }
-
-    // Tell everyone what happened if the message was some change in settings.
-    if (connectionRole == ConnectionRole.HOST && inputBytes[0] >= 20 && inputBytes[0] < 50)
-      for(ConnectedThread connectedThread : originActivity.connectedThreads)
-        if (connectedThread != null) connectedThread.write(inputBytes);
   }
 
   // Fades all buttons of a group except one.

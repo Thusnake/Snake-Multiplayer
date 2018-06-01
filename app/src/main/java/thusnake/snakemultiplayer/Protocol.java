@@ -36,7 +36,10 @@ public class Protocol {
   public static final byte SNAKE2_NAME_CHANGED = 41; // Followed by 1 length byte and a string of chars.
   public static final byte SNAKE3_NAME_CHANGED = 42; // Followed by 1 length byte and a string of chars.
   public static final byte SNAKE4_NAME_CHANGED = 43; // Followed by 1 length byte and a string of chars.
-  public static final byte SPEED_CHANGED = 50; // Followed by 1 speed byte.
+  public static final byte SPEED_CHANGED = 50; // Followed by 1 byte.
+  public static final byte HOR_SQUARES_CHANGED = 51; // Followed by 1 byte.
+  public static final byte VER_SQUARES_CHANGED = 52; // Followed by 1 byte.
+  public static final byte STAGE_BORDERS_CHANGED = 53; // Followed by 1 boolean byte.
 
   public static final byte AGGREGATE_CALL = 60; // Followed by series of calls and NEXT_CALL bytes.
   public static final byte NEXT_CALL = 61;
