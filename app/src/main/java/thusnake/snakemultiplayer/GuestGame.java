@@ -18,7 +18,7 @@ public class GuestGame extends Game {
     super.run(dt);
 
     // Check if there is something to be emptied from the missed moves list.
-    if (missedMovesList.size() > 0 && missedMovesList.firstIsReady())
+    if (missedMovesList != null && missedMovesList.size() > 0 && missedMovesList.firstIsReady())
       this.decodeAndExecuteMove(missedMovesList.extractFirst());
   }
 
@@ -26,7 +26,7 @@ public class GuestGame extends Game {
   // a timer to request snake moves.
   @Override
   public void moveAllSnakes() {
-    if (missedMovesList.size() > 0)
+    if (missedMovesList != null && missedMovesList.size() > 0)
       for (Integer index : missedMovesList.missingMovesIndices()) {
         Pair<Byte, Byte> idBytes = Protocol.encodeMoveID(index);
         this.sendBytes(new byte[] {Protocol.REQUEST_MOVE, idBytes.first, idBytes.second});
@@ -73,6 +73,7 @@ public class GuestGame extends Game {
         moveId = Protocol.decodeMoveID(inputBytes[1], inputBytes[2]);
         if (moveId > moveCount) {
           // The move is ahead of our information.
+          // TODO FIX THIS
           missedMovesList.expand(moveId, inputBytes);
         } else {
           // The move might be relevant, put it in the list.

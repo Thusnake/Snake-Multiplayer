@@ -75,7 +75,7 @@ public class AcceptThread extends Thread {
 
   private void manageConnectedSocket(BluetoothSocket socket) {
     int index;
-    for (index = 0; index < 4; index++)
+    for (index = 0; index < 3; index++)
       if (originActivity.connectedThreads[index] == null)
         break;
 

@@ -43,7 +43,7 @@ public class OnlineHostGame extends Game {
     allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) horizontalSquares});
     allInformation.add(new byte[] {VER_SQUARES_CHANGED, (byte) verticalSquares});
     allInformation.add(new byte[] {SPEED_CHANGED, (byte) getSpeed()});
-    allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) (stageBorders ? 1 : 0)});
+    allInformation.add(new byte[] {STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
 
     return allInformation;
   }
@@ -68,10 +68,10 @@ public class OnlineHostGame extends Game {
     super.moveAllSnakes();
     Player[] players = this.getPlayers();
     this.moveCodes.add(Protocol.getMovementCode(
-        (players[0] != null) ? players[0].getDirection() : Player.Direction.UP,
-        (players[1] != null) ? players[1].getDirection() : Player.Direction.UP,
-        (players[2] != null) ? players[2].getDirection() : Player.Direction.UP,
-        (players[3] != null) ? players[3].getDirection() : Player.Direction.UP
+        (players[0].getDirection() != null) ? players[0].getDirection() : Player.Direction.UP,
+        (players[1].getDirection() != null) ? players[1].getDirection() : Player.Direction.UP,
+        (players[2].getDirection() != null) ? players[2].getDirection() : Player.Direction.UP,
+        (players[3].getDirection() != null) ? players[3].getDirection() : Player.Direction.UP
     ));
 
     this.sendBytes(new byte[] {
@@ -110,6 +110,10 @@ public class OnlineHostGame extends Game {
         awaitingAggregateReceive.remove(sourceThread);
         if (awaitingAggregateReceive.isEmpty())
           running = true;
+        break;
+
+      case Protocol.SNAKE_DIRECTION_CHANGE:
+        getPlayers()[bytes[1]].changeDirection(Protocol.decodeDirection(bytes[2]));
         break;
 
       default:

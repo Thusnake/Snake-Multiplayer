@@ -93,7 +93,7 @@ public class Menu {
     this.stageBorders = true;
 
     // Initialize the players. TODO get the snake values from the options strings.
-    for (int index = 0; index < players.length; index++) players[index] = new Player();
+    for (int index = 0; index < players.length; index++) players[index] = new Player(index);
     this.players[0].setName("Player 1");
     this.players[1].setName("Player 2");
     this.players[2].setName("Player 3");
@@ -143,6 +143,9 @@ public class Menu {
               || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
             this.setText(originActivity.getNumberOfReadyRemoteDevices() + " / "
                 + originActivity.getNumberOfRemoteDevices());
+
+            readyDevices = originActivity.getNumberOfReadyRemoteDevices();
+            connectedDevices = originActivity.getNumberOfRemoteDevices();
 
             if (readyDevices == connectedDevices && readyDevices > 1) {
               // Everyone is ready - begin game.
@@ -693,6 +696,10 @@ public class Menu {
         break;
       }
     this.updateState();
+
+    if (originActivity.isHost())
+      originActivity.writeBytesAuto(getAvailableSnakesList());
+
   }
 
   // Disables a given snake from play and handles the players menu animations.
@@ -1027,23 +1034,36 @@ public class Menu {
             if (player != null && player.getControlType() == Player.ControlType.OFF) {
               player.setControlType(Player.ControlType.BLUETOOTH);
               player.setControllerThread(sourceThread);
+              break;
             }
           }
           sourceThread.write(this.getControlledSnakesList(sourceThread));
+          this.updateState();
         }
         break;
 
       // GUEST ONLY
       case Protocol.CONTROLLED_SNAKES_LIST:
         if (this.isGuest()) {
-          // Disable all.
-          for (Player player : players)
-            player.setControlType(Player.ControlType.OFF);
           // Enable only the ones specified in the list.
           for (int byteIndex = 1; byteIndex < inputBytes.length; byteIndex++)
             for (Player player : players)
               if (player.getNumber() == inputBytes[byteIndex])
                 player.setControlType(Player.ControlType.CORNER);
+        }
+        break;
+
+      case Protocol.AVAILABLE_SNAKES_LIST:
+        if (this.isGuest()) {
+          for (Player player : players)
+            if (player.getControlType().equals(Player.ControlType.OFF))
+              player.setControlType(Player.ControlType.BLUETOOTH);
+
+          for (int index = 1; index < inputBytes.length; index++) {
+            for (Player player : players)
+              if (player.getNumber() == inputBytes[index])
+                player.setControlType(Player.ControlType.OFF);
+          }
         }
         break;
 
@@ -1142,30 +1162,30 @@ public class Menu {
   public byte[] getControlledSnakesList(ConnectedThread thread) {
     int controlledSnakes = 0;
     for (Player player : players)
-      if (player.getControllerThread().equals(thread))
+      if (player.getControllerThread() != null && player.getControllerThread().equals(thread))
         controlledSnakes++;
 
     byte[] output = new byte[controlledSnakes + 1];
     output[0] = Protocol.CONTROLLED_SNAKES_LIST;
     int outputIndex = 1;
     for (Player player : players)
-      if (player.getControllerThread().equals(thread))
+      if (player.getControllerThread() != null && player.getControllerThread().equals(thread))
         output[outputIndex++] = (byte) player.getNumber();
 
     return output;
   }
 
   public byte[] getAvailableSnakesList() {
-    int availableSlots = 4;
+    int availableSlots = 0;
     for (Player player : players)
-      if (player.getControlType() == Player.ControlType.OFF)
-        availableSlots--;
+      if (player.getControlType().equals(Player.ControlType.OFF))
+        availableSlots++;
 
     byte[] output = new byte[availableSlots + 1];
     output[0] = Protocol.AVAILABLE_SNAKES_LIST;
     int outputIndex = 1;
     for (Player player : players)
-      if (player.getControlType() == Player.ControlType.OFF)
+      if (player.getControlType().equals(Player.ControlType.OFF))
         output[outputIndex++] = (byte) player.getNumber();
 
     return output;

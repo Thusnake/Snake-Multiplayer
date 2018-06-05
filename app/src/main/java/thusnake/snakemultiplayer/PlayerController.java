@@ -1,7 +1,6 @@
 package thusnake.snakemultiplayer;
 
 import android.content.Context;
-import android.os.Vibrator;
 import android.view.MotionEvent;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -80,8 +79,9 @@ public abstract class PlayerController {
   public void setDirectionRemote() {
     if (this.inputTargetThread != null)
       inputTargetThread.write(new byte[] {
-          Protocol.DIRECTION_CHANGE,
-          Protocol.getMovementCode(player.getNumber(), player.getDirection())
+          Protocol.SNAKE_DIRECTION_CHANGE,
+          (byte) player.getNumber(),
+          Protocol.encodeDirection(player.getDirection())
       });
   }
 }

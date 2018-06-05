@@ -70,14 +70,14 @@ class Game extends BoardDrawer {
     // Prepare the players
     this.players = players;
     if (gameMode == GameMode.SINGLEPLAYER) {
-      this.players[0].prepareForGame(this, 0);
+      this.players[0].prepareForGame(this);
     } else {
       for (int index = 0; index < playersToCreate; index++) {
         if (this.players[index] == null) {
           this.playersPlaying = index;
           break;
         }
-        this.players[index].prepareForGame(this, index);
+        this.players[index].prepareForGame(this);
       }
     }
 

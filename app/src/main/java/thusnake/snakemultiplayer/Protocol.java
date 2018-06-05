@@ -23,7 +23,8 @@ public class Protocol {
   public static final byte REQUEST_NUMBER_OF_DEVICES = 8;
 
   // Universal codes
-  public static final byte DIRECTION_CHANGE = 10; // Followed by 1 movement byte.
+  public static final byte ALL_DIRECTIONS = 10; // Followed by 1 movement byte.
+  public static final byte SNAKE_DIRECTION_CHANGE = 11; // Followed by 1 snake byte and 1 direction byte.
   public static final byte SNAKE1_COLOR_CHANGED = 20; // Followed by 1 color byte.
   public static final byte SNAKE2_COLOR_CHANGED = 21; // Followed by 1 color byte.
   public static final byte SNAKE3_COLOR_CHANGED = 22; // Followed by 1 color byte.
@@ -72,16 +73,6 @@ public class Protocol {
     dir4 = (byte) (dir4 << 6);
     return (byte) (dir1 | dir2 | dir3 | dir4);
   }
-
-  public static byte getMovementCode(int playerNumber, Player.Direction direction) {
-    switch (playerNumber) {
-      case 0: return getMovementCode(direction, null, null, null);
-      case 1: return getMovementCode(null, direction, null, null);
-      case 2: return getMovementCode(null, null, direction, null);
-      case 3: return getMovementCode(null, null, null, direction);
-      default: throw new RuntimeException("Players are not counted from zero");
-    }
-  }
   
   public static void decodeMovementCode(byte code, Player.Direction[] array) {
     if (array == null || array.length < 4) return;
@@ -89,7 +80,7 @@ public class Protocol {
       array[index] = decodeDirection(code / (int) Math.pow(2, index * 2));
   }
 
-  private static byte encodeDirection(Player.Direction direction) {
+  public static byte encodeDirection(Player.Direction direction) {
     switch (direction) {
       case UP: return 0;
       case DOWN: return 1;
@@ -99,7 +90,7 @@ public class Protocol {
     }
   }
   
-  private static Player.Direction decodeDirection(int code) {
+  public static Player.Direction decodeDirection(int code) {
     switch (code) {
       case 0: return Player.Direction.UP;
       case 1: return Player.Direction.DOWN;

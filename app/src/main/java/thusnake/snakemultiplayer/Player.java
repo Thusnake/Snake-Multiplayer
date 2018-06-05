@@ -34,15 +34,15 @@ public class Player {
   private ConnectedThread onlineControllerThread;
 
   // Constructor for a corner layout player.
-  public Player() {
+  public Player(int number) {
     this.controlType = ControlType.OFF;
+    this.number = number;
     this.setColors(0);
   }
 
   // Gets called upon game start.
-  public void prepareForGame(BoardDrawer game, int number) {
+  public void prepareForGame(BoardDrawer game) {
     this.game = game;
-    this.number = number;
     this.vibrator = (Vibrator) game.getRenderer().getContext()
         .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
@@ -64,6 +64,19 @@ public class Player {
         break;
       case GAMEPAD:
         this.playerController = new GamepadController(game.getRenderer(), this);
+        break;
+      case BLUETOOTH:
+        this.playerController = new PlayerController(game.getRenderer(), this) {
+          @Override
+          public void onMotionEvent(MotionEvent event) {
+
+          }
+
+          @Override
+          public void draw() {
+
+          }
+        };
         break;
       case OFF: break;
       default: break;
