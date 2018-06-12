@@ -106,6 +106,7 @@ public class MenuValue extends MenuDrawable {
 
   public void draw() {
     if (this.visible) {
+      glText.begin();
       gl.glColor4f(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
       glText.draw(this.getValueToString(), this.getX(), this.getY());
       if (this.type == Type.INTEGER && this.expanded) {
@@ -113,7 +114,6 @@ public class MenuValue extends MenuDrawable {
         plusButton.draw();
       }
       glText.end();
-      glText.begin();
     }
   }
 

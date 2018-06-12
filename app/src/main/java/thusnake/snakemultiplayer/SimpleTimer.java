@@ -91,4 +91,6 @@ public class SimpleTimer {
   public boolean isDone() {
     return this.time == this.endTime;
   }
+
+  public double getDuration() { return this.duration; }
 }

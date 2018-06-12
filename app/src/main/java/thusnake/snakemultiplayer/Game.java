@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 
 import com.android.texample.GLText;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -37,10 +40,13 @@ class Game extends BoardDrawer {
   private final Context context;
   private final OpenGLES20Activity originActivity;
 
+  private MenuItem gameOverTopItem, gameOverMiddleItem, gameOverBottomItem;
+  private final List<MenuItem> gameOverItems = new ArrayList<>();
+
   // Constructor that sets up a local session.
   public Game(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
     super(renderer, screenWidth, screenHeight);
-    
+
     // Get the essentials.
     this.renderer = renderer;
     this.gl = renderer.getGl();
@@ -88,6 +94,46 @@ class Game extends BoardDrawer {
     this.boardLines[0] = new Square(0, screenHeight/3f, screenWidth, 4);
     this.boardLines[1] = new Square(0, screenHeight*2f/3f, screenWidth, 4);
     this.boardFade = new Square(0.0, 0.0, screenWidth, screenHeight);
+
+    this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
+        -renderer.getScreenWidth() / 2,
+        renderer.getScreenHeight() * 5 / 6 - glText.getCharHeight()*0.8f / 2,
+        MenuItem.Alignment.CENTER) {
+      @Override
+      public boolean isClicked(float x, float y) {
+        return y < 1/3f * renderer.getScreenHeight();
+      }
+    };
+    this.gameOverTopItem.setAction((action, origin) -> action.startGame(players));
+
+    this.gameOverMiddleItem = new MenuItem(renderer, "Everyone loses",
+        renderer.getScreenWidth() / 2,
+        renderer.getScreenHeight() / 2 - glText.getCharHeight()*0.8f / 2,
+        MenuItem.Alignment.CENTER) {
+      @Override
+      public boolean isClicked(float x, float y) {
+        return y > 1/3f * renderer.getScreenHeight() && y < 2/3f * renderer.getScreenHeight();
+      }
+    };
+    this.gameOverMiddleItem.setAction((action, origin) -> action.triggerStats());
+
+    this.gameOverBottomItem = new MenuItem(renderer, "Menu",
+        renderer.getScreenWidth() * 1.5f,
+        renderer.getScreenHeight() * 1 / 6 - glText.getCharHeight()*0.8f / 2,
+        MenuItem.Alignment.CENTER) {
+      @Override
+      public boolean isClicked(float x, float y) {
+        return y > 2/3f * renderer.getScreenHeight();
+      }
+    };
+    this.gameOverBottomItem.setAction((action, origin) -> action.quitGame());
+
+    this.gameOverTopItem.setEaseOutVariables(5, 0.2);
+    this.gameOverBottomItem.setEaseOutVariables(5, 0.2);
+
+    this.gameOverItems.add(gameOverTopItem);
+    this.gameOverItems.add(gameOverMiddleItem);
+    this.gameOverItems.add(gameOverBottomItem);
   }
 
   // Runs a single frame of the snake game.
@@ -151,11 +197,7 @@ class Game extends BoardDrawer {
       gl.glColor4f(0f, 0f, 0f, Math.min((float) gameOverTimer.getTime() * 0.375f, 0.75f));
       boardFade.draw(gl);
 
-      glText.begin(1f, 1f, 1f, 1f);
       if (gameMode == GameMode.SINGLEPLAYER) {
-        glText.drawC("Game Over", this.getScreenWidth() / 2f,
-            this.getScreenHeight() / 2f + glText.getCharHeight() * 0.077f);
-        glText.end();
         gl.glPushMatrix();
         gl.glScalef(0.25f, 0.25f, 1f);
         glText.begin();
@@ -166,22 +208,13 @@ class Game extends BoardDrawer {
             this.getScreenHeight()/2 * 4 + glText.getCharHeight() * 2.077f);
         glText.end();
         gl.glPopMatrix();
-        glText.begin();
-      } else {
-        if (winner == -1) {
-          glText.drawC("It's a draw!", this.getScreenWidth() / 2f,
-              this.getScreenHeight() / 2f + glText.getCharHeight() * 0.077f);
-        } else {
-          glText.end();
-          glText.begin(players[winner].getColors()[0], players[winner].getColors()[1],
-              players[winner].getColors()[2], players[winner].getColors()[3]);
-          glText.drawC(players[winner].getName() + " wins!", this.getScreenWidth() / 2f,
-              this.getScreenHeight() / 2f + glText.getCharHeight() * 0.077f);
-          glText.end();
-          glText.begin();
-        }
       }
-      glText.end();
+
+      // Move and draw all the game over items.
+      for (MenuItem item : getGameOverItems()) {
+        item.move(dt);
+        item.draw();
+      }
     }
 
     // Draw text for when the game is over which moves.
@@ -189,20 +222,12 @@ class Game extends BoardDrawer {
     gl.glTranslatef(this.getScreenWidth() - Math.min((float) gameOverTimer.getTime(), 1f)
         * this.getScreenWidth(), 0, 0);
     boardLines[0].draw(gl);
-    glText.begin();
-    glText.drawC((gameMode == GameMode.SINGLEPLAYER) ? "Try Again" : "Rematch",
-        this.getScreenWidth() / 2f, this.getScreenHeight() * 5f / 6f + glText.getCharHeight() * 0.077f);
-    glText.end();
     gl.glPopMatrix();
     gl.glPushMatrix();
     gl.glTranslatef(
         -this.getScreenWidth() + Math.min((float) gameOverTimer.getTime(), 1f) * this.getScreenWidth(),
         0, 0);
     boardLines[1].draw(gl);
-    glText.begin();
-    glText.drawC("Menu", this.getScreenWidth() / 2f,
-        this.getScreenHeight() * 1f / 6f + glText.getCharHeight() * 0.077f);
-    glText.end();
     gl.glPopMatrix();
   }
 
@@ -211,6 +236,7 @@ class Game extends BoardDrawer {
         || (gameMode == GameMode.SINGLEPLAYER && this.getAlivePlayers() == 0)
         && !gameOver) {
       gameOver = true;
+
       if (gameMode == GameMode.MULTIPLAYER) {
         winner = this.assessWinner();
       } else if (gameMode == GameMode.SINGLEPLAYER) {
@@ -219,6 +245,22 @@ class Game extends BoardDrawer {
           scoresEditor.commit();
         }
       }
+
+      gameOverTopItem.setDestinationX(getScreenWidth() / 2);
+      gameOverBottomItem.setDestinationX(getScreenWidth() / 2);
+
+      if (gameMode == GameMode.SINGLEPLAYER)
+        gameOverMiddleItem.setText("Game Over");
+      else {
+        if (winner == -1)
+          gameOverMiddleItem.setText("It's a draw!");
+        else {
+          gameOverMiddleItem.setColors(players[winner].getColors()[0], players[winner].getColors()[1],
+              players[winner].getColors()[2], players[winner].getColors()[3]);
+          gameOverMiddleItem.setText(players[winner].getName() + " wins!");
+        }
+      }
+
       return true;
     }
     return false;
@@ -280,4 +322,9 @@ class Game extends BoardDrawer {
   }
   public int getPlayersPlaying() { return this.playersPlaying; }
   public SimpleTimer getGameOverTimer() { return this.gameOverTimer; }
+
+  public List<MenuItem> getGameOverItems() { return this.gameOverItems; }
+  public MenuItem getGameOverTopItem() { return this.gameOverTopItem; }
+  public MenuItem getGameOverMiddleItem() { return this.gameOverMiddleItem; }
+  public MenuItem getGameOverBottomItem() { return this.gameOverBottomItem; }
 }

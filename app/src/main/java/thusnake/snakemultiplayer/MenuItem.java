@@ -30,7 +30,7 @@ public class MenuItem extends MenuDrawable {
     this.setHeight(glText.getHeight() * 0.65f);
 
     this.easeOutMultiplier = 8;
-    this.easeOutInertia = this.getHeight() * 2;
+    this.easeOutInertia = 1/4.0;
 
     if (align == Alignment.LEFT) this.setX(x);
     else if (align == Alignment.RIGHT) this.setX(x - this.getWidth());
@@ -41,25 +41,23 @@ public class MenuItem extends MenuDrawable {
   // GLText.
   @Override
   public void draw() {
-    glText.end();
     glText.begin(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
     glText.draw(this.text, this.getX(), this.getY());
+    glText.end();
     if (this.description != null) {
-      glText.end();
       gl.glPushMatrix();
       gl.glScalef(0.25f, 0.25f, 1f);
       glText.begin(0.66f, 0.66f, 0.66f, desctiptionOpacity);
       glText.draw(this.description, this.getX() * 4, this.getY() * 4);
       glText.end();
       gl.glPopMatrix();
-      glText.begin();
     }
     if (this.value != null) this.value.draw();
   }
 
   public void move(double dt) {
-    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.getHeight() * 2);
-    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.getHeight() * 2);
+    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, easeOutMultiplier, this.getXTimer().getDuration() * easeOutInertia);
+    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, easeOutMultiplier, this.getYTimer().getDuration() * easeOutInertia);
     if (this.value != null) this.value.move(dt);
   }
 

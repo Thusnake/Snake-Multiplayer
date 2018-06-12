@@ -81,7 +81,7 @@ public class Menu {
     this.menuState = MenuState.MAIN;
     this.menuStateItem = new MenuItem(renderer, menuItemStateNames[0], 0, 0,
         MenuItem.Alignment.RIGHT);
-    this.menuStateItem.setEaseOutVariables(32, this.menuStateItem.getHeight() * 2);
+    this.menuStateItem.setEaseOutVariables(8, 1/4.0);
 
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
