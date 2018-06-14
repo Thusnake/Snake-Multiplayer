@@ -106,8 +106,10 @@ public class GameRenderer implements GLSurfaceView.Renderer {
       game = new GuestGame(this, screenWidth, screenHeight, players);
     else if (originActivity.isHost()) {
       game = new OnlineHostGame(this, screenWidth, screenHeight, players);
-      originActivity.acceptThread.cancel();
-      originActivity.acceptThread = null;
+      if (originActivity.acceptThread != null) {
+        originActivity.acceptThread.cancel();
+        originActivity.acceptThread = null;
+      }
     } else
       game = new Game(this, screenWidth, screenHeight, players);
   }
@@ -201,8 +203,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
         break;
     }
 
-    // Pass to the menu or game.
-    if (this.game == null) this.menu.handleInputBytes(bytes, sourceThread);
-    else this.game.handleInputBytes(bytes, sourceThread);
+    // Pass to the menu and game.
+    menu.handleInputBytes(bytes, sourceThread);
+    if (game != null) game.handleInputBytes(bytes, sourceThread);
   }
 }

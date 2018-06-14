@@ -100,6 +100,23 @@ public class Square {
     drawListBuffer.position(0);
   }
 
+  public void setCoordinates(float x, float y, float width, float height) {
+    float squareCoords[] = {
+        x, y+height, 0.0f,   // top left
+        x, y, 0.0f,   // bottom left
+        x+width, y, 0.0f,   // bottom right
+        x+width, y+height, 0.0f }; // top right
+
+    // initialize vertex byte buffer for shape coordinates
+    ByteBuffer bb = ByteBuffer.allocateDirect(
+        // (# of coordinate values * 4 bytes per float)
+        squareCoords.length * 4);
+    bb.order(ByteOrder.nativeOrder());
+    vertexBuffer = bb.asFloatBuffer();
+    vertexBuffer.put(squareCoords);
+    vertexBuffer.position(0);
+  }
+
   /** The texture pointer */
   private int[] textures = new int[1];
 

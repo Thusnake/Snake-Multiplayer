@@ -132,8 +132,8 @@ public class Menu {
 
     this.readyDevicesCounter = new MenuItem(renderer, "", screenWidth - 10,
         menuItemsMain[0].getY(), MenuItem.Alignment.RIGHT) {
-      private int readyDevices = 0;
-      private int connectedDevices = 0;
+      private int readyDevices = -1;
+      private int connectedDevices = -1;
 
       @Override
       public void move(double dt) {
@@ -147,7 +147,7 @@ public class Menu {
             readyDevices = originActivity.getNumberOfReadyRemoteDevices();
             connectedDevices = originActivity.getNumberOfRemoteDevices();
 
-            if (readyDevices == connectedDevices && readyDevices > 1) {
+            if (originActivity.isHost() && readyDevices == connectedDevices && readyDevices > 1) {
               // Everyone is ready - begin game.
               renderer.startGame(players);
             }

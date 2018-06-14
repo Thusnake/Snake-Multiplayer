@@ -2,15 +2,56 @@ package thusnake.snakemultiplayer;
 
 import android.util.Pair;
 
+import javax.microedition.khronos.opengles.GL10;
+
 public class GuestGame extends Game {
   private OpenGLES20Activity originActivity;
   private int moveCount = 0;
   private MissedMovesList missedMovesList;
+  private final Square readyFillBar;
 
   public GuestGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
     super(renderer, screenWidth, screenHeight, players);
 
     this.originActivity = (OpenGLES20Activity) renderer.getContext();
+
+    // Change the top game over button to the ready button.
+    this.getGameOverTopItem().setText(originActivity.isReady() ? "Cancel" : "Ready");
+    this.getGameOverTopItem().setAction((action, origin) -> {
+      if (originActivity.isReady()) {
+        originActivity.setReady(false);
+        MenuItem originItem = (MenuItem) origin;
+        originItem.setText("Ready");
+      } else {
+        originActivity.setReady(true);
+        MenuItem originItem = (MenuItem) origin;
+        originItem.setText("Cancel");
+      }
+    });
+
+    readyFillBar = new Square(0, getScreenHeight()*2/3,
+        getScreenWidth(), getScreenHeight()/3) {
+      private int readyDevices = -1;
+      private int connectedDevices = -1;
+
+      @Override
+      public void draw(GL10 gl) {
+        super.draw(gl);
+
+        if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
+            || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
+          this.setCoordinates(0,
+              screenHeight * 2f / 3f,
+              screenWidth * (float) originActivity.getNumberOfReadyRemoteDevices() /
+                  originActivity.getNumberOfRemoteDevices(),
+              screenHeight / 3f);
+
+          readyDevices = originActivity.getNumberOfReadyRemoteDevices();
+          connectedDevices = originActivity.getNumberOfRemoteDevices();
+        }
+
+      }
+    };
   }
 
   @Override
@@ -18,8 +59,12 @@ public class GuestGame extends Game {
     super.run(dt);
 
     // Check if there is something to be emptied from the missed moves list.
-    if (missedMovesList != null && missedMovesList.size() > 0 && missedMovesList.firstIsReady())
+    if (missedMovesList != null && missedMovesList.size() > 0 && missedMovesList.firstIsReady()) {
       this.decodeAndExecuteMove(missedMovesList.extractFirst());
+      // If it's been emptied - remove it.
+      if (missedMovesList.size() == 0)
+        missedMovesList = null;
+    }
   }
 
   // This doesn't move all the snakes at all, but we're using the fact that it's invoked on

@@ -1,59 +1,48 @@
 package thusnake.snakemultiplayer;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.UUID;
 
 /**
  * Created by Thusnake on 01-Aug-16.
  */
 public class AcceptThread extends Thread {
-  private BluetoothServerSocket mmServerSocket;
+  private BluetoothServerSocket serverSocket;
   private OpenGLES20Activity originActivity;
-  private int state = 1;
-  private int connections = 0;
 
-  public  AcceptThread(OpenGLES20Activity activity) {
-    // Use a temporary object that is later assigned to mmServerSocket,
-    // because mmServerSocket is final
+  AcceptThread(OpenGLES20Activity activity) {
+    // Use a temporary object that is later assigned to serverSocket,
+    // because serverSocket is final
     BluetoothServerSocket tmp = null;
     this.originActivity = activity;
     try {
       // MY_UUID is the app's UUID string, also used by the client code
       UUID uuid = UUID.fromString("55199d92-8a72-4fb7-807e-f482efeff3d6");
       tmp = activity.bluetoothAdapter.listenUsingRfcommWithServiceRecord("host",uuid);
-    } catch (IOException e) { }
-    mmServerSocket = tmp;
+    } catch (IOException e) { System.out.println(e.getMessage()); }
+    serverSocket = tmp;
   }
 
+  @Override
   public void run() {
-    state = 2;
-    BluetoothSocket socket = null;
-    // Keep listening until exception occurs or a socket is returned
+    // Create an empty socket object.
+    BluetoothSocket socket;
+    // Keep listening until exception occurs or a socket is returned.
     while (true) {
-      if (mmServerSocket != null) {
+      if (serverSocket != null) {
         try {
-          socket = mmServerSocket.accept();
+          socket = serverSocket.accept();
         } catch (IOException e) {
           break;
         }
-        // If a connection was accepted
-        //try {
         if (socket != null) {
           // Do work to manage the connection (in a separate thread)
           System.out.println("Host: Socket Connected Completely");
           manageConnectedSocket(socket);
-          connections++;
-          //state = 1;
-          //break;
         }
-        //} catch (IOException e) {
-        //    break;
-        //}
       } else {
         BluetoothServerSocket tmp = null;
         try {
@@ -61,7 +50,7 @@ public class AcceptThread extends Thread {
           UUID uuid = UUID.fromString("55199d92-8a72-4fb7-807e-f482efeff3d6");
           tmp = originActivity.bluetoothAdapter.listenUsingRfcommWithServiceRecord("host",uuid);
         } catch (IOException e) { System.out.println(e.getMessage()); }
-        mmServerSocket = tmp;
+        serverSocket = tmp;
       }
     }
   }
@@ -69,7 +58,7 @@ public class AcceptThread extends Thread {
   /** Will cancel the listening socket, and cause the thread to finish */
   public void cancel() {
     try {
-      mmServerSocket.close();
+      serverSocket.close();
     } catch (IOException e) { System.out.println("Couldn't close accept socket."); }
   }
 
@@ -81,12 +70,9 @@ public class AcceptThread extends Thread {
 
     originActivity.connectedThreads[index] = new ConnectedThread(originActivity, socket);
     originActivity.connectedThreads[index].start();
-    //byte bytes[] = {4,7,(byte)(4 - Player.getPlayingLocal())};
-    //OpenGLES20Activity.cnctdThreads[index].write(bytes);
-  }
 
-  int getCurrentState() {
-    return state;
+    // Inform everyone of the change in number of devices.
+    originActivity.writeBytesAuto(new byte[]
+        {Protocol.NUMBER_OF_DEVICES, (byte) originActivity.getNumberOfRemoteDevices()});
   }
-  int getConnections() {return connections;}
 }

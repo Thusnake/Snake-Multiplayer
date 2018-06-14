@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import static thusnake.snakemultiplayer.Protocol.*;
 
 /**
@@ -15,17 +17,65 @@ public class OnlineHostGame extends Game {
   private ArrayList<Byte> moveCodes = new ArrayList<>();
   private final List<ConnectedThread> awaitingAggregateReceive = new ArrayList<>();
   private boolean running = false;
+  private final Square readyFillBar;
 
   // Constructor.
   public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
     super(renderer, screenWidth, screenHeight, players);
 
+    // Send the initialization call and wait asynchronously for a confirmation from all.
     OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
     for (ConnectedThread thread : originActivity.connectedThreads)
       if (thread != null) {
         thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
         awaitingAggregateReceive.add(thread);
+
+        // Also make everyone not ready for the next game.
+        thread.setReady(false);
       }
+
+    // Change the top game over button to the ready button.
+    this.getGameOverTopItem().setText(originActivity.isReady() ? "Cancel" : "Ready");
+    this.getGameOverTopItem().setAction((action, origin) -> {
+      if (originActivity.isReady()) {
+        originActivity.setReady(false);
+        MenuItem originItem = (MenuItem) origin;
+        originItem.setText("Ready");
+      } else {
+        originActivity.setReady(true);
+        MenuItem originItem = (MenuItem) origin;
+        originItem.setText("Cancel");
+      }
+    });
+
+    readyFillBar = new Square(0, getScreenHeight()*2/3,
+        getScreenWidth(), getScreenHeight()/3) {
+      private int readyDevices = -1;
+      private int connectedDevices = -1;
+
+      @Override
+      public void draw(GL10 gl) {
+        super.draw(gl);
+
+        if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
+            || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
+          this.setCoordinates(0,
+              screenHeight * 2f / 3f,
+              screenWidth * (float) originActivity.getNumberOfReadyRemoteDevices() /
+                                    originActivity.getNumberOfRemoteDevices(),
+              screenHeight / 3f);
+
+          readyDevices = originActivity.getNumberOfReadyRemoteDevices();
+          connectedDevices = originActivity.getNumberOfRemoteDevices();
+
+          if (readyDevices == connectedDevices && readyDevices > 1) {
+            // Everyone is ready - begin game.
+            renderer.startGame(players);
+          }
+        }
+
+      }
+    };
   }
 
   public List<byte[]> createInitializationCalls(ConnectedThread thread) {
