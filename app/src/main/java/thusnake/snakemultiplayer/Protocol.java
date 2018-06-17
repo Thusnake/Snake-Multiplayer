@@ -53,6 +53,7 @@ public class Protocol {
   public static final byte NUMBER_OF_READY = -4; // Followed by number of ready devices.
   public static final byte NUMBER_OF_DEVICES = -5; // Followed by number of devices.
   public static final byte READY_STATUS = -6; // Followed by a device's personal boolean ready value.
+  public static final byte READY_NUMBER_AND_STATUS = -7; // Followed by number of ready devices and device's personal boolean ready value.
   public static final byte APPROVE_CONNECT = -10;
   public static final byte START_GAME = -20;
   public static final byte END_GAME = -30; // Followed by 1 winner byte.

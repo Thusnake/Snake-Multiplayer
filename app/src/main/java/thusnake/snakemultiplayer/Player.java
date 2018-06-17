@@ -183,7 +183,7 @@ public class Player {
     BodyPart[] holder = this.bodyParts;
     this.bodyParts = new BodyPart[this.bodyLength + 1];
     for (int index = 0; index < holder.length; index++) this.bodyParts[index] = holder[index];
-    System.out.println(this.bodyLength + " " + this.bodyParts.length);
+
     this.bodyParts[this.bodyLength] = new BodyPart(this, direction);
     this.bodyLength++;
   }

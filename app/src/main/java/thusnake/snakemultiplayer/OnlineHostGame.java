@@ -34,6 +34,9 @@ public class OnlineHostGame extends Game {
         thread.setReady(false);
       }
 
+    // Set your status to not ready as well.
+    originActivity.setReady(false);
+
     // Change the top game over button to the ready button.
     this.getGameOverTopItem().setText(originActivity.isReady() ? "Cancel" : "Ready");
     this.getGameOverTopItem().setAction((action, origin) -> {

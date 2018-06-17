@@ -84,12 +84,19 @@ public class GuestGame extends Game {
     for (int index = 0; index < 4; index++)
       if (this.getPlayers()[index] != null && this.getPlayers()[index].isAlive())
         this.getPlayers()[index].changeDirection(directions[index]);
+
     // Move all the snakes.
     for (Player player : this.getPlayers())
       if (player != null && player.isAlive())
         player.move();
+
     // Update the counter.
     moveCount++;
+
+    // Check for deaths.
+    for (Player player : getPlayers())
+      if (player != null && player.isAlive())
+        player.checkDeath();
   }
 
   @Override

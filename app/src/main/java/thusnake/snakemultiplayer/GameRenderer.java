@@ -143,42 +143,12 @@ public class GameRenderer implements GLSurfaceView.Renderer {
             {Protocol.NUMBER_OF_READY, (byte) originActivity.getNumberOfReadyRemoteDevices()});
         break;
       case Protocol.IS_READY:
-        if (!originActivity.isGuest()) {
+        if (!originActivity.isGuest())
           sourceThread.setReady(true);
-
-          // Count the ready devices.
-          int readyDevices = 0;
-          for (ConnectedThread thread : originActivity.connectedThreads)
-            if (thread != null && thread.isReady())
-              readyDevices++;
-
-          // Tell everyone how many devices are ready.
-          for (ConnectedThread thread : originActivity.connectedThreads)
-            if (thread != null)
-              thread.write(new byte[]{Protocol.NUMBER_OF_READY, (byte) readyDevices});
-
-          // Tell the source device its last known ready status.
-          sourceThread.write(new byte[]{Protocol.READY_STATUS, 1});
-        }
         break;
       case Protocol.IS_NOT_READY:
-        if (!originActivity.isGuest()) {
+        if (!originActivity.isGuest())
           sourceThread.setReady(false);
-
-          // Count the ready devices.
-          int readyDevices = 0;
-          for (ConnectedThread thread : originActivity.connectedThreads)
-            if (thread != null && thread.isReady())
-              readyDevices++;
-
-          // Tell everyone how many devices are ready.
-          for (ConnectedThread thread : originActivity.connectedThreads)
-            if (thread != null)
-              thread.write(new byte[]{Protocol.NUMBER_OF_READY, (byte) readyDevices});
-
-          // Tell the source device its last known ready status.
-          sourceThread.write(new byte[]{Protocol.READY_STATUS, 0});
-        }
         break;
 
       case Protocol.NUMBER_OF_READY:
@@ -193,14 +163,17 @@ public class GameRenderer implements GLSurfaceView.Renderer {
         break;
       case Protocol.READY_STATUS:
         if (originActivity.isGuest()) {
-          boolean receivedReady = bytes[1] == 1;
+          boolean receivedReady = bytes[1] == (byte) 1;
 
-          // If we received the wrong ready status, tell the host the correct one.
-          if (receivedReady != originActivity.isReady())
-            sourceThread.write(new byte[]
-                {originActivity.isReady() ? Protocol.IS_READY : Protocol.IS_NOT_READY});
+          // Set the ready status without requesting anything further.
+          originActivity.forceSetReady(receivedReady);
         }
         break;
+      case Protocol.READY_NUMBER_AND_STATUS:
+        if (originActivity.isGuest()) {
+          originActivity.numberOfReadyRemoteDevices = bytes[1];
+          originActivity.forceSetReady(bytes[2] == 1);
+        }
     }
 
     // Pass to the menu and game.

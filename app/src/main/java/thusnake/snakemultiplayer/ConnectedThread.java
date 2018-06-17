@@ -74,7 +74,23 @@ public class ConnectedThread extends Thread {
     }
   }
 
-  public void setReady(boolean ready) { this.isReady = ready; }
+  public void setReady(boolean ready) {
+    this.isReady = ready;
+
+    // Count the ready devices.
+    int readyDevices = 0;
+    for (ConnectedThread thread : originActivity.connectedThreads)
+      if (thread != null && thread.isReady())
+        readyDevices++;
+
+    if (originActivity.isReady()) readyDevices++;
+
+    // Tell everyone how many devices are ready and if they are ready themselves.
+    for (ConnectedThread thread : originActivity.connectedThreads)
+      if (thread != null)
+        thread.write(new byte[] {Protocol.READY_NUMBER_AND_STATUS,
+                                 (byte) readyDevices, thread.isReady ? (byte) 1 : (byte) 0});
+  }
 
   public boolean isReady() { return isReady; }
 }

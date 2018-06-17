@@ -162,13 +162,14 @@ public class OpenGLES20Activity extends Activity {
   }
 
   public void setReady(boolean ready) {
-    this.isReady = ready;
-
-    // Tell the host if you're a guest.
+    // Send a request to the host if you're a guest.
     if (this.isGuest())
       connectedThread.write(new byte[] {(ready) ? Protocol.IS_READY : Protocol.IS_NOT_READY});
+
     // If you're a host yourself tell everyone how many are ready.
     else {
+      this.isReady = ready;
+
       int readyDevices = 0;
       for (ConnectedThread thread : connectedThreads)
         if (thread != null && thread.isReady())
@@ -180,7 +181,10 @@ public class OpenGLES20Activity extends Activity {
         if (thread != null)
           thread.write(new byte[]{Protocol.NUMBER_OF_READY, (byte) readyDevices});
     }
+  }
 
+  public void forceSetReady(boolean ready) {
+    this.isReady = ready;
   }
 
   public boolean isReady() { return this.isReady; }
