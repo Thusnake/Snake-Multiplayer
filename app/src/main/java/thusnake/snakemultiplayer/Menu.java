@@ -697,8 +697,11 @@ public class Menu {
       }
     this.updateState();
 
+    // Inform everybody of the change if hosting.
     if (originActivity.isHost())
-      originActivity.writeBytesAuto(getAvailableSnakesList());
+      for (ConnectedThread thread : originActivity.connectedThreads)
+        if (thread != null)
+          thread.write(getDetailedSnakesList(thread));
 
   }
 
@@ -715,6 +718,12 @@ public class Menu {
     addSnakeButton.setDestinationY(menuItemsPlayers[index].getY());
     addSnakeButton.setOpacity(1);
     this.updateState();
+
+    // Inform everybody of the change if hosting.
+    if (originActivity.isHost())
+      for (ConnectedThread thread : originActivity.connectedThreads)
+        if (thread != null)
+          thread.write(getDetailedSnakesList(thread));
   }
 
   // Swaps the indices of two snakes in the players menu screen.
@@ -1037,33 +1046,33 @@ public class Menu {
               break;
             }
           }
-          sourceThread.write(this.getControlledSnakesList(sourceThread));
+          sourceThread.write(this.getDetailedSnakesList(sourceThread));
           this.updateState();
         }
         break;
 
       // GUEST ONLY
-      case Protocol.CONTROLLED_SNAKES_LIST:
+      case Protocol.DETAILED_SNAKES_LIST:
         if (this.isGuest()) {
-          // Enable only the ones specified in the list.
-          for (int byteIndex = 1; byteIndex < inputBytes.length; byteIndex++)
+          for (int index = 1; index < inputBytes.length; index++)
             for (Player player : players)
-              if (player.getNumber() == inputBytes[byteIndex])
-                player.setControlType(Player.ControlType.CORNER);
-        }
-        break;
+              if (player.getNumber() == index - 1)
+                switch(inputBytes[index]) {
+                  case Protocol.DSL_SNAKE_OFF:
+                    player.setControlType(Player.ControlType.OFF);
+                    break;
+                  case Protocol.DSL_SNAKE_LOCAL:
+                    if (player.getControlType().equals(Player.ControlType.OFF) ||
+                        player.getControlType().equals(Player.ControlType.BLUETOOTH))
+                      player.setControlType(Player.ControlType.CORNER);
+                    break;
+                  case Protocol.DSL_SNAKE_REMOTE:
+                    player.setControlType(Player.ControlType.BLUETOOTH);
+                    break;
+                  default: break;
+                }
 
-      case Protocol.AVAILABLE_SNAKES_LIST:
-        if (this.isGuest()) {
-          for (Player player : players)
-            if (player.getControlType().equals(Player.ControlType.OFF))
-              player.setControlType(Player.ControlType.BLUETOOTH);
-
-          for (int index = 1; index < inputBytes.length; index++) {
-            for (Player player : players)
-              if (player.getNumber() == inputBytes[index])
-                player.setControlType(Player.ControlType.OFF);
-          }
+          this.updateState();
         }
         break;
 
@@ -1159,34 +1168,21 @@ public class Menu {
 
   // Protocol simplifier getters.
   public boolean isGuest() { return originActivity.isGuest(); }
-  public byte[] getControlledSnakesList(ConnectedThread thread) {
-    int controlledSnakes = 0;
-    for (Player player : players)
-      if (player.getControllerThread() != null && player.getControllerThread().equals(thread))
-        controlledSnakes++;
 
-    byte[] output = new byte[controlledSnakes + 1];
-    output[0] = Protocol.CONTROLLED_SNAKES_LIST;
+  public byte[] getDetailedSnakesList(ConnectedThread thread) {
+    byte[] output = new byte[5];
+    output[0] = Protocol.DETAILED_SNAKES_LIST;
     int outputIndex = 1;
-    for (Player player : players)
-      if (player.getControllerThread() != null && player.getControllerThread().equals(thread))
-        output[outputIndex++] = (byte) player.getNumber();
 
-    return output;
-  }
-
-  public byte[] getAvailableSnakesList() {
-    int availableSlots = 0;
-    for (Player player : players)
-      if (player.getControlType().equals(Player.ControlType.OFF))
-        availableSlots++;
-
-    byte[] output = new byte[availableSlots + 1];
-    output[0] = Protocol.AVAILABLE_SNAKES_LIST;
-    int outputIndex = 1;
-    for (Player player : players)
-      if (player.getControlType().equals(Player.ControlType.OFF))
-        output[outputIndex++] = (byte) player.getNumber();
+    for (Player player : players) {
+      if (player == null || player.getControlType().equals(Player.ControlType.OFF))
+        output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
+      else if (player.getControlType().equals(Player.ControlType.BLUETOOTH)
+            && player.getControllerThread().equals(thread))
+        output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
+      else
+        output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;
+    }
 
     return output;
   }
