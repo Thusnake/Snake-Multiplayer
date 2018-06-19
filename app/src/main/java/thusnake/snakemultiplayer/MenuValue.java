@@ -109,11 +109,11 @@ public class MenuValue extends MenuDrawable {
       glText.begin();
       gl.glColor4f(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
       glText.draw(this.getValueToString(), this.getX(), this.getY());
+      glText.end();
       if (this.type == Type.INTEGER && this.expanded) {
         minusButton.draw();
         plusButton.draw();
       }
-      glText.end();
     }
   }
 
