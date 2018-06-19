@@ -18,7 +18,6 @@ public abstract class PlayerController {
   private final GameRenderer renderer;
   private final GL10 gl;
   private boolean textureLoaded = false;
-  private ConnectedThread inputTargetThread;
 
   public PlayerController(GameRenderer renderer, Player player) {
     this.player = player;
@@ -70,15 +69,9 @@ public abstract class PlayerController {
   public float getY() { return y; }
   public float getWidth() { return this.width; }
 
-  public void setInputTargetThread(ConnectedThread inputTargetThread) {
-    this.inputTargetThread = inputTargetThread;
-  }
-
-  public ConnectedThread getInputTargetThread() { return inputTargetThread; }
-
   public void setDirectionRemote() {
-    if (this.inputTargetThread != null)
-      inputTargetThread.write(new byte[] {
+    if (this.player.getControllerThread() != null)
+      player.getControllerThread().write(new byte[] {
           Protocol.SNAKE_DIRECTION_CHANGE,
           (byte) player.getNumber(),
           Protocol.encodeDirection(player.getDirection())
