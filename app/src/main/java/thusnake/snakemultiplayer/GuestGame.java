@@ -16,7 +16,7 @@ public class GuestGame extends Game {
     this.originActivity = (OpenGLES20Activity) renderer.getContext();
 
     // Change the top game over button to the ready button.
-    this.getGameOverTopItem().setText(originActivity.isReady() ? "Cancel" : "Ready");
+    this.getGameOverTopItem().setText("Ready");
     this.getGameOverTopItem().setAction((action, origin) -> {
       if (originActivity.isReady()) {
         originActivity.setReady(false);
@@ -36,6 +36,8 @@ public class GuestGame extends Game {
 
       @Override
       public void draw(GL10 gl) {
+        // Flash from 0.1 opacity to 0.4 opacity.
+        gl.glColor4f(1f,1f,1f,(float) Math.sin(getGameOverTimer().getTime() * 4) / 7.5f + 0.25f);
         super.draw(gl);
 
         if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
@@ -49,7 +51,6 @@ public class GuestGame extends Game {
           readyDevices = originActivity.getNumberOfReadyRemoteDevices();
           connectedDevices = originActivity.getNumberOfRemoteDevices();
         }
-
       }
     };
   }
@@ -65,6 +66,10 @@ public class GuestGame extends Game {
       if (missedMovesList.size() == 0)
         missedMovesList = null;
     }
+
+    // Draw and update the ready bar at the top.
+    if (this.isOver())
+      readyFillBar.draw(this.getRenderer().getGl());
   }
 
   // This doesn't move all the snakes at all, but we're using the fact that it's invoked on

@@ -58,6 +58,8 @@ public class OnlineHostGame extends Game {
 
       @Override
       public void draw(GL10 gl) {
+        // Flash from 0.1 opacity to 0.4 opacity.
+        gl.glColor4f(1f,1f,1f,(float) Math.sin(getGameOverTimer().getTime() * 4) / 7.5f + 0.25f);
         super.draw(gl);
 
         if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
@@ -93,6 +95,7 @@ public class OnlineHostGame extends Game {
     allInformation.add(new byte[] {SNAKE4_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[3].getControlCorner())});
     allInformation.add(getRenderer().getMenu().getAvailableSnakesList());
     allInformation.add(getRenderer().getMenu().getControlledSnakesList(thread));
+    allInformation.add(new byte[] {READY_NUMBER_AND_STATUS, 0, 0});
     allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) horizontalSquares});
     allInformation.add(new byte[] {VER_SQUARES_CHANGED, (byte) verticalSquares});
     allInformation.add(new byte[] {SPEED_CHANGED, (byte) getSpeed()});
@@ -105,6 +108,10 @@ public class OnlineHostGame extends Game {
   public void run(double dt) {
     if (running)
       super.run(dt);
+
+    // Draw and update the ready bar at the top.
+    if (this.isOver())
+      readyFillBar.draw(this.getRenderer().getGl());
   }
 
   @Override
