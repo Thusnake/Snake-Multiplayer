@@ -132,7 +132,7 @@ public class Protocol {
   }
 
   public static int decodeMoveID(byte firstByte, byte secondByte) {
-    return firstByte + (secondByte << 8);
+    return (int) firstByte | (((int) secondByte) << 8);
   }
 
   public static byte[] encodeSeveralCalls(List<byte[]> callsList) {
