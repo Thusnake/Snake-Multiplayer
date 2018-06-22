@@ -163,8 +163,12 @@ public class GLText {
          textureSize = 512;                           // Set 512 Texture Size
       else if ( maxSize <= 80 )                       // ELSE IF Max Size is 80 or Less
          textureSize = 1024;                          // Set 1024 Texture Size
-      else                                            // ELSE IF Max Size is Larger Than 80 (and Less than FONT_SIZE_MAX)
+      else if ( maxSize <= 160 )                      // ELSE IF Max Size is 160 or Less
          textureSize = 2048;                          // Set 2048 Texture Size
+      else if ( maxSize <= 320 )                      // ELSE IF Max Size is 320 or Less
+         textureSize = 4096;                          // Set 4096 Texture Size
+      else                                            // ELSE IF Max Size is Larger Than 320 (and Less than FONT_SIZE_MAX)
+         textureSize = 8192;                          // Set 8192 Texture Size
 
       // create an empty bitmap (alpha only)
       Bitmap bitmap = Bitmap.createBitmap( textureSize, textureSize, Bitmap.Config.ALPHA_8 );  // Create Bitmap
