@@ -84,7 +84,7 @@ public class Protocol {
   public static void decodeMovementCode(byte code, Player.Direction[] array) {
     if (array == null || array.length < 4) return;
     for (int index = 0; index < 4; index++)
-      array[index] = decodeDirection(code / (int) Math.pow(2, index * 2));
+      array[index] = decodeDirection((code >> (index * 2)) & 0xFF);
   }
 
   public static byte encodeDirection(Player.Direction direction) {
@@ -103,7 +103,7 @@ public class Protocol {
       case 1: return Player.Direction.DOWN;
       case 2: return Player.Direction.LEFT;
       case 3: return Player.Direction.RIGHT;
-      default: return Player.Direction.UP;
+      default: throw new RuntimeException("Fix your decodeMovementCode function.");
     }
   }
 
