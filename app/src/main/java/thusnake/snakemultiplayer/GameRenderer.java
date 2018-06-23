@@ -56,6 +56,34 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
     if (this.pointerIsDown) this.pointerDownTime += dt;
 
+    // Online host routines independent of game and menu.
+    if (originActivity.isHost()) {
+      // Update the awaiting disconnect list.
+      for (ConnectedThread thread : originActivity.awaitingDisconnectThreads)
+        if (thread != null)
+          if (thread.getDisconnectRequestTimer().getTime() > 5) {
+            // If the thread still hasn't disconnected - manually disconnect it and remove it
+            // from the list.
+            originActivity.awaitingDisconnectThreads.remove(thread);
+            originActivity.closeConnectedGuestThread(thread);
+          }
+          else
+            thread.getDisconnectRequestTimer().countUp(dt);
+
+      // Update the last activity trackers and ping threads which have been inactive.
+      for (ConnectedThread thread : originActivity.connectedThreads)
+        if (thread != null) {
+          thread.getLastActivityTimer().countUp(dt);
+
+          if (thread.getLastActivityTimer().getTime() > 10)
+            // If a thread has been inactive for too long - disconnect it.
+            originActivity.closeConnectedGuestThread(thread);
+          else if (thread.getLastActivityTimer().getTime() > 5)
+            // If a thread has been inactive for a bit - ping it to force activity.
+            thread.write(new byte[]{Protocol.PING});
+        }
+    }
+
     gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
     gl.glMatrixMode(GL10.GL_MODELVIEW);
     gl.glLoadIdentity();
@@ -134,6 +162,34 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
     // Universal input byte handlers.
     switch (bytes[0]) {
+      case Protocol.DISCONNECT_REQUEST:
+        if (originActivity.isHost()) {
+          // Approve the request.
+          sourceThread.write(new byte[] {Protocol.DISCONNECT});
+
+          // Add the thread to the awaiting disconnect list in case it doesn't answer anymore.
+          originActivity.awaitingDisconnectThreads.add(sourceThread);
+        }
+        break;
+      case Protocol.DISCONNECT:
+        if (originActivity.isGuest()) {
+          // Answer the call first.
+          originActivity.writeBytesAuto(new byte[] {Protocol.WILL_DISCONNECT});
+
+          // Disconnect afterwards.
+          originActivity.connectedThread.cancel();
+          originActivity.connectedThread = null;
+        }
+        break;
+      case Protocol.WILL_DISCONNECT:
+        if (originActivity.isHost()) {
+          // Remove it from the awaiting disconnect list.
+          originActivity.awaitingDisconnectThreads.remove(sourceThread);
+
+          // Stop and remove the thread.
+          originActivity.closeConnectedGuestThread(sourceThread);
+        }
+        break;
       case Protocol.REQUEST_NUMBER_OF_DEVICES:
         sourceThread.write(new byte[]
             {Protocol.NUMBER_OF_DEVICES, (byte) originActivity.getNumberOfRemoteDevices()});
@@ -174,6 +230,10 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           originActivity.numberOfReadyRemoteDevices = bytes[1];
           originActivity.forceSetReady(bytes[2] == 1);
         }
+        break;
+      case Protocol.PING:
+        sourceThread.write(new byte[] {Protocol.PING_ANSWER});
+        break;
     }
 
     // Pass to the menu and game.

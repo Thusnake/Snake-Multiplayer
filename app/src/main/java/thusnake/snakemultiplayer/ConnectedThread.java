@@ -14,7 +14,10 @@ public class ConnectedThread extends Thread {
   private final OpenGLES20Activity originActivity;
   private final InputStream inStream;
   private final OutputStream outStream;
+
   private boolean isReady = false;
+  private SimpleTimer disconnectRequestTimer = new SimpleTimer(0.0);
+  private SimpleTimer lastActivityTimer = new SimpleTimer(0.0);
 
   public ConnectedThread(OpenGLES20Activity activity, BluetoothSocket socket) {
     this.socket = socket;
@@ -51,6 +54,7 @@ public class ConnectedThread extends Thread {
           // Read from the InputStream
           inStream.read(buffer);
           originActivity.getRenderer().handleInputBytes(buffer, this);
+          lastActivityTimer.reset();
         }
       } catch (IOException e) { break; }
     }
@@ -67,10 +71,11 @@ public class ConnectedThread extends Thread {
   public void cancel() {
     try {
       socket.close();
-    } catch (IOException e) { }
+    } catch (IOException e) { System.out.println("Couldn't close connection: " + e.getMessage()); }
     finally {
       // End the guest menu mode.
-      originActivity.getRenderer().getMenu().endGuest();
+      if (originActivity.isGuest())
+        originActivity.getRenderer().getMenu().endGuest();
     }
   }
 
@@ -93,4 +98,8 @@ public class ConnectedThread extends Thread {
   }
 
   public boolean isReady() { return isReady; }
+
+  public SimpleTimer getDisconnectRequestTimer() { return disconnectRequestTimer; }
+
+  public SimpleTimer getLastActivityTimer() { return lastActivityTimer; }
 }

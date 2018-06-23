@@ -16,7 +16,9 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Random;
+import java.util.TreeSet;
 
 /**
  * Created by ASRock on 24-Feb-16.
@@ -28,11 +30,12 @@ public class OpenGLES20Activity extends Activity {
   public ConnectThread connectThread;
   public ConnectedThread connectedThread;
   public ConnectedThread[] connectedThreads = new ConnectedThread[3];
-  private Vibrator v;
   public BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
   public final int REQUEST_ENABLE_BT = 1;
   public ArrayList<String> arrayAdapter = new ArrayList<>();
   public ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
+
+  public Collection<ConnectedThread> awaitingDisconnectThreads = new TreeSet<>();
 
   // Bluetooth related variables
   private boolean isReady = false;
@@ -80,7 +83,6 @@ public class OpenGLES20Activity extends Activity {
     super.onCreate(savedInstanceState);
     this.requestWindowFeature(Window.FEATURE_NO_TITLE);
     getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
     // Create a GLSurfaceView instance and set it
     // as the ContentView for this Activity.
@@ -159,6 +161,26 @@ public class OpenGLES20Activity extends Activity {
       for (ConnectedThread thread : connectedThreads)
         if (thread != null)
           thread.write(bytes);
+  }
+
+  // Disconnects a thread and the corresponding socket.
+  public void closeConnectedGuestThread(ConnectedThread thread) {
+    int index;
+    for (index = 0; index < connectedThreads.length; index++)
+      if (connectedThreads[index].equals(thread))
+        break;
+      else if (index == connectedThreads.length - 1)
+        // Reached the end and found no match to break the loop.
+        return;
+
+    connectedThreads[index].cancel();
+    connectedThreads[index] = null;
+
+    // Inform everyone of changes.
+    writeBytesAuto(new byte[]
+        {Protocol.NUMBER_OF_DEVICES, (byte) getNumberOfRemoteDevices()});
+    writeBytesAuto(new byte[]
+        {Protocol.NUMBER_OF_READY, (byte) getNumberOfReadyRemoteDevices()});
   }
 
   public void setReady(boolean ready) {

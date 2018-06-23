@@ -985,11 +985,18 @@ public class Menu {
     if (originActivity.acceptThread != null) {
       originActivity.acceptThread.cancel();
       originActivity.acceptThread = null;
-
-      menuItemsConnect[6].setText("Start server");
-      menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().beginHost());
-      menuItemsConnect[6].setDestinationToInitial();
     }
+
+    // Shut down all connections.
+    for (int index = 0; index < originActivity.connectedThreads.length; index++)
+      if (originActivity.connectedThreads[index] != null) {
+        originActivity.connectedThreads[index].write(new byte[] {Protocol.DISCONNECT});
+        originActivity.awaitingDisconnectThreads.add(originActivity.connectedThreads[index]);
+      }
+
+    menuItemsConnect[6].setText("Start server");
+    menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().beginHost());
+    menuItemsConnect[6].setDestinationToInitial();
   }
 
   // Sets up the menu to work as if you're a guest.

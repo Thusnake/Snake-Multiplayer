@@ -12,7 +12,6 @@ import java.util.List;
 
 public class Protocol {
   // Guest codes
-  public static final byte REQUEST_CONNECT = 0;
   public static final byte REQUEST_MOVE = 1; // Followed by the move's id.
   public static final byte REQUEST_ADD_SNAKE = 2;
   public static final byte REQUEST_AVAILABLE_SNAKES = 3;
@@ -21,6 +20,8 @@ public class Protocol {
   public static final byte IS_NOT_READY = 6;
   public static final byte REQUEST_NUMBER_OF_READY = 7;
   public static final byte REQUEST_NUMBER_OF_DEVICES = 8;
+  public static final byte DISCONNECT_REQUEST = 66;
+  public static final byte WILL_DISCONNECT = 67;
 
   // Universal codes
   public static final byte ALL_DIRECTIONS = 10; // Followed by 1 movement byte.
@@ -46,6 +47,9 @@ public class Protocol {
   public static final byte NEXT_CALL = 61;
   public static final byte AGGREGATE_CALL_RECEIVED = 62;
 
+  public static final byte PING = 68;
+  public static final byte PING_ANSWER = 69;
+
   // Host codes
   public static final byte REQUEST_NAME = -1;
   public static final byte AVAILABLE_SNAKES_LIST = -2; // Followed by 0-4 snake number bytes.
@@ -67,6 +71,8 @@ public class Protocol {
   public static final byte GAME_MOVEMENT_INFORMATION = -41; // Followed by the move's id and 1 movement byte.
   public static final byte GAME_MOVEMENT_MISSING = -42; // Followed by the move's id.
   public static final byte GAME_APPLE_MOVED = -50; // Followed by 2 coordinate bytes.
+
+  public static final byte DISCONNECT = 65;
 
   // Movement code methods.
   public static byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
