@@ -34,23 +34,29 @@ public class SimpleTimer {
     this.time -= time;
   }
 
-  public boolean countUp(double time) {
-    try{
-      this.time += time;
-    } catch (Exception exception) {
-      return false;
-    }
-    return true;
-  }
+  public void countUp(double time) { this.time += time; }
 
-  public void count(double time) {
+  /**
+   * Counts towards the end by a given amount.
+   * @param time Amount of time to count.
+   * @return Whether the timer has reached the end or not.
+   */
+  public boolean count(double time) {
     this.time += time * countDirection;
-    if (this.countDirection > 0 && this.time > this.endTime
-        || this.countDirection < 0 && this.time < this.endTime) {
+    if (this.countDirection > 0 && this.time >= this.endTime
+        || this.countDirection < 0 && this.time <= this.endTime) {
       this.time = this.endTime;
+      return true;
     }
+    return false;
   }
 
+  /**
+   * Counts towards the end smoothly, using an ease-out function.
+   * @param time A base amount of time to count.
+   * @param easeMultiplier Determines the smoothness of the function.
+   * @param inertia Determines the minimum speed of the function.
+   */
   public void countEaseOut(double time, double easeMultiplier, double inertia) {
     if (this.initialTime != this.endTime) {
       double remaining = Math.abs(this.time - this.endTime);
@@ -63,24 +69,27 @@ public class SimpleTimer {
     }
   }
 
-  public boolean reset() {
-    try {
-      this.time = this.initialTime;
-    } catch (Exception exception) {
-      return false;
-    }
-    return true;
+  public void reset() {
+    this.time = this.initialTime;
   }
 
   public void setTime(double time) { this.time = time; this.endTime = time; }
   public void offsetTime(double offset) { this.time += offset; this.endTime += offset; }
 
+  /**
+   * Sets a new end time of the timer, retaining the current time and initial time.
+   * @param time The new end time value.
+   */
   public void setEndTime(double time) {
     this.endTime = time;
     this.countDirection = (endTime - initialTime > 0) ? 1 : -1;
     this.duration = (endTime - initialTime > 0) ? endTime - initialTime : initialTime - endTime;
   }
 
+  /**
+   * Starts a new timer with the timer's current time as initial and a user-determined end time.
+   * @param time The new end time value.
+   */
   public void setEndTimeFromNow (double time) {
     this.initialTime = this.time;
     this.endTime = time;

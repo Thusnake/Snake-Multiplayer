@@ -19,6 +19,10 @@ public class MenuImage extends MenuDrawable {
     this.drawable = new Square(-width/2, -height/2, width, height);
   }
 
+  public MenuImage(GameRenderer renderer, float x, float y, float size) {
+    this(renderer, x, y, size, size);
+  }
+
   // Drawing methods
   public void draw() {
     gl.glPushMatrix();

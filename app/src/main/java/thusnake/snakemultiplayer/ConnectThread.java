@@ -46,6 +46,9 @@ public class ConnectThread extends Thread {
       } catch (IOException closeException)
         { System.out.println("Something went wrong with the socket."); }
       return;
+    } finally {
+      // Remove the interrupting menu message upon connecting.
+      originActivity.getRenderer().setInterruptingMessage(null);
     }
 
     // Do work to manage the connection (in a separate thread)
@@ -57,7 +60,9 @@ public class ConnectThread extends Thread {
   public void cancel() {
     try {
       mmSocket.close();
-    } catch (IOException e) { }
+    } catch (IOException e) {
+      System.out.println("Connect socket unable to close properly: " + e.getMessage());
+    }
   }
 
   private void manageConnectedSocket(BluetoothSocket socket) {

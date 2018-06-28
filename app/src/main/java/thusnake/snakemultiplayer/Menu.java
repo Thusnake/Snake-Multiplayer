@@ -924,12 +924,20 @@ public class Menu {
   // Finds the device corresponding to a given menu item and connects to it.
   private void connectToDeviceViaItem(MenuItem item) {
     BluetoothDevice targetDevice;
-    if ((targetDevice = foundDevices.getDevice(item)) != null) {
+    if (   ((targetDevice = foundDevices.getDevice(item)) != null)
+        || ((targetDevice = pairedDevices.getDevice(item)) != null)) {
       originActivity.connectThread = new ConnectThread(originActivity, targetDevice);
       originActivity.connectThread.run();
-    } else if ((targetDevice = pairedDevices.getDevice(item)) != null) {
-      originActivity.connectThread = new ConnectThread(originActivity, targetDevice);
-      originActivity.connectThread.run();
+
+      // Set a fullscreen loading message.
+      renderer.setInterruptingMessage(
+          new FullscreenMessage(renderer, "Connecting to " + item.getText()) {
+            @Override
+            public void onCancel() {
+              originActivity.connectThread.cancel();
+              originActivity.connectThread = null;
+            }
+          }.withLoadingSnake(true));
     }
   }
 
@@ -1005,9 +1013,15 @@ public class Menu {
     for (MenuDrawable drawable : guestDisabledDrawables)
       if (drawable.isEnabled())
         drawable.setEnabled(false);
+
+    // Hide the list of devices.
+    this.setConnectionType(null);
+    this.setConnectionRole(null);
+
     // Set the new action for the add snake button.
     addSnakeButton.setAction((action, origin)
         -> originActivity.connectedThread.write(new byte[] {Protocol.REQUEST_ADD_SNAKE}));
+
     // Make all players uncontrollable.
     for (Player player : players) {
       player.setControlType(Player.ControlType.OFF);

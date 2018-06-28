@@ -23,6 +23,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private SharedPreferences.Editor scoresEditor;
   private Menu menu;
   private Game game;
+  private FullscreenMessage interruptingMessage;
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
@@ -89,8 +90,11 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     gl.glLoadIdentity();
 
     // Draw the game or (if the game doesn't exist) the menu.
-    if (this.game == null) menu.run(dt);
-    else game.run(dt);
+    if (interruptingMessage == null) {
+      if (this.game == null) menu.run(dt);
+      else game.run(dt);
+    } else
+      interruptingMessage.run(dt);
   }
 
   @Override
@@ -120,7 +124,6 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public boolean isInGame() { return this.game != null; }
   public Menu getMenu() { return this.menu; }
   public Game getGame() { return this.game; }
-  public int[] getPairedDevices() { return new int[] {}; } // TODO: Make it actually return the connected devices.
   public void setMenuState(MenuDrawable origin, Menu.MenuState state) { menu.setState(origin, state); }
   public void setMenuStateToPlayerOptions(int playerIndex) {
     menu.setPlayerOptionsIndex(playerIndex);
@@ -158,6 +161,12 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
 
   public double getPointerDownTime() { return this.pointerDownTime; }
+
+  public void setInterruptingMessage(FullscreenMessage interruptingMessage) {
+    this.interruptingMessage = interruptingMessage;
+  }
+
+  public FullscreenMessage getInterruptingMessage() { return interruptingMessage; }
 
   public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
     // Universal input byte handlers.
