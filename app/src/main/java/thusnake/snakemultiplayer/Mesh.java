@@ -20,10 +20,39 @@ public class Mesh {
   private short[] indices = null;
   private float[] colors = null;
   private int numOfSquares = 0;
-  private final BoardDrawer game;
+
+  private final float x, y, squareSize;
+  private final int horizontalSquares;
+  private final int verticalSquares;
   
-  public Mesh (BoardDrawer game) { this.game = game; }
-  public Mesh () { this.game = null; }
+  public Mesh (float x, float y, float squareSize, BoardDrawer game) {
+    this.x = x;
+    this.y = y;
+    this.squareSize = squareSize;
+    this.horizontalSquares = game.getHorizontalSquares();
+    this.verticalSquares = game.getVerticalSquares();
+    this.addAllSquares();
+  }
+
+  public Mesh (float x, float y, float squareSize, int horizontalSquares, int verticalSquares) {
+    this.x = x;
+    this.y = y;
+    this.squareSize = squareSize;
+    this.horizontalSquares = horizontalSquares;
+    this.verticalSquares = verticalSquares;
+    this.addAllSquares();
+  }
+
+  private void addAllSquares() {
+    for (int y = 0; y < this.verticalSquares; y++) {
+      for (int x = 0; x < this.horizontalSquares; x++) {
+        this.addSquare(this.x + squareSize * x + x + 1,
+            this.y + y + 1 + squareSize * y,
+            squareSize, squareSize);
+      }
+    }
+    this.applySquares();
+  }
 
   protected void setVertices(float[] vertices) {
     ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
@@ -82,10 +111,6 @@ public class Mesh {
     this.numOfSquares++;
   }
 
-  public void addSquare(double x, double y, double width, double height) {
-    this.addSquare((float) x, (float) y, (float) width, (float) height);
-  }
-
   public void applySquares(){
     setVertices(this.vertices);
     setIndices(this.indices);
@@ -94,25 +119,25 @@ public class Mesh {
 
   public void updateColors(int i, int j, float color[]){
     for (int n=0; n<4;n++) {
-      this.colors[((i) + (j) * game.getHorizontalSquares())*16 + n*4] = color[0];
-      this.colors[((i) + (j) * game.getHorizontalSquares())*16 + n*4 + 1] = color[1];
-      this.colors[((i) + (j) * game.getHorizontalSquares())*16 + n*4 + 2] = color[2];
-      this.colors[((i) + (j) * game.getHorizontalSquares())*16 + n*4 + 3] = color[3];
+      this.colors[(i + j * horizontalSquares)*16 + n*4] = color[0];
+      this.colors[(i + j * horizontalSquares)*16 + n*4 + 1] = color[1];
+      this.colors[(i + j * horizontalSquares)*16 + n*4 + 2] = color[2];
+      this.colors[(i + j * horizontalSquares)*16 + n*4 + 3] = color[3];
     }
     setColors(this.colors);
   }
 
   public void updateColors(int i, int j, double color[]){
-    float[] colorf = {(float) color[0], (float) color[1], (float) color[2], (float) color[3]};
-    this.updateColors(i,j,colorf);
+    float[] colorFloat = {(float) color[0], (float) color[1], (float) color[2], (float) color[3]};
+    this.updateColors(i, j, colorFloat);
   }
 
   public void updateColors(int i, int j, float r, float g, float b, float a){
     for (int n=0; n<4;n++) {
-      this.colors[((i - 1) + (j - 1) * game.getHorizontalSquares())*16 + n*4] = r;
-      this.colors[((i - 1) + (j - 1) * game.getHorizontalSquares())*16 + n*4 + 1] = g;
-      this.colors[((i - 1) + (j - 1) * game.getHorizontalSquares())*16 + n*4 + 2] = b;
-      this.colors[((i - 1) + (j - 1) * game.getHorizontalSquares())*16 + n*4 + 3] = a;
+      this.colors[(i + j * horizontalSquares)*16 + n*4] = r;
+      this.colors[(i + j * horizontalSquares)*16 + n*4 + 1] = g;
+      this.colors[(i + j * horizontalSquares)*16 + n*4 + 2] = b;
+      this.colors[(i + j * horizontalSquares)*16 + n*4 + 3] = a;
     }
     setColors(this.colors);
   }
@@ -127,7 +152,31 @@ public class Mesh {
     setColors(this.colors);
   }
 
+  public void updateColors(int i, float[] rgba) {
+    this.updateColors(i, rgba[0], rgba[1], rgba[2], rgba[3]);
+  }
+
+  public float[] getColors(int i, int j) {
+    return new float[] {
+        colors[(i + j * horizontalSquares) * 16],
+        colors[(i + j * horizontalSquares) * 16 + 1],
+        colors[(i + j * horizontalSquares) * 16 + 2],
+        colors[(i + j * horizontalSquares) * 16 + 3]
+    };
+  }
+
+  public float[] getColors(int i) {
+    return new float[] {
+        colors[i*16],
+        colors[i*16 + 1],
+        colors[i*16 + 2],
+        colors[i*16 + 3]
+    };
+  }
+
   public void draw(GL10 gl){
+    gl.glBindTexture(GL10.GL_TEXTURE_2D, 0); // Unbind textures.
+
     gl.glFrontFace(GL10.GL_CCW);
     gl.glEnable(GL10.GL_CULL_FACE);
     gl.glCullFace(GL10.GL_BACK);

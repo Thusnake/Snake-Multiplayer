@@ -1212,16 +1212,16 @@ public class Menu {
 
 
 // Backgrounds snakes which will appear randomly on the screen going from left to right.
-class BackgroundSnake extends Mesh {
+class BackgroundSnake {
   private final float size, speed, initialY;
   private final int length;
   private float x;
   private Menu menu;
   private double movementTimer;
+  private Mesh snakeMesh;
 
   // Constructor.
   public BackgroundSnake(Menu menu) {
-    super();
     this.menu = menu;
     float screenHeight = this.menu.getRenderer().getScreenHeight();
 
@@ -1233,10 +1233,8 @@ class BackgroundSnake extends Mesh {
     this.movementTimer = speed;
     this.x = -((size + 1) * length);
 
-    for (int index = 0; index < length; index++)
-      this.addSquare(index * size + index, 0, size, size);
-    this.applySquares();
-    this.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
+    snakeMesh = new Mesh(x, initialY, size, length, 1);
+    snakeMesh.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
   }
 
   // Moves the snake whenever it is time to be moved.
@@ -1250,8 +1248,8 @@ class BackgroundSnake extends Mesh {
 
   public void draw(GL10 gl) {
     gl.glPushMatrix();
-    gl.glTranslatef(x,initialY,0);
-    super.draw(gl);
+    gl.glTranslatef(x, 0, 0);
+    snakeMesh.draw(gl);
     gl.glPopMatrix();
   }
 }

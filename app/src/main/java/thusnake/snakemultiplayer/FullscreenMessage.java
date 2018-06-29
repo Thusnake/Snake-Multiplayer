@@ -1,43 +1,59 @@
 package thusnake.snakemultiplayer;
 
+import android.opengl.GLES10;
 import android.view.MotionEvent;
+
+import javax.microedition.khronos.opengles.GL10;
 
 public class FullscreenMessage {
   private final GameRenderer renderer;
+  private final GL10 gl;
   private final MenuDrawable message;
   private final MenuDrawable cancelButton;
 
-  private final Square loadingSnake;
+  private final Mesh loadingSnake;
   private SimpleTimer loadingRotateTimer = new SimpleTimer(0.0, 0.25);
-  private int loadingRotations = 0;
-  private boolean loading = false, loadingTextureLoaded = false;
+  private boolean loading = false;
 
   public FullscreenMessage(GameRenderer renderer, String message) {
     this.renderer = renderer;
+    this.gl = renderer.getGl();
+
+    float screenWidth = renderer.getScreenWidth();
+    float screenHeight = renderer.getScreenHeight();
     this.message = new MenuItem(renderer, message,
-                                renderer.getScreenWidth() / 2f,
-                                renderer.getScreenHeight() / 3f,
+                                screenWidth / 2f,
+                                screenHeight * 2f / 3f - renderer.getGlText().getCharHeight() * 0.65f,
                                 MenuItem.Alignment.CENTER);
     this.cancelButton = new MenuItem(renderer, "x",
-                                     renderer.getScreenWidth() - 10,
-                                     renderer.getScreenHeight() - 10 - renderer.getGlText().getCharHeight() * 0.65f,
+                                     screenWidth - 10,
+                                     screenHeight - 10 - renderer.getGlText().getCharHeight() * 0.65f,
                                      MenuItem.Alignment.RIGHT);
-    this.loadingSnake = new Square(renderer.getScreenWidth() / 2f,
-                                   renderer.getScreenHeight() / 2f,
-                                   180 / 720 * renderer.getScreenHeight(),
-                                   180 / 720 * renderer.getScreenHeight());
+    this.loadingSnake = new Mesh(screenWidth / 2f - 60/720f * screenHeight,
+                                 screenHeight / 3f - 60/720f * screenHeight,
+                                 60f / 720f * screenHeight,
+                                 2, 2);
+    // Set the mesh colors.
+    loadingSnake.updateColors(0, 0, 1f, 1f, 1f, 1f);
+    loadingSnake.updateColors(0, 1, 0.25f, 0.25f, 0.25f, 1f);
+    loadingSnake.updateColors(1, 0, 0f, 0f, 0f, 1f);
+    loadingSnake.updateColors(1, 1, 0.25f, 0.25f, 0.25f, 1f);
   }
 
   public void run(double dt) {
     message.draw();
     cancelButton.draw();
     if (loading) {
-      // TODO Have it load a texture that rotates.
-      loadingSnake.draw(renderer.getGl());
+      loadingSnake.draw(gl);
 
       if (loadingRotateTimer.count(dt)) {
         loadingRotateTimer.reset();
-        loadingRotations++;
+        float[][] previousColors = {loadingSnake.getColors(0), loadingSnake.getColors(1),
+                                    loadingSnake.getColors(2), loadingSnake.getColors(3)};
+        loadingSnake.updateColors(0, previousColors[2]);
+        loadingSnake.updateColors(1, previousColors[0]);
+        loadingSnake.updateColors(2, previousColors[3]);
+        loadingSnake.updateColors(3, previousColors[1]);
       }
     }
   }

@@ -11,7 +11,7 @@ public abstract class BoardDrawer {
   private float boardOffsetX, boardOffsetY, squareWidth;
   private int screenWidth, screenHeight;
   private final Square boardOutline, boardFill;
-  private final Mesh boardSquares = new Mesh(this);
+  private final Mesh boardSquares;
   private final float[] boardSquareColors = {0.125f, 0.125f, 0.125f, 1.0f};
 
   public final int horizontalSquares, verticalSquares;
@@ -41,14 +41,7 @@ public abstract class BoardDrawer {
         screenWidth - boardOffsetX*2, screenHeight - boardOffsetY*2);
 
     // Create the board mesh.
-    for (int y = 0; y < this.verticalSquares; y++) {
-      for (int x = 0; x < this.horizontalSquares; x++) {
-        this.boardSquares.addSquare(this.boardOffsetX + this.squareWidth * x + x + 1,
-            this.boardOffsetY + y + 1 + this.squareWidth * y,
-            this.squareWidth, this.squareWidth);
-      }
-    }
-    boardSquares.applySquares();
+    boardSquares = new Mesh(boardOffsetX, boardOffsetY, squareWidth, this);
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
