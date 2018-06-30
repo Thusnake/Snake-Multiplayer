@@ -107,7 +107,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.gl.glMatrixMode(GL10.GL_MODELVIEW);
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-    this.fontSize = (int)((float)height * (1f/6f));
+    this.fontSize = Math.min((int)((float)height * (1f/6f)), (int)(width / 6f));
     this.glText = new GLText(gl, context.getAssets());
     this.glText.load("pf_arma_five.ttf", this.fontSize, 2, 2);
     this.scoresEditor = scores.edit();
@@ -164,6 +164,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
   public void setInterruptingMessage(FullscreenMessage interruptingMessage) {
     this.interruptingMessage = interruptingMessage;
+    menu.updateState();
   }
 
   public FullscreenMessage getInterruptingMessage() { return interruptingMessage; }
@@ -188,6 +189,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           // Disconnect afterwards.
           originActivity.connectedThread.cancel();
           originActivity.connectedThread = null;
+          this.game = null;
+          this.menu.endGuest();
         }
         break;
       case Protocol.WILL_DISCONNECT:

@@ -927,7 +927,6 @@ public class Menu {
     if (   ((targetDevice = foundDevices.getDevice(item)) != null)
         || ((targetDevice = pairedDevices.getDevice(item)) != null)) {
       originActivity.connectThread = new ConnectThread(originActivity, targetDevice);
-      originActivity.connectThread.run();
 
       // Set a fullscreen loading message.
       renderer.setInterruptingMessage(
@@ -938,6 +937,8 @@ public class Menu {
               originActivity.connectThread = null;
             }
           }.withLoadingSnake(true));
+
+      originActivity.connectThread.run();
     }
   }
 
@@ -1032,7 +1033,7 @@ public class Menu {
   public void endGuest() {
     // Re-enable the items.
     for (MenuDrawable drawable : guestDisabledDrawables)
-      if (drawable.isEnabled())
+      if (!drawable.isEnabled())
         drawable.setEnabled(true);
     // Set the add snake button action back to the old one.
     addSnakeButton.setAction((action, origin) -> renderer.getMenu().addSnake());

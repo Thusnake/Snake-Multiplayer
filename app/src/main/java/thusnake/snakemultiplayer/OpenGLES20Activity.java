@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Created by ASRock on 24-Feb-16.
@@ -35,7 +36,7 @@ public class OpenGLES20Activity extends Activity {
   public ArrayList<String> arrayAdapter = new ArrayList<>();
   public ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
 
-  public Collection<ConnectedThread> awaitingDisconnectThreads = new TreeSet<>();
+  public Collection<ConnectedThread> awaitingDisconnectThreads = new CopyOnWriteArraySet<>();
 
   // Bluetooth related variables
   private boolean isReady = false;
@@ -132,6 +133,13 @@ public class OpenGLES20Activity extends Activity {
     super.onDestroy();
 
     unregisterReceiver(broadcastReceiver);
+  }
+
+  @Override
+  public void onBackPressed() {
+    if (!getRenderer().isInGame()) {
+      getRenderer().getMenu().goBack();
+    }
   }
 
   public GameRenderer getRenderer() {return this.gameView.getGameRenderer(); }

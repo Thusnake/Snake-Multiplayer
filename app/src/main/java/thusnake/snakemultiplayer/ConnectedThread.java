@@ -72,11 +72,6 @@ public class ConnectedThread extends Thread {
     try {
       socket.close();
     } catch (IOException e) { System.out.println("Couldn't close connection: " + e.getMessage()); }
-    finally {
-      // End the guest menu mode.
-      if (originActivity.isGuest())
-        originActivity.getRenderer().getMenu().endGuest();
-    }
   }
 
   public void setReady(boolean ready) {
