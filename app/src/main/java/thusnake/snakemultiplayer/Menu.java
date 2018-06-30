@@ -46,7 +46,7 @@ public class Menu {
   private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
   private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
   private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
-  private final MenuDrawable bluetoothStatusIcon, readyDevicesCounter;
+  private final MenuDrawable bluetoothStatusIcon, readyDevicesCounter, disconnectButton;
 
   private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
   private final MenuItem menuStateItem, addSnakeButton;
@@ -211,6 +211,17 @@ public class Menu {
         }
       }
     };
+
+    this.disconnectButton = new MenuItem(renderer, "disconnect", screenWidth * 1.5f,
+        screenHeight / 8f, MenuItem.Alignment.CENTER) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        this.setDrawable(originActivity.isGuest());
+      }
+    };
+    this.disconnectButton.setAction((action, origin)
+        -> originActivity.writeBytesAuto(new byte[] {Protocol.DISCONNECT_REQUEST}));
 
     bluetoothGuestMenu.add(menuItemsConnect[4]);
     bluetoothGuestMenu.add(menuItemsConnect[5]);
@@ -409,6 +420,7 @@ public class Menu {
     drawablesConnect = new CopyOnWriteArrayList<>();
     drawablesConnect.addAll(Arrays.asList(menuItemsConnect));
     drawablesConnect.add(bluetoothStatusIcon);
+    drawablesConnect.add(disconnectButton);
 
     drawablesBoard = new ArrayList<>();
     drawablesBoard.addAll(Arrays.asList(menuItemsBoard));
