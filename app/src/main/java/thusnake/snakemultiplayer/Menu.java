@@ -465,8 +465,10 @@ public class Menu {
       this.backgroundSnakeTimer.setEndTime(Math.random());
     }
     for (BackgroundSnake backgroundSnake : backgroundSnakes) {
-      backgroundSnake.update(dt);
-      backgroundSnake.draw(gl);
+      if (!backgroundSnake.isDead()) {
+        backgroundSnake.update(dt);
+        backgroundSnake.draw(gl);
+      }
     }
 
     glText.begin(1f, 1f, 1f, 1f);
@@ -1231,6 +1233,7 @@ class BackgroundSnake {
   private float x;
   private Menu menu;
   private double movementTimer;
+  private boolean dead = false;
   private Mesh snakeMesh;
 
   // Constructor.
@@ -1238,24 +1241,34 @@ class BackgroundSnake {
     this.menu = menu;
     float screenHeight = this.menu.getRenderer().getScreenHeight();
 
-    // Set their variables randomly. You can change up the formulas.
-    this.size = screenHeight * 0.05f + (float) Math.random() * screenHeight * 0.1f;
-    this.length = 4 + (int) Math.round(Math.random()*11);
-    this.speed = 1f / (6 + (int) Math.round(Math.random()*12));
-    this.initialY = size + (float) Math.random() * screenHeight * 2f;
+    // The z-index is chosen randomly. It represents how close the snake will appear to be.
+    // It can take whole values in the range 0 - 20.
+    int zIndex = (int)Math.floor(Math.random()*105 % 21);
+
+    this.size = screenHeight * 0.05f + zIndex / 20f * screenHeight * 0.1f;
+    this.length = 4 + (int) ((20 - zIndex) / 4f * Math.random()) + (int) Math.round(Math.random()*6);
+    this.speed = 1f / (5 + zIndex * 5f/20f + Math.round(Math.random()*5));
+    this.initialY = screenHeight - size / 2f - (float) (screenHeight * Math.random());
     this.movementTimer = speed;
     this.x = -((size + 1) * length);
 
     snakeMesh = new Mesh(x, initialY, size, length, 1);
+    for (int index = 0; index < length - 1; index++)
+      snakeMesh.updateColors(index, 0.25f, 0.25f, 0.25f, 0.5f);
     snakeMesh.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
   }
 
   // Moves the snake whenever it is time to be moved.
   public void update(double dt) {
-    this.movementTimer -= dt;
-    while (this.movementTimer < 0) {
-      this.movementTimer += speed;
-      this.x += this.size + 1;
+    if (!dead) {
+      this.movementTimer -= dt;
+      while (this.movementTimer < 0) {
+        this.movementTimer += speed;
+        this.x += this.size + 1;
+      }
+
+      if (x > menu.getRenderer().getScreenWidth() * 5)
+        this.dead = true;
     }
   }
 
@@ -1265,6 +1278,8 @@ class BackgroundSnake {
     snakeMesh.draw(gl);
     gl.glPopMatrix();
   }
+
+  public boolean isDead() { return this.dead; }
 }
 
 
