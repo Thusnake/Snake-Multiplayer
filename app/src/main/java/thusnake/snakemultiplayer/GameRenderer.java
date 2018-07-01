@@ -3,9 +3,7 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
-
 import com.android.texample.GLText;
-
 import javax.microedition.khronos.opengles.GL10;
 
 /**

@@ -15,6 +15,12 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.reward.RewardItem;
+import com.google.android.gms.ads.reward.RewardedVideoAd;
+import com.google.android.gms.ads.reward.RewardedVideoAdListener;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
@@ -25,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Created by ASRock on 24-Feb-16.
  */
 
-public class OpenGLES20Activity extends Activity {
+public class OpenGLES20Activity extends Activity implements RewardedVideoAdListener {
   private GameSurfaceView gameView;
   public AcceptThread acceptThread;
   public ConnectThread connectThread;
@@ -44,6 +50,9 @@ public class OpenGLES20Activity extends Activity {
   // Guest-only
   public int numberOfRemoteDevices = 0;
   public int numberOfReadyRemoteDevices = 0;
+
+  // Advertisements
+  private RewardedVideoAd videoAd;
 
   // Create a BroadcastReceiver for ACTION_FOUND
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -93,6 +102,10 @@ public class OpenGLES20Activity extends Activity {
     // Register the BroadcastReceiver
     IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
     registerReceiver(broadcastReceiver, filter); // Don't forget to unregister during onDestroy
+
+    this.videoAd = MobileAds.getRewardedVideoAdInstance(this);
+    videoAd.setRewardedVideoAdListener(this);
+    videoAd.loadAd("ca-app-pub-3940256099942544/5224354917", new AdRequest.Builder().build());
   }
 
   @Override
@@ -240,5 +253,52 @@ public class OpenGLES20Activity extends Activity {
           ready++;
       return ready;
     }
+  }
+
+
+  public void showAd() {
+    if (videoAd.isLoaded())
+      videoAd.show();
+  }
+
+  @Override
+  public void onRewarded(RewardItem reward) {
+    getRenderer().setInterruptingMessage(new FullscreenMessage(getRenderer(),
+        "You were rewarded with " + reward.getAmount() + " " + reward.getType()));
+  }
+
+  @Override
+  public void onRewardedVideoAdLeftApplication() {
+
+  }
+
+  @Override
+  public void onRewardedVideoAdClosed() {
+
+  }
+
+  @Override
+  public void onRewardedVideoAdFailedToLoad(int errorCode) {
+
+  }
+
+  @Override
+  public void onRewardedVideoAdLoaded() {
+
+  }
+
+  @Override
+  public void onRewardedVideoAdOpened() {
+
+  }
+
+  @Override
+  public void onRewardedVideoStarted() {
+
+  }
+
+  @Override
+  public void onRewardedVideoCompleted() {
+
   }
 }

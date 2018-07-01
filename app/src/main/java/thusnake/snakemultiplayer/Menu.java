@@ -272,6 +272,7 @@ public class Menu {
     this.menuItemsMain[1].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.CONNECT));
     this.menuItemsMain[2].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.BOARD));
     this.menuItemsMain[3].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.PLAYERS));
+    this.menuItemsMain[4].setAction((action, origin) -> originActivity.showAd());
 
     this.menuItemsConnect[0].setAction((action,origin) -> renderer.getMenu()
         .setConnectionRole(ConnectionRole.HOST));
