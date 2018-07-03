@@ -53,6 +53,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   // Advertisements
   private RewardedVideoAd videoAd;
+  private boolean videoAdLoaded;
 
   // Create a BroadcastReceiver for ACTION_FOUND
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -105,13 +106,14 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
     this.videoAd = MobileAds.getRewardedVideoAdInstance(this);
     videoAd.setRewardedVideoAdListener(this);
-    videoAd.loadAd("ca-app-pub-3940256099942544/5224354917", new AdRequest.Builder().build());
+    this.loadAd();
   }
 
   @Override
   protected void onResume() {
     super.onResume();
     gameView.onResume();
+    videoAd.resume(this);
 
     View decorView = getWindow().getDecorView();
     // Hide both the navigation bar and the status bar.
@@ -130,6 +132,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   protected void onPause() {
     super.onPause();
     gameView.onPause();
+    videoAd.pause(this);
   }
 
   @Override
@@ -144,6 +147,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
             }
         }*/
     super.onDestroy();
+    videoAd.destroy(this);
 
     unregisterReceiver(broadcastReceiver);
   }
@@ -256,9 +260,18 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   }
 
 
+  public void loadAd() {
+    videoAd.loadAd("ca-app-pub-3940256099942544/5224354917", new AdRequest.Builder().build());
+    videoAdLoaded = false;
+  }
+
   public void showAd() {
     if (videoAd.isLoaded())
       videoAd.show();
+  }
+
+  public boolean videoAdIsLoaded() {
+    return videoAd != null && videoAdLoaded;
   }
 
   @Override
@@ -274,7 +287,8 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   @Override
   public void onRewardedVideoAdClosed() {
-
+    // Load a new one.
+    this.loadAd();
   }
 
   @Override
@@ -284,7 +298,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   @Override
   public void onRewardedVideoAdLoaded() {
-
+    videoAdLoaded = true;
   }
 
   @Override

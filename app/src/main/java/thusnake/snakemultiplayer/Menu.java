@@ -124,11 +124,21 @@ public class Menu {
           if (!this.getText().equals(menuItemsMainText[0])) this.setText(menuItemsMainText[0]);
       }
     };
-    for (int i = 1; i < menuItemsMainText.length; i++)
+    for (int i = 1; i < menuItemsMainText.length - 1; i++)
       this.menuItemsMain[i] = new MenuItem(renderer, menuItemsMainText[i], 10,
           screenHeight - glText.getCharHeight() * (i + 1) * 0.65f
               - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
           MenuItem.Alignment.LEFT);
+    this.menuItemsMain[4] = new MenuItem(renderer, menuItemsMainText[4], 10,
+        screenHeight - glText.getCharHeight() * (4 + 1) * 0.65f
+            - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
+        MenuItem.Alignment.LEFT) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        this.setEnabled(originActivity.videoAdIsLoaded());
+      }
+    };
 
     this.readyDevicesCounter = new MenuItem(renderer, "", screenWidth - 10,
         menuItemsMain[0].getY(), MenuItem.Alignment.RIGHT) {
