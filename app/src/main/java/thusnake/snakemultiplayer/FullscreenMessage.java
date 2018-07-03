@@ -21,16 +21,18 @@ public class FullscreenMessage {
 
     float screenWidth = renderer.getScreenWidth();
     float screenHeight = renderer.getScreenHeight();
-    this.message = new MenuItem(renderer, message,
+    this.message
+        = new MultilineMenuItem(renderer, message,
                                 screenWidth / 2f,
                                 screenHeight * 2f / 3f - renderer.getGlText().getCharHeight() * 0.65f,
-                                MenuItem.Alignment.CENTER);
+                                MenuItem.Alignment.CENTER,
+                                screenWidth);
     this.cancelButton = new MenuItem(renderer, "x",
                                      screenWidth - 10,
                                      screenHeight - 10 - renderer.getGlText().getCharHeight() * 0.65f,
                                      MenuItem.Alignment.RIGHT);
     this.loadingSnake = new Mesh(screenWidth / 2f - 60/720f * screenHeight,
-                                 screenHeight / 3f - 60/720f * screenHeight,
+                                 this.message.getY() / 2f - 60/720f * screenHeight,
                                  60f / 720f * screenHeight,
                                  2, 2);
     // Set the mesh colors.
