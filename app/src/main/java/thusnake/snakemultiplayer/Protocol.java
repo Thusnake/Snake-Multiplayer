@@ -138,7 +138,14 @@ public class Protocol {
   }
 
   public static int decodeMoveID(byte firstByte, byte secondByte) {
-    return (int) firstByte | (((int) secondByte) << 8);
+    // First transform to unsigned.
+    int firstInt, secondInt;
+    if (firstByte < 0) firstInt = firstByte + 0xFF + 1;
+    else               firstInt = firstByte;
+    if (secondByte < 0) secondInt = secondByte + 0xFF + 1;
+    else                secondInt = secondByte;
+
+    return firstInt | secondInt << 8;
   }
 
   public static byte[] encodeSeveralCalls(List<byte[]> callsList) {

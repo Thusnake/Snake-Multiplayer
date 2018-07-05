@@ -113,7 +113,7 @@ public class GuestGame extends Game {
   public void handleInputBytes(byte[] inputBytes, ConnectedThread source) {
     switch (inputBytes[0]) {
       case Protocol.GAME_MOVEMENT_OCCURRED:
-        int moveId = inputBytes[1] + (inputBytes[2] << 8);
+        int moveId = Protocol.decodeMoveID(inputBytes[1], inputBytes[2]);
         if (moveId - moveCount == 1) {
           // The move is correct, as it follows the last we know of. Execute it.
           this.decodeAndExecuteMove(inputBytes[3]);
