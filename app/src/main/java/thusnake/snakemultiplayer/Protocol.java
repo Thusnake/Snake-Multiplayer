@@ -90,7 +90,7 @@ public class Protocol {
   public static void decodeMovementCode(byte code, Player.Direction[] array) {
     if (array == null || array.length < 4) return;
     for (int index = 0; index < 4; index++)
-      array[index] = decodeDirection((code >> (index * 2)) & 0xFF);
+      array[index] = decodeDirection((code >> (index * 2)) & 0x3);
   }
 
   public static byte encodeDirection(Player.Direction direction) {
