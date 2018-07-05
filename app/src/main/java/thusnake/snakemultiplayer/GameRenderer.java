@@ -81,6 +81,18 @@ public class GameRenderer implements GLSurfaceView.Renderer {
             // If a thread has been inactive for a bit - ping it to force activity.
             thread.write(new byte[]{Protocol.PING});
         }
+    } else if (originActivity.isGuest()) {
+      // Update the last activity tracker and ping the host if it's been inactive.
+      if (originActivity.connectedThread != null) {
+        originActivity.connectedThread.getLastActivityTimer().countUp(dt);
+
+        if (originActivity.connectedThread.getLastActivityTimer().getTime() > 10) {
+          originActivity.connectedThread.cancel();
+          originActivity.connectedThread = null;
+        }
+        else if (originActivity.connectedThread.getLastActivityTimer().getTime() > 5)
+          originActivity.connectedThread.write(new byte[]{Protocol.PING});
+      }
     }
 
     gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
