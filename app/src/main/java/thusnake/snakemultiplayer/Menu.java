@@ -709,8 +709,9 @@ public class Menu {
   }
 
   // Enables the first currently disabled snake to play and handles the players menu animations.
-  public void addSnake() {
-    for (int index = 0; index < players.length; index++)
+  public Player addSnake() {
+    int index;
+    for (index = 0; index < players.length; index++)
       if (players[index].getControlType() == Player.ControlType.OFF) {
         players[index].setControlType(Player.ControlType.CORNER);
         removeSnakeButtons[index].show();
@@ -728,6 +729,7 @@ public class Menu {
         if (thread != null)
           thread.write(getDetailedSnakesList(thread));
 
+    return players[index];
   }
 
   // Disables a given snake from play and handles the players menu animations.
@@ -1028,6 +1030,11 @@ public class Menu {
         originActivity.awaitingDisconnectThreads.add(originActivity.connectedThreads[index]);
       }
 
+    // Remove all non-local snakes.
+    for (Player player : players)
+      if (player != null && player.getControlType().equals(Player.ControlType.BLUETOOTH))
+        this.removeSnake(player.getNumber());
+
     menuItemsConnect[6].setText("Start server");
     menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().beginHost());
     menuItemsConnect[6].setDestinationToInitial();
@@ -1086,14 +1093,10 @@ public class Menu {
       // HOST ONLY
       case Protocol.REQUEST_ADD_SNAKE:
         if (originActivity.isHost()) {
-          for (Player player : players) {
-            if (player != null && player.getControlType() == Player.ControlType.OFF) {
-              player.setControlType(Player.ControlType.BLUETOOTH);
-              player.setControllerThread(sourceThread);
-              break;
-            }
-          }
-          sourceThread.write(this.getDetailedSnakesList(sourceThread));
+          Player addedSnake = this.addSnake();
+          addedSnake.setControlType(Player.ControlType.BLUETOOTH);
+          addedSnake.setControllerThread(sourceThread);
+
           this.updateState();
         }
         break;
