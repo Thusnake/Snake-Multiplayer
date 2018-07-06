@@ -89,6 +89,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
         if (originActivity.connectedThread.getLastActivityTimer().getTime() > 10) {
           originActivity.connectedThread.cancel();
           originActivity.connectedThread = null;
+          menu.endGuest();
         }
         else if (originActivity.connectedThread.getLastActivityTimer().getTime() > 5)
           originActivity.connectedThread.write(new byte[]{Protocol.PING});

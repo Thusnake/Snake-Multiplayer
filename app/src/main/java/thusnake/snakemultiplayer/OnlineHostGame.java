@@ -1,9 +1,9 @@
 package thusnake.snakemultiplayer;
 
+import android.util.Pair;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -14,7 +14,8 @@ import static thusnake.snakemultiplayer.Protocol.*;
  */
 
 public class OnlineHostGame extends Game {
-  private ArrayList<Byte> moveCodes = new ArrayList<>();
+  private ArrayList<byte[]> moveCodes = new ArrayList<>();
+  private int moveCount = 0;
   private final List<ConnectedThread> awaitingAggregateReceive = new ArrayList<>();
   private boolean running = false;
   private final Square readyFillBar;
@@ -22,6 +23,10 @@ public class OnlineHostGame extends Game {
   // Constructor.
   public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
     super(renderer, screenWidth, screenHeight, players);
+
+    // The first move is null, as it's the game's initial state.
+    moveCodes.add(null);
+    prepare();
 
     // Send the initialization call and wait asynchronously for a confirmation from all.
     OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
@@ -83,6 +88,14 @@ public class OnlineHostGame extends Game {
     };
   }
 
+  public void prepare() {
+    moveCount++;
+    Pair<Byte, Byte> moveId = Protocol.encodeMoveID(moveCount);
+    moveCodes.add(new byte[] {GAME_APPLE_POS_CHANGED,
+                              moveId.first, moveId.second,
+                              (byte) getApple().getX(), (byte) getApple().getY()});
+  }
+
   public List<byte[]> createInitializationCalls(ConnectedThread thread) {
     List<byte[]> allInformation = new ArrayList<>();
     allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers()[0].getColorIndex()});
@@ -99,6 +112,7 @@ public class OnlineHostGame extends Game {
     allInformation.add(new byte[] {VER_SQUARES_CHANGED, (byte) verticalSquares});
     allInformation.add(new byte[] {SPEED_CHANGED, (byte) getSpeed()});
     allInformation.add(new byte[] {STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
+    allInformation.add(moveCodes.get(1));
 
     return allInformation;
   }
@@ -125,23 +139,38 @@ public class OnlineHostGame extends Game {
   @Override
   protected void moveAllSnakes() {
     super.moveAllSnakes();
+    moveCount++;
+
     Player[] players = this.getPlayers();
-    this.moveCodes.add(Protocol.getMovementCode(
-        (players[0].getDirection() != null) ? players[0].getDirection() : Player.Direction.UP,
-        (players[1].getDirection() != null) ? players[1].getDirection() : Player.Direction.UP,
-        (players[2].getDirection() != null) ? players[2].getDirection() : Player.Direction.UP,
-        (players[3].getDirection() != null) ? players[3].getDirection() : Player.Direction.UP
-    ));
-
-    this.sendBytes(new byte[] {
+    this.moveCodes.add(new byte[] {
         Protocol.GAME_MOVEMENT_OCCURRED,
-        (byte) (this.getMoveCount() & 0xFF),        // First byte of the moveCount integer.
-        (byte) ((this.getMoveCount() >> 8) & 0xFF), // Second byte of the moveCount integer.
-        // The rest of the bytes are not handled and so everything goes wrong if the game becomes
-        // longer than 32768 moves.
-
-        this.moveCodes.get(this.moveCodes.size() - 1) // Get the last movement code and send it.
+        Protocol.encodeMoveID(moveCount).first,  // The rest of the bytes are not handled
+        Protocol.encodeMoveID(moveCount).second, // and so everything goes wrong if the
+        Protocol.getMovementCode(                // game becomes longer than 32768 moves.
+          (players[0].getDirection() != null) ? players[0].getDirection() : Player.Direction.UP,
+          (players[1].getDirection() != null) ? players[1].getDirection() : Player.Direction.UP,
+          (players[2].getDirection() != null) ? players[2].getDirection() : Player.Direction.UP,
+          (players[3].getDirection() != null) ? players[3].getDirection() : Player.Direction.UP
+        )
     });
+
+    // Get the movement code we just added and send it.
+    this.sendBytes(this.moveCodes.get(this.moveCodes.size() - 1));
+  }
+
+  @Override
+  public void onAppleEaten(Apple apple) {
+    super.onAppleEaten(apple);
+    moveCount++;
+
+    this.moveCodes.add(new byte[] {
+        Protocol.GAME_APPLE_EATEN_NEXT_POS,
+        Protocol.encodeMoveID(moveCount).first,
+        Protocol.encodeMoveID(moveCount).second,
+        (byte) apple.getX(), (byte) apple.getY()
+    });
+
+    this.sendBytes(moveCodes.get(moveCodes.size() - 1));
   }
 
   @Override
@@ -150,12 +179,7 @@ public class OnlineHostGame extends Game {
       case Protocol.REQUEST_MOVE:
         try {
           // Send back the move number together with the information for it.
-          sourceThread.write(new byte[]{
-              Protocol.GAME_MOVEMENT_INFORMATION,
-              bytes[1],
-              bytes[2],
-              this.moveCodes.get(bytes[1] + (bytes[2] << 8))
-          });
+          sourceThread.write(this.moveCodes.get(Protocol.decodeMoveID(bytes[1], bytes[2])));
         } catch (IndexOutOfBoundsException e) {
           // If we don't have information about the move (e.g. it hasn't happened yet) return a
           // movement missing signal.

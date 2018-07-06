@@ -267,7 +267,6 @@ class Game extends BoardDrawer {
   }
 
   protected void moveAllSnakes() {
-    moveCount++;
     for (Player player : players) {
       // Move and check if it has eaten the apple.
       if (player != null && player.isAlive() && player.move()) {
@@ -285,15 +284,16 @@ class Game extends BoardDrawer {
     }
   }
 
-  public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
+  // Methods for overriding purposes.
+  public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {}
+  public void onAppleEaten(Apple apple) {}
 
-  }
-
+  // Getters.
   public GameRenderer getRenderer() { return this.renderer; }
   public GameMode getGameMode() { return this.gameMode; }
   public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
-  public int getMoveCount() { return this.moveCount; }
+  public Apple getApple() { return this.apple; }
   public Player[] getPlayers() { return this.players; }
   public int getAlivePlayers() {
     int playersAlive = 0;

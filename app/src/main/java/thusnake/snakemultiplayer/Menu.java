@@ -1131,7 +1131,7 @@ public class Menu {
           // Decode all calls and execute them.
           for (byte[] call : Protocol.decodeSeveralCalls(inputBytes))
             if (call.length > 0 && call[0] != Protocol.AGGREGATE_CALL)
-              handleInputBytes(call, sourceThread);
+              renderer.handleInputBytes(call, sourceThread);
 
           // Tell the host you're ready.
           sourceThread.write(new byte[] {Protocol.AGGREGATE_CALL_RECEIVED});

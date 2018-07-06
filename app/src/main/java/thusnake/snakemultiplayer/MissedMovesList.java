@@ -13,17 +13,17 @@ public class MissedMovesList {
   }
 
   public void expand(int expandToIndex) {
-    for (int index = firstMoveIndex + movesList.size(); index < expandToIndex; index++)
+    for (int index = firstMoveIndex + movesList.size(); index <= expandToIndex; index++)
       this.movesList.add(null);
   }
 
   public void expand(int expandToIndex, byte[] lastMove) {
-    for (int index = firstMoveIndex + movesList.size(); index < expandToIndex - 1; index++)
+    for (int index = firstMoveIndex + movesList.size(); index < expandToIndex; index++)
       this.movesList.add(null);
     this.movesList.add(lastMove);
   }
 
-  public byte extractFirst() { return movesList.remove(0)[3]; }
+  public byte[] extractFirst() { return movesList.remove(0); }
 
   public boolean firstIsReady() { return movesList.get(0) != null; }
 
@@ -44,12 +44,15 @@ public class MissedMovesList {
     return indices;
   }
 
-  public boolean insert(int moveNumber, byte[] move) {
-    int relativeMoveNumber = moveNumber + firstMoveIndex;
-    if (movesList.get(relativeMoveNumber) == null) {
-      movesList.set(relativeMoveNumber, move);
-      return true;
+  public void insert(int moveNumber, byte[] move) {
+    int relativeMoveNumber = moveNumber - firstMoveIndex;
+
+    if (relativeMoveNumber < size()) {
+      if (movesList.get(relativeMoveNumber) == null)
+        movesList.set(relativeMoveNumber, move);
+    } else {
+      expand(moveNumber, move);
     }
-    return false;
+
   }
 }
