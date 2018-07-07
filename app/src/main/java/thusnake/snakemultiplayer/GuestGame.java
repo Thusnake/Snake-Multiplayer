@@ -189,6 +189,6 @@ public class GuestGame extends Game {
     if (this.missedMovesList == null)
       this.missedMovesList = new MissedMovesList(moveCount, moveId, latestMove);
     else
-      this.missedMovesList.expand(moveId);
+      this.missedMovesList.expand(moveId, latestMove);
   }
 }

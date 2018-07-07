@@ -2,9 +2,10 @@ package thusnake.snakemultiplayer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MissedMovesList {
-  private ArrayList<byte[]> movesList = new ArrayList<>();
+  private List<byte[]> movesList = new CopyOnWriteArrayList<>();
   private int firstMoveIndex;
 
   public MissedMovesList(int currentLastIndex, int receivedLastIndex, byte[] receivedMove) {
@@ -53,6 +54,5 @@ public class MissedMovesList {
     } else {
       expand(moveNumber, move);
     }
-
   }
 }
