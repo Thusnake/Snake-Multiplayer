@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import static thusnake.snakemultiplayer.Player.Direction.DOWN;
 import static thusnake.snakemultiplayer.Player.Direction.LEFT;
 import static thusnake.snakemultiplayer.Player.Direction.RIGHT;
@@ -73,7 +75,7 @@ public class Player {
           }
 
           @Override
-          public void draw() {
+          public void draw(GL10 gl) {
 
           }
         };
