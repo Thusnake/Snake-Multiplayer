@@ -47,6 +47,9 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
   @Override
   public void onDrawFrame(GL10 gl) {
+    // Enable 2D textures in case something has disabled it. (like minimizing the app)
+    gl.glEnable(GL10.GL_TEXTURE_2D);
+
     // Calculate the delta time.
     long currentTime = System.nanoTime();
     long deltaTimeLong = currentTime - previousTime;
