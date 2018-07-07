@@ -123,6 +123,9 @@ public class OnlineHostGame extends Game {
   public void run(double dt) {
     if (running)
       super.run(dt);
+    else if (awaitingAggregateReceive != null && !awaitingAggregateReceive.isEmpty())
+      for (ConnectedThread thread : awaitingAggregateReceive)
+        thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
 
     // Draw and update the ready bar at the top.
     if (this.isOver())

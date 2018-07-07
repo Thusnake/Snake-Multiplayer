@@ -157,9 +157,9 @@ public class Protocol {
     outputCall[0] = AGGREGATE_CALL;
     int outputIndex = 1;
     for (byte[] call : callsList) {
+      outputCall[outputIndex++] = (byte) call.length;
       for (byte callByte : call)
         outputCall[outputIndex++] = callByte;
-      outputCall[outputIndex++] = NEXT_CALL;
     }
 
     return outputCall;
@@ -168,20 +168,21 @@ public class Protocol {
   public static List<byte[]> decodeSeveralCalls(byte[] aggregateCall) {
     List<byte[]> callsList = new ArrayList<>();
 
-    List<Byte> currentCall = new ArrayList<>();
-    for (byte inputByte : aggregateCall) {
-      if (inputByte != NEXT_CALL && inputByte != AGGREGATE_CALL) {
-        currentCall.add(inputByte);
-      } else if (inputByte != AGGREGATE_CALL) {
-        byte[] currentCallArray = new byte[currentCall.size()];
-        int index = 0;
-        for (Byte currentCallByte : currentCall)
-          currentCallArray[index++] = currentCallByte;
+    int currentIndex = 1;
+    while(currentIndex < aggregateCall.length) {
+      // Go through as many bytes as the current one decides to and add them to an array.
+      byte[] currentCall = new byte[aggregateCall[currentIndex]];
 
-        callsList.add(currentCallArray);
-
-        currentCall = new ArrayList<>();
+      for (int currentCallIndex = 0; currentCallIndex < currentCall.length; currentCallIndex++) {
+        currentIndex++;
+        currentCall[currentCallIndex] = aggregateCall[currentIndex];
       }
+
+      // Add to the list of calls.
+      callsList.add(currentCall);
+
+      // Increment currentIndex to start from the next call's first byte.
+      currentIndex++;
     }
 
     return callsList;
