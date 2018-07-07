@@ -36,10 +36,6 @@ public class GuestGame extends Game {
 
       @Override
       public void draw(GL10 gl) {
-        // Flash from 0.1 opacity to 0.4 opacity.
-        gl.glColor4f(1f,1f,1f,(float) Math.sin(getGameOverTimer().getTime() * 4) / 7.5f + 0.25f);
-        super.draw(gl);
-
         if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
             || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
           this.setCoordinates(0,
@@ -51,6 +47,10 @@ public class GuestGame extends Game {
           readyDevices = originActivity.getNumberOfReadyRemoteDevices();
           connectedDevices = originActivity.getNumberOfRemoteDevices();
         }
+
+        // Flash from 0.1 opacity to 0.4 opacity.
+        gl.glColor4f(1f,1f,1f,(float) Math.sin(getGameOverTimer().getTime() * 4) / 7.5f + 0.25f);
+        super.draw(gl);
       }
     };
 

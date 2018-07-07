@@ -28,19 +28,21 @@ public class OnlineHostGame extends Game {
     moveCodes.add(null);
     prepare();
 
-    // Send the initialization call and wait asynchronously for a confirmation from all.
     OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
+
+    // Make everyone not ready for the next game.
+    for (ConnectedThread thread : originActivity.connectedThreads)
+      if (thread != null)
+        thread.setReady(false);
+    // Set your status to not ready as well.
+    originActivity.setReady(false);
+
+    // Send the initialization call and wait asynchronously for a confirmation from all.
     for (ConnectedThread thread : originActivity.connectedThreads)
       if (thread != null) {
         thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
         awaitingAggregateReceive.add(thread);
-
-        // Also make everyone not ready for the next game.
-        thread.setReady(false);
       }
-
-    // Set your status to not ready as well.
-    originActivity.setReady(false);
 
     // Change the top game over button to the ready button.
     this.getGameOverTopItem().setText(originActivity.isReady() ? "Cancel" : "Ready");
