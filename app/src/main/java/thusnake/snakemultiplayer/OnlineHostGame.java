@@ -17,6 +17,7 @@ public class OnlineHostGame extends Game {
   private ArrayList<byte[]> moveCodes = new ArrayList<>();
   private int moveCount = 0;
   private final List<ConnectedThread> awaitingAggregateReceive = new ArrayList<>();
+  private final SimpleTimer awaitingAggregateReceiveTimer = new SimpleTimer(0.0, 0.25);
   private boolean running = false;
   private final Square readyFillBar;
 
@@ -124,8 +125,12 @@ public class OnlineHostGame extends Game {
     if (running)
       super.run(dt);
     else if (awaitingAggregateReceive != null && !awaitingAggregateReceive.isEmpty())
-      for (ConnectedThread thread : awaitingAggregateReceive)
-        thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
+      if (awaitingAggregateReceiveTimer.count(dt)) {
+        awaitingAggregateReceiveTimer.reset();
+        for (ConnectedThread thread : awaitingAggregateReceive)
+          thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
+      }
+
 
     // Draw and update the ready bar at the top.
     if (this.isOver())

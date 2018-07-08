@@ -170,6 +170,8 @@ public class Protocol {
 
     int currentIndex = 1;
     while(currentIndex < aggregateCall.length) {
+      if (aggregateCall[currentIndex] == Protocol.AGGREGATE_CALL) break;
+
       // Go through as many bytes as the current one decides to and add them to an array.
       byte[] currentCall = new byte[aggregateCall[currentIndex]];
 

@@ -52,8 +52,10 @@ public class ConnectedThread extends Thread {
       try {
         if (inStream.available() > 0) {
           // Read from the InputStream
-          inStream.read(buffer);
-          originActivity.getRenderer().handleInputBytes(buffer.clone(), this);
+          int length = inStream.read(buffer);
+          byte[] inputBytes = new byte[length];
+          System.arraycopy(buffer, 0, inputBytes, 0, length);
+          originActivity.getRenderer().handleInputBytes(inputBytes, this);
           lastActivityTimer.reset();
         }
       } catch (IOException e) { break; }

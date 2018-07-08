@@ -1128,13 +1128,13 @@ public class Menu {
 
       case Protocol.AGGREGATE_CALL:
         if (this.isGuest()) {
+          // Tell the host you've received the aggregate call.
+          sourceThread.write(new byte[] {Protocol.AGGREGATE_CALL_RECEIVED});
+
           // Decode all calls and execute them.
           for (byte[] call : Protocol.decodeSeveralCalls(inputBytes))
             if (call.length > 0 && call[0] != Protocol.AGGREGATE_CALL)
               renderer.handleInputBytes(call, sourceThread);
-
-          // Tell the host you're ready.
-          sourceThread.write(new byte[] {Protocol.AGGREGATE_CALL_RECEIVED});
 
           // Start the game.
           renderer.startGame(players);
