@@ -48,11 +48,13 @@ public class MissedMovesList {
   public void insert(int moveNumber, byte[] move) {
     int relativeMoveNumber = moveNumber - firstMoveIndex;
 
-    if (relativeMoveNumber < size()) {
-      if (movesList.get(relativeMoveNumber) == null)
-        movesList.set(relativeMoveNumber, move);
-    } else {
-      expand(moveNumber, move);
+    if (relativeMoveNumber >= 0) {
+      if (relativeMoveNumber < size()) {
+        if (movesList.get(relativeMoveNumber) == null)
+          movesList.set(relativeMoveNumber, move);
+      } else {
+        expand(moveNumber, move);
+      }
     }
   }
 }
