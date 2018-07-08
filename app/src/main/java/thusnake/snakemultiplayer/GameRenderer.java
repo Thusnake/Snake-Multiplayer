@@ -3,7 +3,12 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
+
 import com.android.texample.GLText;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -25,6 +30,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
+  private Set<TextureReloadable> texturablesToBeReloaded = new HashSet<>();
 
   public GameRenderer(Context context) {
     super();
@@ -124,6 +130,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.fontSize = Math.min((int)((float)height * (1f/6f)), (int)(width / 6f));
     this.glText = new GLText(gl, context.getAssets());
     this.glText.load("pf_arma_five.ttf", this.fontSize, 2, 2);
+    for (TextureReloadable textureReloadable : texturablesToBeReloaded)
+      textureReloadable.reloadGLTexture(gl, originActivity);
     this.scoresEditor = scores.edit();
 
     this.screenWidth = width;
@@ -175,6 +183,10 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
 
   public double getPointerDownTime() { return this.pointerDownTime; }
+
+  public void addToReloadTextureRoutine(TextureReloadable textureReloadable) {
+    texturablesToBeReloaded.add(textureReloadable);
+  }
 
   public void setInterruptingMessage(FullscreenMessage interruptingMessage) {
     this.interruptingMessage = interruptingMessage;

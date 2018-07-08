@@ -17,7 +17,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Created by ASRock on 24-Feb-16.
  */
-public class Square {
+public class Square implements TextureReloadable {
   private FloatBuffer vertexBuffer;
   private ShortBuffer drawListBuffer;
 
@@ -35,6 +35,8 @@ public class Square {
   float color[] = {1.0f,1.0f,0.0f,1.0f};
 
   private short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
+
+  private int textureId;
 
   public Square(float x,float y,float width,float height) {
     float squareCoords[] = {
@@ -138,6 +140,26 @@ public class Square {
     GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
 
     // Clean up
+    bitmap.recycle();
+
+    this.textureId = id;
+
+    OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
+    originActivity.getRenderer().addToReloadTextureRoutine(this);
+  }
+
+  public void reloadGLTexture(GL10 gl, Context context) {
+    Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), textureId);
+
+    gl.glDeleteTextures(1, textures, 0);
+    gl.glGenTextures(1, textures, 0);
+    gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
+
+    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+
     bitmap.recycle();
   }
 
