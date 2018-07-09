@@ -58,6 +58,7 @@ public class Menu {
   private SimpleTimer menuAnimationTimer = new SimpleTimer(0.0, 1.0);
   private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
   private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<>();
+  private SimpleTimer scrollInertia = new SimpleTimer(0.0);
 
   private int onlineIdentifier;
   private final OpenGLES20Activity originActivity;
@@ -466,6 +467,11 @@ public class Menu {
     if (!this.menuAnimationTimer.isDone()) this.menuAnimationTimer.countEaseOut(dt, 3, 0);
     if (!this.screenTransformX.isDone()) this.screenTransformX.countEaseOut(dt, 8, screenWidth/2);
     if (!this.screenTransformY.isDone()) this.screenTransformY.countEaseOut(dt, 8, screenHeight/2);
+    if (!this.scrollInertia.isDone()) {
+      if (renderer.getPointerDownTime() == 0)
+        scroll((float) scrollInertia.getTime());
+      scrollInertia.countEaseOut(dt, 2, screenHeight/16);
+    }
 
     // Draw the background items.
     this.backgroundSnakeTimer.count(dt);
@@ -1196,6 +1202,12 @@ public class Menu {
   public void scroll(float amount) {
     this.screenTransformY.setTime(Math.max(this.getScrollHeight(),
                                   Math.min(0, amount + screenTransformY.getTime())));
+  }
+
+  // Sets the scroll inertia so that the screen moves with a bit of "inertia" that slowly decreases.
+  public void setScrollInertia(float inertia) {
+    scrollInertia.setTime(inertia);
+    scrollInertia.setEndTimeFromNow(0.0);
   }
 
   // Performs a screen scroll horizontally by a given amount, but only to the left.

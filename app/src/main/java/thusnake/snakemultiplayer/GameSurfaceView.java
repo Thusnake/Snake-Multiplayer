@@ -152,9 +152,10 @@ public class GameSurfaceView extends GLSurfaceView {
 
           // Using the hold mode.
           if (e.getHistorySize() > 0) {
-            if (holdMode == HoldMode.VER_SCROLL && gameRenderer.getMenu().isScrollable())
+            if (holdMode == HoldMode.VER_SCROLL && gameRenderer.getMenu().isScrollable()) {
               gameRenderer.getMenu().scroll(rawY[0] - e.getHistoricalY(0));
-            else if (holdMode == HoldMode.HOR_SCROLL) {
+              gameRenderer.getMenu().setScrollInertia(rawY[0] - e.getHistoricalY(0));
+            } else if (holdMode == HoldMode.HOR_SCROLL) {
               if (rawX[0] - e.getHistoricalX(0) > 20) {
                 gameRenderer.getMenu().goBack();
                 // Reset everything as if the user has released the screen and pressed it again.
