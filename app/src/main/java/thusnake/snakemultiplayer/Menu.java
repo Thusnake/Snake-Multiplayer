@@ -178,8 +178,8 @@ public class Menu {
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.RIGHT);
     this.menuItemsConnect[3] = new MenuItem(renderer, "Wi-Fi", screenWidth * 2 - 10,
         screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuItem.Alignment.RIGHT);
-    this.menuItemsConnect[4] = new MenuItem(renderer, "Search", screenWidth*1.5f,
-        screenHeight / 8 - glText.getCharHeight() * 0.65f, MenuItem.Alignment.CENTER);
+    this.menuItemsConnect[4] = new MenuItem(renderer, "Search", screenWidth*2 - 10,
+        screenHeight / 8, MenuItem.Alignment.RIGHT);
     this.menuItemsConnect[5] = new MenuItem(renderer, "Devices:", screenWidth + 10,
         screenHeight / 8, MenuItem.Alignment.LEFT);
     this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
@@ -916,6 +916,8 @@ public class Menu {
         pairedDevices.add(device, deviceItem);
       }
     }
+    bluetoothGuestMenu.removeAll(pairedDevices.getItems());
+    drawablesConnect.removeAll(pairedDevices.getItems());
     bluetoothGuestMenu.addAll(pairedDevices.getItems());
     drawablesConnect.addAll(pairedDevices.getItems());
   }
@@ -977,7 +979,7 @@ public class Menu {
     if (adapter == null) {
       // There is no bluetooth adapter, so don't do anything.
       this.menuItemsConnect[4].setDrawable(true);
-      this.menuItemsConnect[4].setText("Bluetooth error :/");
+      this.menuItemsConnect[4].setText("error :/");
     } else {
       if (!adapter.isEnabled()) {
         // There is an adapter, but it's not enabled.
@@ -992,9 +994,18 @@ public class Menu {
 
       if (!adapter.startDiscovery()) {
         menuItemsConnect[4].setDrawable(true);
-        menuItemsConnect[4].setText("Bluetooth error :/");
+        menuItemsConnect[4].setText("error :/");
       }
     }
+  }
+
+  public void onDiscoveryStarted() {
+    menuItemsConnect[4].setDrawable(false);
+  }
+
+  public void onDiscoveryFinished() {
+    menuItemsConnect[4].setDrawable(true);
+    menuItemsConnect[4].setText("Search");
   }
 
   // Begins the hosting of a bluetooth game.
@@ -1314,7 +1325,7 @@ class DeviceItemMap{
 
   public boolean has(BluetoothDevice device) {
     for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
-      if (device == pair.first)
+      if (device.getAddress().equals(pair.first.getAddress()))
         return true;
 
     return false;
@@ -1331,14 +1342,14 @@ class DeviceItemMap{
 
   public MenuItem getItem(BluetoothDevice device) {
     for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
-      if (device == pair.first)
+      if (device.getAddress().equals(pair.first.getAddress()))
         return pair.second;
     return null;
   }
 
   public BluetoothDevice getDevice(MenuItem item) {
     for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
-      if (item == pair.second)
+      if (item.equals(pair.second))
         return pair.first;
     return null;
   }

@@ -68,6 +68,10 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
         // Add the name and address to an array adapter to show in a ListView
         arrayAdapter.add(device.getName() + "\n" + device.getAddress());
         gameView.getGameRenderer().getMenu().addFoundDevice(device);
+      } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
+        getRenderer().getMenu().onDiscoveryStarted();
+      } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+        getRenderer().getMenu().onDiscoveryFinished();
       }
     }
   };
@@ -102,6 +106,8 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
     // Register the BroadcastReceiver
     IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+    filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+    filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
     registerReceiver(broadcastReceiver, filter); // Don't forget to unregister during onDestroy
 
     this.videoAd = MobileAds.getRewardedVideoAdInstance(this);
@@ -137,15 +143,6 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   @Override
   protected  void onDestroy(){
-        /*if (MyGLRenderer.playingBluetooth) {
-            byte[] bytes = {8, 2};
-            MyGLRenderer.writeHost(bytes);
-
-            try {
-                wait(1000);
-            } catch (java.lang.InterruptedException e) {
-            }
-        }*/
     super.onDestroy();
     videoAd.destroy(this);
 
