@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -24,7 +23,6 @@ import com.google.android.gms.ads.reward.RewardedVideoAdListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
-import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -109,6 +107,8 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
     filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
     filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
     registerReceiver(broadcastReceiver, filter); // Don't forget to unregister during onDestroy
+
+    MobileAds.initialize(this, getString(R.string.app_id));
 
     this.videoAd = MobileAds.getRewardedVideoAdInstance(this);
     videoAd.setRewardedVideoAdListener(this);
@@ -258,7 +258,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
 
   public void loadAd() {
-    videoAd.loadAd("ca-app-pub-3940256099942544/5224354917", new AdRequest.Builder().build());
+    videoAd.loadAd(getString(R.string.test_video_ad_id), new AdRequest.Builder().build());
     videoAdLoaded = false;
   }
 
@@ -274,13 +274,11 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   @Override
   public void onRewarded(RewardItem reward) {
     getRenderer().setInterruptingMessage(new FullscreenMessage(getRenderer(),
-        "You were rewarded with " + reward.getAmount() + " " + reward.getType()));
+        "Thanks for the support! Take this " + reward.getAmount() + " " + reward.getType()));
   }
 
   @Override
-  public void onRewardedVideoAdLeftApplication() {
-
-  }
+  public void onRewardedVideoAdLeftApplication() {}
 
   @Override
   public void onRewardedVideoAdClosed() {
@@ -289,9 +287,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   }
 
   @Override
-  public void onRewardedVideoAdFailedToLoad(int errorCode) {
-
-  }
+  public void onRewardedVideoAdFailedToLoad(int errorCode) {}
 
   @Override
   public void onRewardedVideoAdLoaded() {
@@ -299,17 +295,11 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   }
 
   @Override
-  public void onRewardedVideoAdOpened() {
-
-  }
+  public void onRewardedVideoAdOpened() {}
 
   @Override
-  public void onRewardedVideoStarted() {
-
-  }
+  public void onRewardedVideoStarted() {}
 
   @Override
-  public void onRewardedVideoCompleted() {
-
-  }
+  public void onRewardedVideoCompleted() {}
 }
