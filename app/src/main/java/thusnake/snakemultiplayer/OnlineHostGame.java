@@ -96,7 +96,7 @@ public class OnlineHostGame extends Game {
     Pair<Byte, Byte> moveId = Protocol.encodeMoveID(moveCount);
     moveCodes.add(new byte[] {GAME_APPLE_POS_CHANGED,
                               moveId.first, moveId.second,
-                              (byte) getApple().getX(), (byte) getApple().getY()});
+                              (byte) getApples().get(0).getX(), (byte) getApples().get(0).getY()});
   }
 
   public List<byte[]> createInitializationCalls(ConnectedThread thread) {

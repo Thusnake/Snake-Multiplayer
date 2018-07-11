@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import com.android.texample.GLText;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -21,7 +22,6 @@ class Game extends BoardDrawer {
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
   private SimpleTimer gameOverTimer = new SimpleTimer(0.0);
-  private int moveCount = 0;
   private enum GameMode {SINGLEPLAYER, MULTIPLAYER};
   private GameMode gameMode;
   private int winner;
@@ -31,7 +31,7 @@ class Game extends BoardDrawer {
   private SharedPreferences.Editor scoresEditor;
   private final Player[] players;
   private int playersPlaying;
-  private final Apple apple;
+  private final List<Apple> apples = new LinkedList<>();
   private final Square[] boardLines = new Square[2];
   private final Square boardFade;
   private final GameRenderer renderer;
@@ -88,7 +88,7 @@ class Game extends BoardDrawer {
     }
 
     // Create the apple.
-    this.apple = new Apple(this);
+    this.createApples();
     
     // Create the rest of the square objects.
     this.boardLines[0] = new Square(0, screenHeight/3f, screenWidth, 4);
@@ -162,7 +162,8 @@ class Game extends BoardDrawer {
     for (Player player : players) if (player != null && player.isDrawable()) player.updateColors();
 
     // Draw all apples.
-    apple.updateColors();
+    for (Apple apple : apples)
+      apple.updateColors();
     
     // Apply the transformation and draw the board.
     gl.glLoadIdentity();
@@ -231,6 +232,10 @@ class Game extends BoardDrawer {
     gl.glPopMatrix();
   }
 
+  public void createApples() {
+    apples.add(new Apple(this));
+  }
+
   protected boolean checkGameOver() {
     if ((gameMode == GameMode.MULTIPLAYER && this.getAlivePlayers() <= 1)
         || (gameMode == GameMode.SINGLEPLAYER && this.getAlivePlayers() == 0)
@@ -270,8 +275,9 @@ class Game extends BoardDrawer {
     for (Player player : players) {
       // Move and check if it has eaten the apple.
       if (player != null && player.isAlive() && player.move()) {
-        if (apple.check(player))
-          this.getBoardSquares().updateColors(apple.x, apple.y, apple.getColors());
+        for (Apple apple : apples)
+          if (apple.check(player))
+            this.getBoardSquares().updateColors(apple.x, apple.y, apple.getColors());
       }
     }
     for (Player player : players)
@@ -293,7 +299,7 @@ class Game extends BoardDrawer {
   public GameMode getGameMode() { return this.gameMode; }
   public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
-  public Apple getApple() { return this.apple; }
+  public List<Apple> getApples() { return this.apples; }
   public Player[] getPlayers() { return this.players; }
   public int getAlivePlayers() {
     int playersAlive = 0;

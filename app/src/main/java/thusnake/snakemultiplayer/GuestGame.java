@@ -112,8 +112,9 @@ public class GuestGame extends Game {
         // Move all the snakes.
         for (Player player : this.getPlayers())
           if (player != null && player.isAlive() && player.move())
-            if (getApple().check(player))
-              this.getBoardSquares().updateColors(getApple().x, getApple().y, getApple().getColors());
+            for (Apple apple : getApples())
+              if (apple.check(player))
+                this.getBoardSquares().updateColors(apple.x, apple.y, apple.getColors());
 
         // Check for deaths.
         for (Player player : getPlayers())
@@ -123,12 +124,12 @@ public class GuestGame extends Game {
         break;
 
       case Protocol.GAME_APPLE_EATEN_NEXT_POS:
-        getApple().setNextPosition(moveBytes[3], moveBytes[4]);
+        getApples().get(0).setNextPosition(moveBytes[3], moveBytes[4]);
         break;
 
       case Protocol.GAME_APPLE_POS_CHANGED:
-        getApple().setX(moveBytes[3]);
-        getApple().setY(moveBytes[4]);
+        getApples().get(0).setX(moveBytes[3]);
+        getApples().get(0).setY(moveBytes[4]);
         break;
 
       default: break;
