@@ -4,6 +4,7 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Path;
 import android.opengl.GLES11;
 import android.opengl.GLUtils;
 
@@ -123,9 +124,17 @@ public class Square implements TextureReloadable {
   private int[] textures = new int[1];
 
   public void loadGLTexture(GL10 gl, Context context, int id) {
-    // loading texture
-    Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),
-        id);
+    OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
+
+    // When loading the bitmap we first check the cache and then decode the resource if the cache
+    // doesn't have it.
+    Bitmap bitmap;
+    if ((bitmap = originActivity.getRenderer().getTextureFromCache(id)) == null) {
+      bitmap = BitmapFactory.decodeResource(context.getResources(), id);
+
+      // Cache the texture for next time.
+      originActivity.getRenderer().cacheTexture(bitmap, id);
+    }
 
     // generate one texture pointer
     gl.glGenTextures(1, textures, 0);
@@ -139,17 +148,20 @@ public class Square implements TextureReloadable {
     // Use Android GLUtils to specify a two-dimensional texture image from our bitmap
     GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
 
-    // Clean up
-    bitmap.recycle();
-
     this.textureId = id;
 
-    OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
+    // Make sure that this texture will be reloaded when necessary.
     originActivity.getRenderer().addToReloadTextureRoutine(this);
   }
 
   public void reloadGLTexture(GL10 gl, Context context) {
-    Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), textureId);
+    OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
+
+    Bitmap bitmap;
+    if ((bitmap = originActivity.getRenderer().getTextureFromCache(textureId)) == null) {
+      bitmap = BitmapFactory.decodeResource(context.getResources(), textureId);
+      originActivity.getRenderer().cacheTexture(bitmap, textureId);
+    }
 
     gl.glDeleteTextures(1, textures, 0);
     gl.glGenTextures(1, textures, 0);
@@ -159,8 +171,6 @@ public class Square implements TextureReloadable {
     gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
     GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
-
-    bitmap.recycle();
   }
 
 

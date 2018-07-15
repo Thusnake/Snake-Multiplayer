@@ -2,11 +2,15 @@ package thusnake.snakemultiplayer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
+import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -31,6 +35,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
   private Set<TextureReloadable> texturablesToBeReloaded = new HashSet<>();
+  private SparseArray<Bitmap> textureCacheMap = new SparseArray<>();
 
   public GameRenderer(Context context) {
     super();
@@ -146,11 +151,6 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public boolean isInGame() { return this.game != null; }
   public Menu getMenu() { return this.menu; }
   public Game getGame() { return this.game; }
-  public void setMenuState(MenuDrawable origin, Menu.MenuState state) { menu.setState(origin, state); }
-  public void setMenuStateToPlayerOptions(int playerIndex) {
-    menu.setPlayerOptionsIndex(playerIndex);
-    menu.setState(this.menu.getCurrentMenuItems()[playerIndex], Menu.MenuState.PLAYERSOPTIONS);
-  }
   public float getScreenWidth() { return this.screenWidth; }
   public float getScreenHeight() { return this.screenHeight; }
 
@@ -188,9 +188,16 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     texturablesToBeReloaded.add(textureReloadable);
   }
 
+  public void cacheTexture(Bitmap textureBitmap, int id) {
+    textureCacheMap.append(id, textureBitmap);
+  }
+
+  public Bitmap getTextureFromCache(int id) {
+    return textureCacheMap.get(id);
+  }
+
   public void setInterruptingMessage(FullscreenMessage interruptingMessage) {
     this.interruptingMessage = interruptingMessage;
-    menu.updateState();
   }
 
   public FullscreenMessage getInterruptingMessage() { return interruptingMessage; }
