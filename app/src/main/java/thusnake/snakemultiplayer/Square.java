@@ -38,6 +38,9 @@ public class Square implements TextureReloadable {
   private short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
 
   private int textureId;
+  private boolean textureLoaded = true;
+  private GL10 gl;
+  private OpenGLES20Activity originActivity;
 
   public Square(float x,float y,float width,float height) {
     float squareCoords[] = {
@@ -123,6 +126,13 @@ public class Square implements TextureReloadable {
   /** The texture pointer */
   private int[] textures = new int[1];
 
+  public void setTexture(GL10 gl, Context context, int id) {
+    textureLoaded = false;
+    textureId = id;
+    this.gl = gl;
+    originActivity = (OpenGLES20Activity) context;
+  }
+
   public void loadGLTexture(GL10 gl, Context context, int id) {
     OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
 
@@ -148,7 +158,8 @@ public class Square implements TextureReloadable {
     // Use Android GLUtils to specify a two-dimensional texture image from our bitmap
     GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
 
-    this.textureId = id;
+    textureId = id;
+    textureLoaded = true;
 
     // Make sure that this texture will be reloaded when necessary.
     originActivity.getRenderer().addToReloadTextureRoutine(this);
@@ -174,7 +185,10 @@ public class Square implements TextureReloadable {
   }
 
 
-  public void draw(GL10 gl){
+  public void draw(GL10 gl) {
+    if (!textureLoaded)
+      loadGLTexture(gl, originActivity, textureId);
+
     // Counter-clockwise winding.
     gl.glFrontFace(GL10.GL_CCW);
     // Enable face culling.
@@ -202,37 +216,6 @@ public class Square implements TextureReloadable {
 
     // Disable face culling.
     gl.glDisable(GL10.GL_CULL_FACE);
-
-  }
-
-  public void draw(GLES11 gl){
-    // Counter-clockwise winding.
-    gl.glFrontFace(GLES11.GL_CCW);
-    // Enable face culling.
-    gl.glEnable(GLES11.GL_CULL_FACE);
-    // What faces to remove with the face culling.
-    gl.glCullFace(GLES11.GL_BACK);
-
-    // bind the previously generated texture
-    gl.glBindTexture(GLES11.GL_TEXTURE_2D, textures[0]);
-
-    // Enabled the vertices buffer for writing and to be used during rendering.
-    gl.glEnableClientState(GLES11.GL_VERTEX_ARRAY);
-    gl.glEnableClientState(GLES11.GL_TEXTURE_COORD_ARRAY);
-
-    // Specifies the location and data format of an array of vertex coordinates to use when rendering.
-    gl.glVertexPointer(3, GLES11.GL_FLOAT, 0, vertexBuffer);
-    gl.glTexCoordPointer(2, GLES11.GL_FLOAT, 0, textureBuffer);
-
-    gl.glDrawElements(GLES11.GL_TRIANGLES, drawOrder.length, GLES11.GL_UNSIGNED_SHORT, drawListBuffer);
-    //gl.glDrawArrays(GLES11.GL_TRIANGLE_STRIP,0,squareCoords.length/3);
-
-    // Disable the vertices buffer.
-    gl.glDisableClientState(GLES11.GL_VERTEX_ARRAY);
-    gl.glDisableClientState(GLES11.GL_TEXTURE_COORD_ARRAY);
-
-    // Disable face culling.
-    gl.glDisable(GLES11.GL_CULL_FACE);
 
   }
 }
