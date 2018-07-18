@@ -17,7 +17,6 @@ public abstract class PlayerController {
   private final Player player;
   private final GameRenderer renderer;
   private final GL10 gl;
-  private boolean textureLoaded = false;
 
   public PlayerController(GameRenderer renderer, Player player) {
     this.player = player;
@@ -48,17 +47,17 @@ public abstract class PlayerController {
         break;
     }
 
-    this.drawableLayout = new Square(x, renderer.getScreenHeight() - y - width, width, width);
+    this.drawableLayout
+        = new Square(renderer, x, renderer.getScreenHeight() - y - width, width, width);
+
+    setTexture(renderer.getOriginActivity());
   }
 
-  public void loadGLTexture(Context context) {
-    this.textureLoaded = true;
-  }
-
-  public boolean textureIsLoaded() { return this.textureLoaded; }
+  public abstract void setTexture(Context context);
+  public void reloadTexture() { drawableLayout.reloadTexture(); }
 
   public void draw() { this.draw(gl); }
-  public void draw(GL10 gl) { if (textureLoaded) this.drawableLayout.draw(gl); }
+  public void draw(GL10 gl) { this.drawableLayout.draw(gl); }
 
   public abstract void onMotionEvent(MotionEvent event);
 

@@ -23,9 +23,8 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 // And instance of this class would be a single menu with all menu items.
-public class Menu {
+public class Menu implements Activity {
   private SimpleTimer screenTransformX, screenTransformY;
-  private int currentScreen = 0;
   private float screenWidth, screenHeight;
   private GameRenderer renderer;
   private Player[] players = new Player[4];
@@ -48,27 +47,20 @@ public class Menu {
   private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
   private final MenuDrawable bluetoothStatusIcon, readyDevicesCounter, disconnectButton;
 
-  private final MenuImage[] colorSelectionSquare, cornerSelectionSquare;
-  private final MenuItem menuStateItem, addSnakeButton;
+  private final MenuButton[] colorSelectionSquare, cornerSelectionSquare;
+  private final MenuItem addSnakeButton;
   private final MenuButtonRemoveSnake[] removeSnakeButtons = new MenuButtonRemoveSnake[4];
-  public enum MenuState {MAIN, CONNECT, BOARD, PLAYERS, PLAYERSOPTIONS};
-  private String[] menuItemStateNames = {"", "Connect", "Board", "Players", ""};
-  private MenuState menuState = MenuState.MAIN, menuStatePrevious = MenuState.MAIN;
   private int playersOptionsIndex, expandedItemIndex = -1;
-  private SimpleTimer menuAnimationTimer = new SimpleTimer(0.0, 1.0);
   private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
   private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<>();
   private SimpleTimer scrollInertia = new SimpleTimer(0.0);
 
-  private int onlineIdentifier;
   private final OpenGLES20Activity originActivity;
+  private MenuScreen currentScreen;
+  private MenuAnimation transitionAnimation;
 
   // Menu variables
-  public int horizontalSquares, verticalSquares, speed;
-  public boolean stageBorders;
-
-  // TODO Find a way to not use this, currently used for the background snakes, they refuse to render without it.
-  private Square testSquare = new Square(500,0,0,0);
+  private GameSetupBuffer setupBuffer = new GameSetupBuffer();
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -79,19 +71,16 @@ public class Menu {
 
     this.screenTransformX = new SimpleTimer(0.0);
     this.screenTransformY = new SimpleTimer(0.0);
-    this.menuState = MenuState.MAIN;
-    this.menuStateItem = new MenuItem(renderer, menuItemStateNames[0], 0, 0,
-        MenuItem.Alignment.RIGHT);
-    this.menuStateItem.setEaseOutVariables(8, 1/4.0);
+    this.currentScreen = new MenuMainScreen(this);
 
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
 
     // TODO get these values from the options strings.
-    this.horizontalSquares = 20;
-    this.verticalSquares = 20;
-    this.speed = 12;
-    this.stageBorders = true;
+    setupBuffer.horizontalSquares = 20;
+    setupBuffer.verticalSquares = 20;
+    setupBuffer.speed = 12;
+    setupBuffer.stageBorders = true;
 
     // Initialize the players. TODO get the snake values from the options strings.
     for (int index = 0; index < players.length; index++) players[index] = new Player(index);
@@ -160,7 +149,7 @@ public class Menu {
 
             if (originActivity.isHost() && readyDevices == connectedDevices && readyDevices > 1) {
               // Everyone is ready - begin game.
-              renderer.startGame(players);
+              renderer.startGame(new Game(renderer, setupBuffer));
             }
           }
         } else {
@@ -276,13 +265,10 @@ public class Menu {
       OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
       if (originActivity.isGuest() || originActivity.isHost())
         originActivity.setReady(!originActivity.isReady());
-      else
-        renderer.startGame(renderer.getMenu().getPlayers());
+      //else
+        //renderer.startGame(renderer.getMenu().getPlayers());
     });
 
-    this.menuItemsMain[1].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.CONNECT));
-    this.menuItemsMain[2].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.BOARD));
-    this.menuItemsMain[3].setAction((action, origin) -> renderer.setMenuState(origin, MenuState.PLAYERS));
     this.menuItemsMain[4].setAction((action, origin) -> originActivity.showAd());
 
     this.menuItemsConnect[0].setAction((action,origin) -> renderer.getMenu()
@@ -296,12 +282,7 @@ public class Menu {
     this.menuItemsConnect[4].setAction((action,origin) -> renderer.getMenu().beginSearch());
     this.menuItemsConnect[6].setAction((action,origin) -> renderer.getMenu().beginHost());
 
-    this.menuItemsBoard[0].setAction((action, origin) -> renderer.getMenu().expandItem(0));
-    this.menuItemsBoard[1].setAction((action, origin) -> renderer.getMenu().expandItem(1));
-    this.menuItemsBoard[2].setAction((action, origin) -> renderer.getMenu().expandItem(2));
-    this.menuItemsBoard[3].setAction((action, origin) -> renderer.getMenu().expandItem(3));
-
-    this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, this.horizontalSquares,
+    this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, setupBuffer.horizontalSquares,
         screenWidth * 2 - 10,
         this.menuItemsBoard[0].getY(), MenuItem.Alignment.RIGHT) {
       @Override
@@ -312,7 +293,7 @@ public class Menu {
           originActivity.writeBytesAuto(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) value});
       }
     });
-    this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, this.verticalSquares,
+    this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, setupBuffer.verticalSquares,
         screenWidth * 2 - 10,
         this.menuItemsBoard[1].getY(), MenuItem.Alignment.RIGHT) {
       @Override
@@ -323,7 +304,7 @@ public class Menu {
           originActivity.writeBytesAuto(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) value});
       }
     });
-    this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, this.speed,
+    this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, setupBuffer.speed,
         screenWidth * 2 - 10,
         this.menuItemsBoard[2].getY(), MenuItem.Alignment.RIGHT) {
       @Override
@@ -334,7 +315,7 @@ public class Menu {
           originActivity.writeBytesAuto(new byte[] {Protocol.SPEED_CHANGED, (byte) value});
       }
     });
-    this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, this.stageBorders,
+    this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, setupBuffer.stageBorders,
         screenWidth * 2 - 10,
         this.menuItemsBoard[3].getY(), MenuItem.Alignment.RIGHT) {
       @Override
@@ -351,11 +332,6 @@ public class Menu {
     this.menuItemsBoard[1].getValue().setBoundaries(1, 100);
     this.menuItemsBoard[2].getValue().setBoundaries(1, 100);
 
-    this.menuItemsPlayers[0].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(0));
-    this.menuItemsPlayers[1].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(1));
-    this.menuItemsPlayers[2].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(2));
-    this.menuItemsPlayers[3].setAction((action, origin) -> renderer.setMenuStateToPlayerOptions(3));
-
     this.addSnakeButton.setAction((action, origin) -> renderer.getMenu().addSnake());
     this.removeSnakeButtons[0].setAction((action, origin) -> renderer.getMenu().removeSnake(0));
     this.removeSnakeButtons[1].setAction((action, origin) -> renderer.getMenu().removeSnake(1));
@@ -369,13 +345,31 @@ public class Menu {
         screenWidth * 3 - 10, this.menuItemsPlayersOptions[0].getY(), MenuItem.Alignment.RIGHT));
 
     // Create the graphics.
-    this.colorSelectionSquare = new MenuImage[8];
+    this.colorSelectionSquare = new MenuButton[8];
     float squareSize = (screenWidth - 10 - 10*this.colorSelectionSquare.length)
                         / (float) this.colorSelectionSquare.length;
     for (int index = 0; index < this.colorSelectionSquare.length; index++) {
-      this.colorSelectionSquare[index] = new MenuImage(this.renderer,
-          screenWidth*2 + 10*(index+1) + squareSize*index,
-          screenHeight - glText.getCharHeight()*0.65f - squareSize, squareSize, squareSize);
+      this.colorSelectionSquare[index]
+          = new MenuButton(renderer,
+                           screenWidth*2 + 10*(index+1) + squareSize*index,
+                           screenHeight - glText.getCharHeight()*0.65f - squareSize,
+                           squareSize,
+                           squareSize,
+                           MenuItem.Alignment.LEFT) {
+
+        private Square solidColor;
+
+        @Override
+        public void onButtonCreated() {
+          solidColor = new Square(renderer, getX(), getY(), getWidth(), getHeight());
+        }
+
+        @Override
+        public void drawInside() {
+          solidColor.draw(gl);
+        }
+      };
+
       this.colorSelectionSquare[index].setColors(getColorFromIndex(index));
     }
     this.colorSelectionSquare[0].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(0));
@@ -387,27 +381,45 @@ public class Menu {
     this.colorSelectionSquare[6].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(6));
     this.colorSelectionSquare[7].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(7));
 
-    this.cornerSelectionSquare = new MenuImage[4];
+    this.cornerSelectionSquare = new MenuButton[4];
     squareSize = (screenWidth*0.6f - 10 - 10*this.cornerSelectionSquare.length)
                   / (float) this.cornerSelectionSquare.length;
-    for (int index = 0; index < this.cornerSelectionSquare.length; index++) {
-      this.cornerSelectionSquare[index] = new MenuImage(this.renderer,
-          screenWidth*2.2f + 10*(index+1) + squareSize*index,
-          this.menuItemsPlayersOptions[this.menuItemsPlayersOptions.length - 1].getY() - squareSize,
-          squareSize, squareSize);
-    }
-    this.cornerSelectionSquare[0].setGraphic(R.drawable.lowerleft);
-    this.cornerSelectionSquare[1].setGraphic(R.drawable.upperleft);
-    this.cornerSelectionSquare[2].setGraphic(R.drawable.upperright);
-    this.cornerSelectionSquare[3].setGraphic(R.drawable.lowerright);
-    this.cornerSelectionSquare[0].setAction((action, origin)
-        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_LEFT));
-    this.cornerSelectionSquare[1].setAction((action, origin)
-        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_LEFT));
-    this.cornerSelectionSquare[2].setAction((action, origin)
-        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_RIGHT));
-    this.cornerSelectionSquare[3].setAction((action, origin)
-        -> renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_RIGHT));
+
+    this.cornerSelectionSquare[0] = new MenuButton(renderer, screenWidth*2.2f + 10,
+        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getY() - squareSize,
+        squareSize, squareSize, MenuItem.Alignment.LEFT) {
+      @Override
+      public void performAction() {
+        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_LEFT);
+      }
+    }.withBackgroundImage(R.drawable.lowerleft);
+
+    this.cornerSelectionSquare[1] = new MenuButton(renderer, screenWidth*2.2f + 20 + squareSize,
+        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getY() - squareSize,
+        squareSize, squareSize, MenuItem.Alignment.LEFT) {
+      @Override
+      public void performAction() {
+        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_LEFT);
+      }
+    }.withBackgroundImage(R.drawable.upperleft);
+
+    this.cornerSelectionSquare[2] = new MenuButton(renderer, screenWidth*2.2f + 30 + squareSize*2,
+        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getY() - squareSize,
+        squareSize, squareSize, MenuItem.Alignment.LEFT) {
+      @Override
+      public void performAction() {
+        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_RIGHT);
+      }
+    }.withBackgroundImage(R.drawable.upperright);
+
+    this.cornerSelectionSquare[3] = new MenuButton(renderer, screenWidth*2.2f + 40 + squareSize*3,
+        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getY() - squareSize,
+        squareSize, squareSize, MenuItem.Alignment.LEFT) {
+      @Override
+      public void performAction() {
+        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_RIGHT);
+      }
+    }.withBackgroundImage(R.drawable.lowerright);
 
     // Some items should be disabled for online game guests.
     guestDisabledDrawables.add(menuItemsMain[2]);     // The board menu button.
@@ -464,7 +476,6 @@ public class Menu {
     //this.gl.glBlendFunc(GL10.GL_SRC_ALPHA,GL10.GL_ONE_MINUS_SRC_ALPHA);
 
     // Handle timers.
-    if (!this.menuAnimationTimer.isDone()) this.menuAnimationTimer.countEaseOut(dt, 3, 0);
     if (!this.screenTransformX.isDone()) this.screenTransformX.countEaseOut(dt, 8, screenWidth/2);
     if (!this.screenTransformY.isDone()) this.screenTransformY.countEaseOut(dt, 8, screenHeight/2);
     if (!this.scrollInertia.isDone()) {
@@ -488,231 +499,29 @@ public class Menu {
       }
     }
 
-    glText.begin(1f, 1f, 1f, 1f);
-
-    // Draw the current menu items.
-    for (MenuDrawable drawable : getCurrentDrawables()) {
-      if (drawable.isDrawable()
-          && (drawable.isDrawableOutsideOfScreen() || screenTransformX.isDone()))
-        drawable.draw();
-      drawable.move(dt);
-    }
-
-    // Also draw the menu items for the previous screen.
-    if (menuStatePrevious != menuState)
-      for (MenuDrawable drawable : getPreviousDrawables()) {
-        if (drawable.isDrawable() && drawable.isDrawableOutsideOfScreen())
-          drawable.draw();
-        drawable.move(dt);
-      }
-
-    // Draw the menu state element.
-    this.menuStateItem.move(dt);
-    this.menuStateItem.draw();
-
-    glText.end();
-
-    // This is required for the background snakes to render. Do not understand why.
-    testSquare.draw(gl);
-  }
-
-  public MenuState getState() { return this.menuState; }
-  public MenuState getPreviousState() { return this.menuStatePrevious; }
-  public MenuItem[] getCurrentMenuItems() {
-    switch(menuState) {
-      case MAIN:
-        return menuItemsMain;
-      case CONNECT:
-        return menuItemsConnect;
-      case BOARD:
-        return menuItemsBoard;
-      case PLAYERS:
-        return menuItemsPlayers;
-      case PLAYERSOPTIONS:
-        return menuItemsPlayersOptions;
-      default:
-        return null;
-    }
-  }
-  public List<MenuDrawable> getCurrentDrawables() { return getDrawablesFromState(menuState); }
-  public List<MenuDrawable> getPreviousDrawables() {
-    return getDrawablesFromState(menuStatePrevious);
-  }
-  public List<MenuDrawable> getDrawablesFromState(MenuState state) {
-    switch(state) {
-      case MAIN: return drawablesMain;
-      case CONNECT: return drawablesConnect;
-      case BOARD: return drawablesBoard;
-      case PLAYERS: return drawablesPlayers;
-      case PLAYERSOPTIONS: return drawablesPlayersOptions;
-      default: return null;
+    if (transitionAnimation == null) {
+      currentScreen.drawAll();
+      currentScreen.moveAll(dt);
+    } else {
+      transitionAnimation.run(dt);
     }
   }
 
-  // Handles setting the menu state to a given one.
-  public void setState(MenuState state) {
-    if (this.expandedItemIndex != -1) this.expandItem(this.expandedItemIndex);
-    this.menuStatePrevious = this.menuState;
-    this.menuState = state;
-    // Reset all items' opacity in case we've used an animation to transition out of that screen.
-    for (MenuItem item : this.getCurrentMenuItems()) item.setOpacity(1);
-    this.menuStateItem.setColors(1f,1f,1f,1f);
-    int screen;
-    switch (state) {
-      case MAIN:
-        this.menuStateItem.setText("");
-        screen = 0;
-        break;
-      case CONNECT:
-        this.menuStateItem.setText("Connect");
-        screen = 1;
-        // Update the items' opacity.
-        if (this.connectionType == ConnectionType.BLUETOOTH)
-          this.menuItemsConnect[3].setOpacity(0.25f);
-        else if (this.connectionType == ConnectionType.WIFI)
-          this.menuItemsConnect[2].setOpacity(0.25f);
-        if (this.connectionRole == ConnectionRole.HOST)
-          this.menuItemsConnect[1].setOpacity(0.25f);
-        else if (this.connectionRole == ConnectionRole.GUEST)
-          this.menuItemsConnect[0].setOpacity(0.25f);
-        break;
-      case BOARD:
-        this.menuStateItem.setText("Board");
-        screen = 1;
-        break;
-      case PLAYERS:
-        this.menuStateItem.setText("Players");
-        screen = 1;
-        // Update the descriptions.
-        for (int index = 0; index < this.menuItemsPlayers.length; index++) {
-          menuItemsPlayers[index].setDescription(this.players[index].getControlType().toString());
-          menuItemsPlayers[index].setColors(this.players[index].getColors());
-          menuItemsPlayers[index].setOpacity(
-              (players[index].getControlType() == Player.ControlType.OFF) ? 0.5f : 1f);
-          menuItemsPlayers[index].setDescriptionOpacity(
-              (players[index].getControlType() == Player.ControlType.OFF) ? 0.5f : 1f);
-        }
-        break;
-      case PLAYERSOPTIONS:
-        this.menuStateItem.setText(this.players[this.playersOptionsIndex].getName());
-        screen = 2;
-        // Update the chosen player's options values.
-        this.menuItemsPlayersOptions[0].getValue()
-            .setValue(this.players[this.playersOptionsIndex].getControlType().toString());
-        this.menuStateItem.setColors(this.players[this.playersOptionsIndex].getColors());
-        this.fadeAllButOne(colorSelectionSquare,
-            colorSelectionSquare[this.players[this.playersOptionsIndex].getColorIndex()]);
-        switch (this.players[this.playersOptionsIndex].getControlCorner()) {
-          case LOWER_LEFT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[0]); break;
-          case UPPER_LEFT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[1]); break;
-          case UPPER_RIGHT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[2]); break;
-          case LOWER_RIGHT: fadeAllButOne(cornerSelectionSquare, cornerSelectionSquare[3]); break;
-        }
-        break;
-      default:
-        this.menuStateItem.setText("");
-        screen = 0;
-        break;
-    }
-
-    this.setScreen(screen);
-    this.menuStateItem.setDestinationX(this.screenWidth * (screen + 1) - 10);
-    this.menuStateItem.setDestinationY(this.screenHeight - 10 - glText.getCharHeight()*0.65);
+  public void refresh() {
+    currentScreen.refresh();
   }
 
-  // A modified version which also handles the menuStateItem's animation.
-  public void setState(MenuDrawable origin, MenuState state) {
-    this.menuStateItem.setX(origin.getX());
-    this.menuStateItem.setY(origin.getY());
-    origin.setOpacity(0);
-    this.setState(state);
-  }
+  public void setScreen(MenuScreen screen) { currentScreen = screen; }
 
-  // Calls set state for the menu's current state so that it updates some visual values.
-  public void updateState() {
-    this.setState(menuState);
-  }
+  public MenuScreen getCurrentScreen() { return currentScreen; }
 
-  // Handles moving back one screen.
+  /**
+   * Handles moving back one screen.
+   */
   public void goBack() {
-    if (this.screenTransformX.isDone())
-      switch (this.menuState) {
-        case MAIN: break;
-        case CONNECT: this.setState(MenuState.MAIN); break;
-        case BOARD: this.setState(MenuState.MAIN); break;
-        case PLAYERS: this.setState(MenuState.MAIN); break;
-        case PLAYERSOPTIONS: this.setState(MenuState.PLAYERS); break;
-        default: break;
-      }
+    currentScreen.goBack();
   }
 
-  public void setScreen(int screen) {
-    this.screenTransformX.setEndTimeFromNow(-this.screenWidth * screen);
-    this.screenTransformY.setEndTimeFromNow(0);
-    this.currentScreen = screen;
-  }
-
-  // Expands an item which has an integer value, pushing all following items down to make room for
-  // the plus/minus buttons interface.
-  public void expandItem(int expandIndex) {
-    if (expandIndex < this.getCurrentMenuItems().length
-        && this.getCurrentMenuItems()[expandIndex].getValue() != null) {
-      MenuItem[] items = this.getCurrentMenuItems();
-      // If it has an integer value - expand it.
-      if (items[expandIndex].getValue().getType() == MenuValue.Type.INTEGER) {
-        if (expandIndex == this.expandedItemIndex) {
-          // If the item pressed has already been expanded, then retract it and all other items.
-          for (int itemIndex = 0; itemIndex < items.length; itemIndex++) {
-            items[itemIndex].setDestinationYFromOrigin(0);
-            if (items[itemIndex].getValue() != null) {
-              items[itemIndex].getValue().setExpanded(false);
-              items[itemIndex].getValue().setDestinationYFromOrigin(0);
-            }
-          }
-          this.expandedItemIndex = -1;
-        } else {
-          if (this.expandedItemIndex >= 0 && this.expandedItemIndex < items.length
-              && items[this.expandedItemIndex].getValue() != null)
-            items[this.expandedItemIndex].getValue().setExpanded(false);
-          // Do not push items before it.
-          for (int itemIndex = 0; itemIndex < expandIndex; itemIndex++) {
-            items[itemIndex].setDestinationYFromOrigin(0);
-            if (items[itemIndex].getValue() != null)
-              items[itemIndex].getValue().setDestinationYFromOrigin(0);
-          }
-          // Expand the item itself by half its height.
-          items[expandIndex].setDestinationYFromOrigin(-items[expandIndex].getHeight() / 2);
-          // Push all following items down by the expanded item's height.
-          for (int itemIndex = expandIndex + 1; itemIndex < items.length; itemIndex++) {
-            items[itemIndex].setDestinationYFromOrigin(-items[expandIndex].getHeight());
-            if (items[itemIndex].getValue() != null)
-              items[itemIndex].getValue()
-                              .setDestinationYFromOrigin(-items[expandIndex].getHeight());
-          }
-
-          if (items[expandIndex].getValue() != null)
-            items[expandIndex].getValue().setExpanded(true);
-          this.expandedItemIndex = expandIndex;
-        }
-      // If it has a boolean value - just invert the value.
-      } else if (items[expandIndex].getValue().getType() == MenuValue.Type.BOOLEAN) {
-        items[expandIndex].getValue().setValue(!items[expandIndex].getValue().getValueBoolean());
-      // If it has a string value - open the keyboard layout to type.
-      } else {
-        // TODO
-      }
-    }
-  }
-
-  // This will be called after every change of a menuValue's value.
-  public void syncValues() {
-    if (this.menuState == MenuState.BOARD) {
-      this.horizontalSquares = menuItemsBoard[0].getValue().getValueInteger();
-      this.verticalSquares = menuItemsBoard[1].getValue().getValueInteger();
-      this.speed = menuItemsBoard[2].getValue().getValueInteger();
-      this.stageBorders = menuItemsBoard[3].getValue().getValueBoolean();
-    }
-  }
 
   // Enables the first currently disabled snake to play and handles the players menu animations.
   public Player addSnake() {
@@ -727,7 +536,6 @@ public class Menu {
           addSnakeButton.setOpacity(0);
         break;
       }
-    this.updateState();
 
     // Inform everybody of the change if hosting.
     if (originActivity.isHost())
@@ -750,7 +558,6 @@ public class Menu {
     removeSnakeButtons[index].hide();
     addSnakeButton.setDestinationY(menuItemsPlayers[index].getY());
     addSnakeButton.setOpacity(1);
-    this.updateState();
 
     // Inform everybody of the change if hosting.
     if (originActivity.isHost())
@@ -826,8 +633,6 @@ public class Menu {
 
   public void setPlayerColor(int playerIndex, int index) {
     this.players[playerIndex].setColors(index);
-    if (playerIndex == playersOptionsIndex)
-      this.menuStateItem.setColors(getColorFromIndex(index));
   }
 
   // Sets the currently selected player's control corner to a Corner represented by a corner square.
@@ -1102,10 +907,10 @@ public class Menu {
       case Protocol.SNAKE2_CORNER_CHANGED: setPlayerCorner(1, Protocol.decodeCorner(inputBytes[1])); break;
       case Protocol.SNAKE3_CORNER_CHANGED: setPlayerCorner(2, Protocol.decodeCorner(inputBytes[1])); break;
       case Protocol.SNAKE4_CORNER_CHANGED: setPlayerCorner(3, Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.HOR_SQUARES_CHANGED: horizontalSquares = inputBytes[1]; break;
-      case Protocol.VER_SQUARES_CHANGED: verticalSquares = inputBytes[1]; break;
-      case Protocol.SPEED_CHANGED: speed = inputBytes[1]; break;
-      case Protocol.STAGE_BORDERS_CHANGED: stageBorders = inputBytes[1] == 1; break;
+      case Protocol.HOR_SQUARES_CHANGED: setupBuffer.horizontalSquares = inputBytes[1]; break;
+      case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares = inputBytes[1]; break;
+      case Protocol.SPEED_CHANGED: setupBuffer.speed = inputBytes[1]; break;
+      case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.stageBorders = inputBytes[1] == 1; break;
 
       // HOST ONLY
       case Protocol.REQUEST_ADD_SNAKE:
@@ -1113,8 +918,6 @@ public class Menu {
           Player addedSnake = this.addSnake();
           addedSnake.setControlType(Player.ControlType.BLUETOOTH);
           addedSnake.setControllerThread(sourceThread);
-
-          this.updateState();
         }
         break;
 
@@ -1138,8 +941,6 @@ public class Menu {
                     break;
                   default: break;
                 }
-
-          this.updateState();
         }
         break;
 
@@ -1154,7 +955,7 @@ public class Menu {
               renderer.handleInputBytes(call, sourceThread);
 
           // Start the game.
-          renderer.startGame(players);
+          renderer.startGame(new GuestGame(renderer, setupBuffer));
         }
         break;
 
@@ -1193,7 +994,7 @@ public class Menu {
   // Gets the lowest point of the lowest item drawn on screen.
   public float getScrollHeight() {
     float minHeight = 0;
-    for (MenuDrawable drawable : getCurrentDrawables())
+    for (MenuDrawable drawable : currentScreen.getAllDrawables())
       if (drawable.isDrawable() && drawable.getY() < minHeight) minHeight = drawable.getY();
     return minHeight;
   }
@@ -1210,33 +1011,16 @@ public class Menu {
     scrollInertia.setEndTimeFromNow(0.0);
   }
 
-  // Performs a screen scroll horizontally by a given amount, but only to the left.
-  public void peekLeftScreen(float amount) {
-    if (screenTransformX.isDone())
-      this.screenTransformX.setTime(Math.min(Math.max(currentScreen * (-screenWidth),
-                                             amount + screenTransformX.getTime())
-                                    ,0));
-  }
-
-  // Checks the current screen horizontal transformation and snaps it to either the current screen
-  // or the one on the left. You cannot snap forward (to the screen on the right).
-  public void snapToClosestHorizontalScreen() {
-    if (screenTransformX.getEndTime() % screenWidth > -screenWidth * 4 / 5
-        && screenTransformX.getEndTime() % screenWidth != 0)
-      this.goBack();
-    else
-      this.screenTransformX.setEndTimeFromNow(-screenWidth * currentScreen);
-  }
-
   // More getters.
   public void setPlayerOptionsIndex(int index) { this.playersOptionsIndex = index; }
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
-  public MenuImage[] getColorSelectionSquares() { return this.colorSelectionSquare; }
-  public MenuImage[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
+  public MenuButton[] getColorSelectionSquares() { return this.colorSelectionSquare; }
+  public MenuButton[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
   public GameRenderer getRenderer() { return this.renderer; }
   public OpenGLES20Activity getOriginActivity() { return this.originActivity; }
 
+  public GameSetupBuffer getSetupBuffer() { return setupBuffer; }
   public Player[] getPlayers() { return this.players; }
 
   // Protocol simplifier getters.

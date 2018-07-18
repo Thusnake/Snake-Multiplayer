@@ -8,9 +8,7 @@ import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -28,9 +26,12 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private GLText glText;
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
+
   private Menu menu;
   private Game game;
   private FullscreenMessage interruptingMessage;
+  private Activity currentActivity;
+
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
@@ -114,12 +115,12 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     gl.glMatrixMode(GL10.GL_MODELVIEW);
     gl.glLoadIdentity();
 
-    // Draw the game or (if the game doesn't exist) the menu.
-    if (interruptingMessage == null) {
-      if (this.game == null) menu.run(dt);
-      else game.run(dt);
-    } else
-      interruptingMessage.run(dt);
+    // Determine and run the current activity based on a priority order.
+    if (interruptingMessage != null) currentActivity = interruptingMessage;
+    else if (game != null)           currentActivity = game;
+    else                             currentActivity = menu;
+
+    currentActivity.run(dt);
   }
 
   @Override
@@ -133,18 +134,23 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
     this.fontSize = Math.min((int)((float)height * (1f/6f)), (int)(width / 6f));
-    this.glText = new GLText(gl, context.getAssets());
+
+    // Reload the glText.
+    if (glText == null) this.glText = new GLText(gl, context.getAssets());
     this.glText.load("pf_arma_five.ttf", this.fontSize, 2, 2);
-    for (TextureReloadable textureReloadable : texturablesToBeReloaded)
-      textureReloadable.reloadGLTexture(gl, originActivity);
+
+    // Reload all active textures.
+    if (currentActivity != null) currentActivity.refresh();
+
     this.scoresEditor = scores.edit();
 
     this.screenWidth = width;
     this.screenHeight = height;
 
-    if (this.menu == null) this.menu = new Menu(this, width, height);
+    if (menu == null) menu = new Menu(this, width, height);
   }
 
+  public OpenGLES20Activity getOriginActivity() { return originActivity; }
   public GL10 getGl() { return this.gl; }
   public GLText getGlText() { return glText; }
   public Context getContext() { return this.context; }
@@ -154,7 +160,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public float getScreenWidth() { return this.screenWidth; }
   public float getScreenHeight() { return this.screenHeight; }
 
-  public void startGame(Player[] players) {
+  public void startGame(Game game) {
+    /*
     if (originActivity.isGuest())
       game = new GuestGame(this, screenWidth, screenHeight, players);
     else if (originActivity.isHost()) {
@@ -165,7 +172,19 @@ public class GameRenderer implements GLSurfaceView.Renderer {
       }
     } else
       game = new Game(this, screenWidth, screenHeight, players);
+    */
+
+    this.game = game;
   }
+
+  public void restartGame() {
+    try {
+      this.game = game.getClass().getConstructor(GameRenderer.class, GameSetupBuffer.class).newInstance(this, menu.getSetupBuffer());
+    } catch (Exception exception) {
+      throw new RuntimeException("Could not restart game: " + exception.getMessage());
+    }
+  }
+
   public void quitGame() {
     game = null;
   }
@@ -222,7 +241,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           // Disconnect afterwards.
           originActivity.connectedThread.cancel();
           originActivity.connectedThread = null;
-          this.game = null;
+          game = null;
           this.menu.endGuest();
         }
         break;

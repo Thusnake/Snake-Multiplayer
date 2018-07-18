@@ -21,20 +21,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class Square implements TextureReloadable {
   private FloatBuffer vertexBuffer;
   private ShortBuffer drawListBuffer;
-
   private FloatBuffer textureBuffer;  // buffer holding the texture coordinates
-  private float texture[] = {
-      // Mapping coordinates for the vertices
-      0.0f, 0.0f,    // top left     (V2)
-      0.0f, 1.0f,   // bottom left  (V1)
-      1.0f, 1.0f,    // bottom right (V3)
-      1.0f, 0.0f    // top right    (V4)
-
-  };
-
-
-  float color[] = {1.0f,1.0f,0.0f,1.0f};
-
   private short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
 
   private int textureId;
@@ -42,12 +29,23 @@ public class Square implements TextureReloadable {
   private GL10 gl;
   private OpenGLES20Activity originActivity;
 
-  public Square(float x,float y,float width,float height) {
+  public Square(GameRenderer renderer, float x,float y,float width,float height) {
+    gl = renderer.getGl();
+    originActivity = renderer.getOriginActivity();
+
+    float texture[] = {
+        0.0f, 0.0f,   // top left     (V2)
+        0.0f, 1.0f,   // bottom left  (V1)
+        1.0f, 1.0f,   // bottom right (V3)
+        1.0f, 0.0f    // top right    (V4)
+    };
+
     float squareCoords[] = {
-        x, y+height, 0.0f,   // top left
-        x, y, 0.0f,   // bottom left
-        x+width, y, 0.0f,   // bottom right
-        x+width, y+height, 0.0f }; // top right
+        x, y+height, 0.0f,      // top left
+        x, y, 0.0f,             // bottom left
+        x+width, y, 0.0f,       // bottom right
+        x+width, y+height, 0.0f // top right
+    };
 
     // initialize vertex byte buffer for shape coordinates
     ByteBuffer bb = ByteBuffer.allocateDirect(
@@ -74,36 +72,8 @@ public class Square implements TextureReloadable {
     drawListBuffer.position(0);
   }
 
-  public Square(double x,double y,double width,double height) {
-    float squareCoords[] = {
-        (float)x, (float)y+(float)height, 0.0f,   // top left
-        (float)x, (float)y, 0.0f,   // bottom left
-        (float)x+(float)width, (float)y, 0.0f,   // bottom right
-        (float)x+(float)width, (float)y+(float)height, 0.0f }; // top right
-
-    // initialize vertex byte buffer for shape coordinates
-    ByteBuffer bb = ByteBuffer.allocateDirect(
-        // (# of coordinate values * 4 bytes per float)
-        squareCoords.length * 4);
-    bb.order(ByteOrder.nativeOrder());
-    vertexBuffer = bb.asFloatBuffer();
-    vertexBuffer.put(squareCoords);
-    vertexBuffer.position(0);
-
-    bb = ByteBuffer.allocateDirect(texture.length * 4);
-    bb.order(ByteOrder.nativeOrder());
-    textureBuffer = bb.asFloatBuffer();
-    textureBuffer.put(texture);
-    textureBuffer.position(0);
-
-    // initialize byte buffer for the draw list
-    ByteBuffer dlb = ByteBuffer.allocateDirect(
-        // (# of coordinate values * 2 bytes per short)
-        drawOrder.length * 2);
-    dlb.order(ByteOrder.nativeOrder());
-    drawListBuffer = dlb.asShortBuffer();
-    drawListBuffer.put(drawOrder);
-    drawListBuffer.position(0);
+  public Square(GameRenderer renderer, double x,double y,double width,double height) {
+    this(renderer, (float) x, (float) y, (float) width, (float) height);
   }
 
   public void setCoordinates(float x, float y, float width, float height) {
@@ -126,21 +96,17 @@ public class Square implements TextureReloadable {
   /** The texture pointer */
   private int[] textures = new int[1];
 
-  public void setTexture(GL10 gl, Context context, int id) {
+  public void setTexture(int id) {
     textureLoaded = false;
     textureId = id;
-    this.gl = gl;
-    originActivity = (OpenGLES20Activity) context;
   }
 
-  public void loadGLTexture(GL10 gl, Context context, int id) {
-    OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
-
+  public void loadGLTexture(int id) {
     // When loading the bitmap we first check the cache and then decode the resource if the cache
     // doesn't have it.
     Bitmap bitmap;
     if ((bitmap = originActivity.getRenderer().getTextureFromCache(id)) == null) {
-      bitmap = BitmapFactory.decodeResource(context.getResources(), id);
+      bitmap = BitmapFactory.decodeResource(originActivity.getResources(), id);
 
       // Cache the texture for next time.
       originActivity.getRenderer().cacheTexture(bitmap, id);
@@ -165,12 +131,10 @@ public class Square implements TextureReloadable {
     originActivity.getRenderer().addToReloadTextureRoutine(this);
   }
 
-  public void reloadGLTexture(GL10 gl, Context context) {
-    OpenGLES20Activity originActivity = (OpenGLES20Activity) context;
-
+  public void reloadTexture() {
     Bitmap bitmap;
     if ((bitmap = originActivity.getRenderer().getTextureFromCache(textureId)) == null) {
-      bitmap = BitmapFactory.decodeResource(context.getResources(), textureId);
+      bitmap = BitmapFactory.decodeResource(originActivity.getResources(), textureId);
       originActivity.getRenderer().cacheTexture(bitmap, textureId);
     }
 
@@ -187,7 +151,7 @@ public class Square implements TextureReloadable {
 
   public void draw(GL10 gl) {
     if (!textureLoaded)
-      loadGLTexture(gl, originActivity, textureId);
+      loadGLTexture(textureId);
 
     // Counter-clockwise winding.
     gl.glFrontFace(GL10.GL_CCW);

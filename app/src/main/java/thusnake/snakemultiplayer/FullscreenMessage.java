@@ -5,7 +5,7 @@ import android.view.MotionEvent;
 
 import javax.microedition.khronos.opengles.GL10;
 
-public class FullscreenMessage {
+public class FullscreenMessage implements Activity {
   private final GameRenderer renderer;
   private final GL10 gl;
   private final MenuDrawable message;
@@ -42,6 +42,7 @@ public class FullscreenMessage {
     loadingSnake.updateColors(1, 1, 0.25f, 0.25f, 0.25f, 1f);
   }
 
+  @Override
   public void run(double dt) {
     message.draw();
     cancelButton.draw();
@@ -59,6 +60,9 @@ public class FullscreenMessage {
       }
     }
   }
+
+  @Override
+  public void refresh() {}
 
   public FullscreenMessage withLoadingSnake(boolean loading) {
     this.loading = loading;

@@ -61,76 +61,41 @@ public class GameSurfaceView extends GLSurfaceView {
         if (player != null && player.isAlive())
           player.onMotionEvent(e);
 
-      switch (e.getActionMasked()) {
-        case MotionEvent.ACTION_UP:
-          // Handle the game over screen inputs.
-          if (gameRenderer.getGame().isOver() && e.getEventTime() - e.getDownTime() < 500
-              && gameRenderer.getGame().getGameOverTimer().getTime() > 0.5) {
-            // TODO Make it so that it knows which pointer did what.
-            for (MenuItem item : gameRenderer.getGame().getGameOverItems())
-              if (item.isClicked(pointerX[0], pointerY[0]))
-                item.performAction();
-          }
-          break;
-        default:
-          break;
+      // Handle the game over screen inputs.
+      if (e.getActionMasked() == MotionEvent.ACTION_UP
+          && gameRenderer.getGame().isOver() && e.getEventTime() - e.getDownTime() < 500
+          && gameRenderer.getGame().getGameOverTimer().getTime() > 0.5) {
+
+          for (MenuItem item : gameRenderer.getGame().getGameOverItems())
+            if (item.isClicked(pointerX[0], pointerY[0]))
+              item.performAction();
       }
     } else {
       // Handle the plus/minus buttons.
-      for (MenuItem menuItem : gameRenderer.getMenu().getCurrentMenuItems())
-        if (menuItem.getValue() != null && menuItem.getValue().isExpanded())
-          switch(e.getActionMasked()) {
-            case ACTION_DOWN:
-              menuItem.getValue().handleButtonsDown(pointerX[0], pointerY[0]);
-              break;
-            case ACTION_MOVE:
-              menuItem.getValue().handleButtonsMove(pointerX[0], pointerY[0]);
-              break;
-            case MotionEvent.ACTION_UP:
-              menuItem.getValue().handleButtonsUp();
-          }
+//      for (MenuItem menuItem : gameRenderer.getMenu().getCurrentMenuItems())
+//        if (menuItem.getValue() != null && menuItem.getValue().isExpanded())
+//          switch (e.getActionMasked()) {
+//            case ACTION_DOWN:
+//              menuItem.getValue().handleButtonsDown(pointerX[0], pointerY[0]);
+//              break;
+//            case ACTION_MOVE:
+//              menuItem.getValue().handleButtonsMove(pointerX[0], pointerY[0]);
+//              break;
+//            case MotionEvent.ACTION_UP:
+//              menuItem.getValue().handleButtonsUp();
+//          }
 
       // Handle player menu color and corner squares.
-      if (gameRenderer.getMenu().getState() == Menu.MenuState.PLAYERSOPTIONS
-          || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS) {
-        for (MenuImage square : gameRenderer.getMenu().getColorSelectionSquares())
-          if (square.isClicked(pointerX[0], pointerY[0]))
-            switch (e.getActionMasked()) {
-              case ACTION_DOWN:
-                square.setScaleDestination(1 - e.getPressure(0) / 2);
-                break;
-              case ACTION_MOVE:
-                square.setScaleDestination(1 - e.getPressure(0) / 2);
-                break;
-              case ACTION_UP:
-                square.setScaleDestination(1);
-                gameRenderer.getMenu()
-                    .fadeAllButOne(gameRenderer.getMenu().getColorSelectionSquares(), square);
-                break;
-            }
-          else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
-            square.setScaleDestination(1);
+//      if (gameRenderer.getMenu().getState() == Menu.MenuState.PLAYERSOPTIONS
+//          || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS) {
+//        for (MenuButton square : gameRenderer.getMenu().getColorSelectionSquares())
+//          square.onMotionEvent(e);
+//
+//        for (MenuButton square : gameRenderer.getMenu().getCornerSelectionSquares())
+//          square.onMotionEvent(e);
+//      }
 
-        for (MenuImage square : gameRenderer.getMenu().getCornerSelectionSquares())
-          if (square.isClicked(pointerX[0], pointerY[0]))
-            switch (e.getActionMasked()) {
-              case ACTION_DOWN:
-                square.setScaleDestination(1 - e.getPressure(0) / 2);
-                break;
-              case ACTION_MOVE:
-                square.setScaleDestination(1 - e.getPressure(0) / 2);
-                break;
-              case ACTION_UP:
-                square.setScaleDestination(1);
-                gameRenderer.getMenu()
-                    .fadeAllButOne(gameRenderer.getMenu().getCornerSelectionSquares(), square);
-                break;
-            }
-          else if (square.getScaleX() != 1f && !square.isClicked(pointerX[0], pointerY[0]))
-            square.setScaleDestination(1);
-      }
-
-      switch(e.getAction()) {
+      switch (e.getAction()) {
         case ACTION_DOWN:
           break;
         case ACTION_MOVE:
@@ -139,12 +104,12 @@ public class GameSurfaceView extends GLSurfaceView {
               && e.getHistorySize() > 0) {
             if (rawX[0] - e.getHistoricalX(0) > 20 || rawX[0] - holdOriginX > 60) {
               // The user has swiped right.
-              holdMode = HoldMode.HOR_SCROLL;
-              gameRenderer.getMenu()
-                  .peekLeftScreen(Math.max(rawX[0] - e.getHistoricalX(0), rawX[0] - holdOriginX));
+//              holdMode = HoldMode.HOR_SCROLL;
+//              gameRenderer.getMenu()
+//                  .peekLeftScreen(Math.max(rawX[0] - e.getHistoricalX(0), rawX[0] - holdOriginX));
             } else if (gameRenderer.getMenu().isScrollable()
-                       && (Math.abs(rawY[0] - e.getHistoricalY(0)) > 20
-                        || Math.abs(rawY[0] - holdOriginY) > 60)) {
+                && (Math.abs(rawY[0] - e.getHistoricalY(0)) > 20
+                || Math.abs(rawY[0] - holdOriginY) > 60)) {
               // The user has swiped vertically.
               holdMode = HoldMode.VER_SCROLL;
             }
@@ -163,20 +128,13 @@ public class GameSurfaceView extends GLSurfaceView {
                 holdOriginX = e.getRawX();
                 holdOriginY = e.getRawY();
               } else {
-                gameRenderer.getMenu().peekLeftScreen(rawX[0] - e.getHistoricalX(0));
+//                gameRenderer.getMenu().peekLeftScreen(rawX[0] - e.getHistoricalX(0));
               }
             }
           }
           break;
         case MotionEvent.ACTION_UP:
-          if (holdMode == HoldMode.NORMAL) {
-            // Handle pressing menu drawables depending on which menu we're currently on.
-            // Only the first pointer can click on menu drawables!
-            for (MenuDrawable menuDrawable : gameRenderer.getMenu().getCurrentDrawables()) {
-              if (menuDrawable.isClicked(pointerX[0], pointerY[0]))
-                menuDrawable.performAction();
-            }
-          }
+
           break;
         default:
           break;
@@ -185,13 +143,17 @@ public class GameSurfaceView extends GLSurfaceView {
       // Nullify the hold mode if the user releases their pointer.
       if (e.getAction() == ACTION_UP) {
         holdMode = HoldMode.NORMAL;
-        gameRenderer.getMenu().snapToClosestHorizontalScreen();
+//        gameRenderer.getMenu().snapToClosestHorizontalScreen();
       }
       // Set the origin coordinates it the user presses the screen.
       else if (e.getAction() == ACTION_DOWN) {
         holdOriginX = e.getRawX();
         holdOriginY = e.getRawY();
       }
+
+      // Pass the event to the current screen to handle.
+      if (holdMode == HoldMode.NORMAL)
+        gameRenderer.getMenu().getCurrentScreen().onMotionEvent(e);
     }
     return true;
   }

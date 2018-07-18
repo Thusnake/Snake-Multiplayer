@@ -1,5 +1,6 @@
 package thusnake.snakemultiplayer;
 
+import android.content.Context;
 import android.view.MotionEvent;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -55,7 +56,8 @@ public class SwipeController extends PlayerController {
   }
 
   @Override
-  public void draw(GL10 gl) {
+  public void draw(GL10 gl) {}
 
-  }
+  @Override
+  public void setTexture(Context context) {}
 }

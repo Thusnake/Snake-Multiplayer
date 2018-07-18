@@ -42,6 +42,34 @@ public class Player {
     this.setColors(0);
   }
 
+  public Player defaultPreset() {
+    setName("Player " + (number + 1));
+
+    switch(number) {
+      case 0:
+        setCorner(PlayerController.Corner.LOWER_LEFT);
+        setControlType(ControlType.CORNER);
+        break;
+
+      case 1:
+        setCorner(PlayerController.Corner.UPPER_LEFT);
+        break;
+
+      case 2:
+        setCorner(PlayerController.Corner.UPPER_RIGHT);
+        break;
+
+      case 3:
+        setCorner(PlayerController.Corner.LOWER_RIGHT);
+        break;
+
+      default:
+        throw new RuntimeException("Player number not between 0 and 3");
+
+    }
+    return this;
+  }
+
   // Gets called upon game start.
   public void prepareForGame(BoardDrawer game) {
     this.game = game;
@@ -70,14 +98,13 @@ public class Player {
       case BLUETOOTH:
         this.playerController = new PlayerController(game.getRenderer(), this) {
           @Override
-          public void onMotionEvent(MotionEvent event) {
-
-          }
+          public void setTexture(Context context) {}
 
           @Override
-          public void draw(GL10 gl) {
+          public void onMotionEvent(MotionEvent event) {}
 
-          }
+          @Override
+          public void draw(GL10 gl) {}
         };
         break;
       case OFF: break;
@@ -90,12 +117,11 @@ public class Player {
       case LOWER_LEFT:
         this.expandBody(0, 0); break;
       case LOWER_RIGHT:
-        this.expandBody(game.getRenderer().getMenu().horizontalSquares - 1, 0); break;
+        this.expandBody(game.getHorizontalSquares() - 1, 0); break;
       case UPPER_LEFT:
-        this.expandBody(0, game.getRenderer().getMenu().verticalSquares - 1); break;
+        this.expandBody(0, game.getVerticalSquares() - 1); break;
       case UPPER_RIGHT:
-        this.expandBody(game.getRenderer().getMenu().horizontalSquares - 1,
-            game.getRenderer().getMenu().verticalSquares - 1); break;
+        this.expandBody(game.getHorizontalSquares() - 1, game.getVerticalSquares() - 1); break;
     }
     for (int index = 1; index < 4; index++) {
       this.expandBody(Player.getOppositeDirection(this.direction));

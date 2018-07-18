@@ -16,7 +16,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 // An instance of this class would be a single game of snake.
-class Game extends BoardDrawer {
+class Game extends BoardDrawer implements Activity {
   private boolean gameOver = false;
   private SimpleTimer beginTimer = new SimpleTimer(0.0, 3.0);
   private SimpleTimer moveTimer;
@@ -37,27 +37,26 @@ class Game extends BoardDrawer {
   private final GameRenderer renderer;
   private final GL10 gl;
   private final GLText glText;
-  private final Context context;
   private final OpenGLES20Activity originActivity;
 
   private MenuItem gameOverTopItem, gameOverMiddleItem, gameOverBottomItem;
   private final List<MenuItem> gameOverItems = new ArrayList<>();
 
   // Constructor that sets up a local session.
-  public Game(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
-    super(renderer, screenWidth, screenHeight);
+  public Game(GameRenderer renderer, GameSetupBuffer setupBuffer) {
+    super(renderer, (int) renderer.getScreenWidth(), (int) renderer.getScreenHeight());
 
     // Get the essentials.
     this.renderer = renderer;
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
-    this.context = renderer.getContext();
-    this.originActivity = (OpenGLES20Activity) context;
-    this.scores = context.getSharedPreferences("scores", Context.MODE_PRIVATE);
+    this.originActivity = renderer.getOriginActivity();
+    this.scores = originActivity.getSharedPreferences("scores", Context.MODE_PRIVATE);
     this.scoresEditor = scores.edit();
 
-    // Get the options from the menu.
-    this.speed = renderer.getMenu().speed;
+    // Get the options from the setup buffer.
+    this.players = setupBuffer.players;
+    this.speed = setupBuffer.speed;
 
     this.moveTimer = new SimpleTimer(1.0 / speed);
     this.beginTimer.reset();
@@ -74,7 +73,6 @@ class Game extends BoardDrawer {
     else this.gameMode = GameMode.MULTIPLAYER;
 
     // Prepare the players
-    this.players = players;
     if (gameMode == GameMode.SINGLEPLAYER) {
       this.players[0].prepareForGame(this);
     } else {
@@ -91,9 +89,9 @@ class Game extends BoardDrawer {
     this.createApples();
     
     // Create the rest of the square objects.
-    this.boardLines[0] = new Square(0, screenHeight/3f, screenWidth, 4);
-    this.boardLines[1] = new Square(0, screenHeight*2f/3f, screenWidth, 4);
-    this.boardFade = new Square(0.0, 0.0, screenWidth, screenHeight);
+    this.boardLines[0] = new Square(renderer, 0, getScreenHeight()/3f, getScreenWidth(), 4);
+    this.boardLines[1] = new Square(renderer, 0, getScreenHeight()*2f/3f, getScreenWidth(), 4);
+    this.boardFade = new Square(renderer, 0.0, 0.0, getScreenWidth(), getScreenHeight());
 
     this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
         -renderer.getScreenWidth() / 2,
@@ -104,7 +102,7 @@ class Game extends BoardDrawer {
         return y < 1/3f * renderer.getScreenHeight();
       }
     };
-    this.gameOverTopItem.setAction((action, origin) -> action.startGame(players));
+    this.gameOverTopItem.setAction((action, origin) -> action.restartGame());
 
     this.gameOverMiddleItem = new MenuItem(renderer, "Everyone loses",
         renderer.getScreenWidth() / 2,
@@ -230,6 +228,11 @@ class Game extends BoardDrawer {
         0, 0);
     boardLines[1].draw(gl);
     gl.glPopMatrix();
+  }
+
+  public void refresh() {
+    for (Player player : players)
+      player.getPlayerController().reloadTexture();
   }
 
   public void createApples() {

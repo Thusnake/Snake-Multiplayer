@@ -22,8 +22,8 @@ public class OnlineHostGame extends Game {
   private final Square readyFillBar;
 
   // Constructor.
-  public OnlineHostGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players){
-    super(renderer, screenWidth, screenHeight, players);
+  public OnlineHostGame(GameRenderer renderer, GameSetupBuffer setupBuffer){
+    super(renderer, setupBuffer);
 
     // The first move is null, as it's the game's initial state.
     moveCodes.add(null);
@@ -59,7 +59,7 @@ public class OnlineHostGame extends Game {
       }
     });
 
-    readyFillBar = new Square(0, getScreenHeight()*2/3,
+    readyFillBar = new Square(renderer, 0, getScreenHeight()*2/3,
         getScreenWidth(), getScreenHeight()/3) {
       private int readyDevices = -1;
       private int connectedDevices = -1;
@@ -73,17 +73,17 @@ public class OnlineHostGame extends Game {
         if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
             || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
           this.setCoordinates(0,
-              screenHeight * 2f / 3f,
-              screenWidth * (float) originActivity.getNumberOfReadyRemoteDevices() /
+              getScreenHeight() * 2f / 3f,
+              getScreenWidth() * (float) originActivity.getNumberOfReadyRemoteDevices() /
                                     originActivity.getNumberOfRemoteDevices(),
-              screenHeight / 3f);
+              getScreenHeight() / 3f);
 
           readyDevices = originActivity.getNumberOfReadyRemoteDevices();
           connectedDevices = originActivity.getNumberOfRemoteDevices();
 
           if (readyDevices == connectedDevices && readyDevices > 1) {
             // Everyone is ready - begin game.
-            renderer.startGame(players);
+            renderer.restartGame();
           }
         }
 

@@ -10,8 +10,8 @@ public class GuestGame extends Game {
   private MissedMovesList missedMovesList;
   private final Square readyFillBar;
 
-  public GuestGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
-    super(renderer, screenWidth, screenHeight, players);
+  public GuestGame(GameRenderer renderer, GameSetupBuffer setupBuffer) {
+    super(renderer, setupBuffer);
 
     this.originActivity = (OpenGLES20Activity) renderer.getContext();
 
@@ -29,7 +29,7 @@ public class GuestGame extends Game {
       }
     });
 
-    readyFillBar = new Square(0, getScreenHeight()*2/3,
+    readyFillBar = new Square(renderer, 0, getScreenHeight()*2/3,
         getScreenWidth(), getScreenHeight()/3) {
       private int readyDevices = -1;
       private int connectedDevices = -1;
@@ -39,10 +39,10 @@ public class GuestGame extends Game {
         if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
             || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
           this.setCoordinates(0,
-              screenHeight * 2f / 3f,
-              screenWidth * (float) originActivity.getNumberOfReadyRemoteDevices() /
+              getScreenHeight() * 2f / 3f,
+              getScreenWidth() * (float) originActivity.getNumberOfReadyRemoteDevices() /
                   originActivity.getNumberOfRemoteDevices(),
-              screenHeight / 3f);
+              getScreenHeight() / 3f);
 
           readyDevices = originActivity.getNumberOfReadyRemoteDevices();
           connectedDevices = originActivity.getNumberOfRemoteDevices();
@@ -54,7 +54,7 @@ public class GuestGame extends Game {
       }
     };
 
-    for (Player player : players)
+    for (Player player : setupBuffer.players)
       if (player != null && !player.getControlType().equals(Player.ControlType.OFF)
                          && !player.getControlType().equals(Player.ControlType.BLUETOOTH))
         player.setControllerThread(originActivity.connectedThread);

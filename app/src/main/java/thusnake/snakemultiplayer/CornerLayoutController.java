@@ -15,9 +15,8 @@ public class CornerLayoutController extends PlayerController {
   }
 
   @Override
-  public void loadGLTexture(Context context) {
-    super.loadGLTexture(context);
-    this.getDrawableLayout().loadGLTexture(this.getGl(), context, R.drawable.androidcontrols);
+  public void setTexture(Context context) {
+    this.getDrawableLayout().setTexture(R.drawable.androidcontrols);
   }
 
   @Override

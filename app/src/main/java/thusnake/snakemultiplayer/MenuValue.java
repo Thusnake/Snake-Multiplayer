@@ -80,7 +80,7 @@ public class MenuValue extends MenuDrawable {
                                  - glText.getLength(this.getValueToString()));
       this.setWidth(glText.getLength(this.getValueToString(newValue)));
       this.valueInteger = newValue;
-      this.renderer.getMenu().syncValues();
+//      this.renderer.getMenu().syncValues();
     }
   }
   public void setValue(boolean newValue) {
@@ -90,7 +90,7 @@ public class MenuValue extends MenuDrawable {
                                  - glText.getLength(this.getValueToString()));
       this.setWidth(glText.getLength(this.getValueToString(newValue)));
       this.valueBoolean = newValue;
-      this.renderer.getMenu().syncValues();
+//      this.renderer.getMenu().syncValues();
     }
   }
   public void setValue(String newValue) {
@@ -100,7 +100,7 @@ public class MenuValue extends MenuDrawable {
                                  - glText.getLength(this.getValueToString()));
       this.setWidth(glText.getLength(newValue));
       this.valueString = newValue;
-      this.renderer.getMenu().syncValues();
+//      this.renderer.getMenu().syncValues();
     }
   }
 

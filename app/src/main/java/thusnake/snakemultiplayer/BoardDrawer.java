@@ -22,9 +22,9 @@ public abstract class BoardDrawer {
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
 
-    this.horizontalSquares = renderer.getMenu().horizontalSquares;
-    this.verticalSquares = renderer.getMenu().verticalSquares;
-    this.stageBorders = renderer.getMenu().stageBorders;
+    this.horizontalSquares = renderer.getMenu().getSetupBuffer().horizontalSquares;
+    this.verticalSquares = renderer.getMenu().getSetupBuffer().verticalSquares;
+    this.stageBorders = renderer.getMenu().getSetupBuffer().stageBorders;
 
     // TODO Calculate board offset.
     this.boardOffsetY = 10.0f;
@@ -35,9 +35,9 @@ public abstract class BoardDrawer {
     this.squareWidth
         = (float) ((screenHeight - 20.0 - this.verticalSquares - 1.0) / verticalSquares);
     // Apply offset to some Squares.
-    this.boardOutline = new Square(boardOffsetX - 1.0, boardOffsetY - 1.0,
+    this.boardOutline = new Square(renderer, boardOffsetX - 1.0, boardOffsetY - 1.0,
         screenWidth - boardOffsetX*2 + 2.0, screenHeight - boardOffsetY*2 + 2.0);
-    this.boardFill = new Square(boardOffsetX, boardOffsetY,
+    this.boardFill = new Square(renderer, boardOffsetX, boardOffsetY,
         screenWidth - boardOffsetX*2, screenHeight - boardOffsetY*2);
 
     // Create the board mesh.
@@ -61,10 +61,7 @@ public abstract class BoardDrawer {
   public void drawControllerLayout(Player player) {
     gl.glColor4f(player.getColors()[0], player.getColors()[1],
         player.getColors()[2], player.getColors()[3]);
-    // For some unknown reason I can not load the texture inside the constructor properly.
-    // This is my band-aid fix.
-    if (!player.getPlayerController().textureIsLoaded())
-      player.getPlayerController().loadGLTexture(this.renderer.getContext());
+
     player.getPlayerController().draw(gl);
   }
 

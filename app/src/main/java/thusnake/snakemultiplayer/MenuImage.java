@@ -1,59 +1,56 @@
 package thusnake.snakemultiplayer;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Created by Nick on 22/01/2018.
  */
 
-public class MenuImage extends MenuDrawable {
-  private SimpleTimer scaleX, scaleY;
+public class MenuImage extends MenuDrawable implements TextureReloadable {
+  private SimpleTimer scaleX = new SimpleTimer(1.0), scaleY = new SimpleTimer(1.0);
   private Square drawable;
 
   public MenuImage(GameRenderer renderer, float x, float y, float width, float height) {
     super(renderer, x, y);
-    this.scaleX = new SimpleTimer(1.0);
-    this.scaleY = new SimpleTimer(1.0);
     this.setWidth(width);
     this.setHeight(height);
-    this.drawable = new Square(-width/2, -height/2, width, height);
+    this.drawable = new Square(renderer, x, y, width, height);
   }
 
-  public MenuImage(GameRenderer renderer, float x, float y, float size) {
-    this(renderer, x, y, size, size);
+  public MenuImage(GameRenderer renderer, float x, float y, int resourceId) {
+    super(renderer, x, y);
+
+    // Try finding the resource in the cache.
+    Bitmap image;
+    if ((image = renderer.getTextureFromCache(resourceId)) == null) {
+      image = BitmapFactory.decodeResource(renderer.getOriginActivity().getResources(), resourceId);
+
+      // Cache the texture for next time if it had to be decoded.
+      renderer.cacheTexture(image, resourceId);
+    }
+
+    setWidth(image.getWidth());
+    setHeight(image.getHeight());
+    drawable = new Square(renderer, x, y, getWidth(), getHeight());
+    drawable.setTexture(resourceId);
   }
 
   // Drawing methods
   public void draw() {
-    gl.glPushMatrix();
-    gl.glTranslatef(this.getX() + this.getWidth()/2f,
-                    this.getY() + this.getHeight()/2f, 0);
-    gl.glScalef((float) this.scaleX.getTime(), (float) this.scaleY.getTime(), 1);
-    gl.glColor4f(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
     this.drawable.draw(this.gl);
-    gl.glPopMatrix();
   }
 
-  public void setGraphic(int id) {
-    this.drawable.loadGLTexture(this.gl, this.renderer.getContext(), id);
+  public void setTexture(int id) {
+    this.drawable.setTexture(id);
   }
 
-
-  // Position manipulation methods
-  public void move(double dt) {
-    if (!this.scaleX.isDone()) this.scaleX.countEaseOut(dt, 8, 5*dt);
-    if (!this.scaleY.isDone()) this.scaleY.countEaseOut(dt, 8, 5*dt);
+  @Override
+  public void reloadTexture() {
+    drawable.reloadTexture();
   }
 
-  public void setScale(float scale) {
-    this.scaleX.setTime(scale);
-    this.scaleY.setTime(scale);
-  }
-  public void setScaleDestination(float scale) {
-    this.scaleX.setEndTimeFromNow(scale);
-    this.scaleY.setEndTimeFromNow(scale);
-  }
-
-  // Getters
-  public float getScaleX() { return (float) this.scaleX.getTime(); }
+  public void move(double dt) {}
 }

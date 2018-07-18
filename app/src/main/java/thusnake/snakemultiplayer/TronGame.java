@@ -1,8 +1,8 @@
 package thusnake.snakemultiplayer;
 
 public class TronGame extends Game {
-  public TronGame(GameRenderer renderer, int screenWidth, int screenHeight, Player[] players) {
-    super(renderer, screenWidth, screenHeight, players);
+  public TronGame(GameRenderer renderer, GameSetupBuffer setupBuffer) {
+    super(renderer, setupBuffer);
   }
 
   @Override
