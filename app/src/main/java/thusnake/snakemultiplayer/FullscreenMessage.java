@@ -1,6 +1,5 @@
 package thusnake.snakemultiplayer;
 
-import android.opengl.GLES10;
 import android.view.MotionEvent;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -24,15 +23,15 @@ public class FullscreenMessage implements Activity {
     this.message
         = new MultilineMenuItem(renderer, message,
                                 screenWidth / 2f,
-                                screenHeight * 2f / 3f - renderer.getGlText().getCharHeight() * 0.65f,
-                                MenuItem.Alignment.CENTER,
+                                screenHeight * 2f / 3f,
+                                MenuDrawable.EdgePoint.TOP_CENTER,
                                 screenWidth);
     this.cancelButton = new MenuItem(renderer, "x",
                                      screenWidth - 10,
-                                     screenHeight - 10 - renderer.getGlText().getCharHeight() * 0.65f,
-                                     MenuItem.Alignment.RIGHT);
+                                     screenHeight - 10,
+                                     MenuDrawable.EdgePoint.TOP_RIGHT);
     this.loadingSnake = new Mesh(screenWidth / 2f - 60/720f * screenHeight,
-                                 this.message.getY() / 2f - 60/720f * screenHeight,
+                                 this.message.getBottomY() / 2f - 60/720f * screenHeight,
                                  60f / 720f * screenHeight,
                                  2, 2);
     // Set the mesh colors.

@@ -96,7 +96,7 @@ class Game extends BoardDrawer implements Activity {
     this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
         -renderer.getScreenWidth() / 2,
         renderer.getScreenHeight() * 5 / 6 - glText.getCharHeight()*0.8f / 2,
-        MenuItem.Alignment.CENTER) {
+        MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public boolean isClicked(float x, float y) {
         return y < 1/3f * renderer.getScreenHeight();
@@ -107,7 +107,7 @@ class Game extends BoardDrawer implements Activity {
     this.gameOverMiddleItem = new MenuItem(renderer, "Everyone loses",
         renderer.getScreenWidth() / 2,
         renderer.getScreenHeight() / 2 - glText.getCharHeight()*0.8f / 2,
-        MenuItem.Alignment.CENTER) {
+        MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public boolean isClicked(float x, float y) {
         return y > 1/3f * renderer.getScreenHeight() && y < 2/3f * renderer.getScreenHeight();
@@ -118,7 +118,7 @@ class Game extends BoardDrawer implements Activity {
     this.gameOverBottomItem = new MenuItem(renderer, "Menu",
         renderer.getScreenWidth() * 1.5f,
         renderer.getScreenHeight() * 1 / 6 - glText.getCharHeight()*0.8f / 2,
-        MenuItem.Alignment.CENTER) {
+        MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public boolean isClicked(float x, float y) {
         return y > 2/3f * renderer.getScreenHeight();

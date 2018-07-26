@@ -3,6 +3,7 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
 import android.util.SparseArray;
 
@@ -35,7 +36,6 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
-  private Set<TextureReloadable> texturablesToBeReloaded = new HashSet<>();
   private SparseArray<Bitmap> textureCacheMap = new SparseArray<>();
 
   public GameRenderer(Context context) {
@@ -203,12 +203,26 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
   public double getPointerDownTime() { return this.pointerDownTime; }
 
-  public void addToReloadTextureRoutine(TextureReloadable textureReloadable) {
-    texturablesToBeReloaded.add(textureReloadable);
-  }
-
   public void cacheTexture(Bitmap textureBitmap, int id) {
     textureCacheMap.append(id, textureBitmap);
+  }
+
+  /**
+   * Attempts to a texture's bitmap in the cache from its ID. If it can't find it, the bitmap is
+   * instead decoded and saved in the cache.
+   * @param id The Android resource ID of the texture image.
+   * @return The loaded or decoded Bitmap.
+   */
+  public Bitmap loadTextureBitmap(int id) {
+    Bitmap bitmap;
+    if ((bitmap = getTextureFromCache(id)) == null) {
+      bitmap = BitmapFactory.decodeResource(originActivity.getResources(), id);
+
+      // Cache the texture for next time.
+      cacheTexture(bitmap, id);
+    }
+
+    return bitmap;
   }
 
   public Bitmap getTextureFromCache(int id) {

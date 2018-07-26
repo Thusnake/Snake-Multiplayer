@@ -11,7 +11,7 @@ public final class MenuMainScreen extends MenuScreen {
                                         renderer.getScreenHeight() * 0.2f,
                                         renderer.getScreenHeight() * 0.6f,
                                         renderer.getScreenHeight() * 0.6f,
-                                        MenuItem.Alignment.RIGHT) {
+                                        MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
         menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
@@ -25,7 +25,7 @@ public final class MenuMainScreen extends MenuScreen {
                                        renderer.getScreenHeight() * 0.2f,
                                        renderer.getScreenHeight() * 0.6f,
                                        renderer.getScreenHeight() * 0.6f,
-                                       MenuItem.Alignment.LEFT) {
+                                       MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
 //        menu.setScreen(new MultiPlayerSnakeSetupScreen(menu));
@@ -37,7 +37,7 @@ public final class MenuMainScreen extends MenuScreen {
                                         10,
                                         renderer.getScreenHeight() * 0.2f - 30,
                                         renderer.getScreenHeight() * 0.2f - 30,
-                                        MenuItem.Alignment.RIGHT) {
+                                        MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
 //        menu.setScreen(new OptionsScreen(menu));
@@ -49,7 +49,7 @@ public final class MenuMainScreen extends MenuScreen {
                                         10,
                                         (renderer.getScreenHeight() * 0.2f - 30) * 53/21f,
                                         renderer.getScreenHeight() * 0.2f - 30,
-                                        MenuItem.Alignment.LEFT) {
+                                        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() { originActivity.showAd(); }
     }.withBackgroundImage(R.drawable.ad_icon);

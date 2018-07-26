@@ -8,18 +8,14 @@ import java.util.List;
 
 public class MultilineMenuItem extends MenuDrawable {
   private String text;
-  private MenuItem.Alignment alignment;
-  private float wrapWidth, x, y;
+  private float wrapWidth;
   private final GLText glText;
   private final List<MenuItem> lines = new ArrayList<>();
 
   public MultilineMenuItem(GameRenderer renderer, String text, float x, float y,
-                           MenuItem.Alignment align, float wrapWidth) {
-    super(renderer, x, y);
+                           EdgePoint alignPoint, EdgePoint originPoint, float wrapWidth) {
+    super(renderer, x, y, alignPoint, originPoint);
     this.text = text;
-    this.x = x;
-    this.y = y;
-    this.alignment = align;
     this.wrapWidth = wrapWidth;
 
     this.glText = renderer.getGlText();
@@ -27,12 +23,23 @@ public class MultilineMenuItem extends MenuDrawable {
     this.generateLines();
   }
 
+  public MultilineMenuItem(GameRenderer renderer, String text, float x, float y,
+                           EdgePoint alignPoint, float wrapWidth) {
+    this(renderer, text, x, y, alignPoint, EdgePoint.CENTER, wrapWidth);
+  }
+
   public void draw() {
+    gl.glPushMatrix();
+    translateAndScale();
+
     for (MenuItem line : lines)
       line.draw();
+
+    gl.glPopMatrix();
   }
 
   public void move(double dt) {
+    super.move(dt);
     for (MenuItem line : lines)
       line.move(dt);
   }
@@ -77,8 +84,8 @@ public class MultilineMenuItem extends MenuDrawable {
       line.setDestinationToInitial();
   }
 
-  public float getY() {
-    return lines.get(lines.size()-1).getY();
+  public float getBottomY() {
+    return lines.get(lines.size()-1).getBottomY();
   }
 
   private void generateLines() {
@@ -88,6 +95,8 @@ public class MultilineMenuItem extends MenuDrawable {
     // Create a list of words.
     List<String> remainingWords = new ArrayList<>();
     Collections.addAll(remainingWords, text.split(" "));
+
+    List<String> generatedLines = new ArrayList<>();
 
     while(!remainingWords.isEmpty()) {
       // Each line has at least 1 word.
@@ -99,24 +108,33 @@ public class MultilineMenuItem extends MenuDrawable {
         currentLine += " " + remainingWords.remove(0);
       }
 
-      // Add the line as a MenuItem to an array.
-      lines.add(new MenuItem(renderer,
-                             currentLine,
-                             x,
-                             y - lines.size() * glText.getHeight() * 0.65f,
-                             alignment));
+      // Add the line to an array.
+      generatedLines.add(currentLine);
     }
 
     // Figure out the width of the whole.
     float maxWidth = 0;
-    for (MenuItem line : lines)
-      if (line.getWidth() > maxWidth)
-        maxWidth = line.getWidth();
+    for (String line : generatedLines)
+      if (glText.getLength(line) > maxWidth)
+        maxWidth = glText.getLength(line);
 
     this.setWidth(maxWidth);
 
     // Figure out the height of the whole.
-    this.setHeight(lines.get(0).getY() + lines.get(0).getHeight()
-                   - lines.get(lines.size()-1).getY());
+    this.setHeight(glText.getHeight() * 0.65f * generatedLines.size());
+
+    // Create all the MenuItems so that they fit this container's width and height.
+    for (String line : generatedLines)
+      /* Adding MenuItems is done by getting from the raw originPoint to the raw alignPoint and
+      creating a new MenuItem there with the same alignPoint, except shifted to the top. That
+      way we can draw multiple lines of top-aligned MenuItems within the boundaries of this item. */
+
+      lines.add(new MenuItem
+          (renderer,
+           line,
+           -getEdgePointOffset(originPoint).first  + getEdgePointOffset(alignPoint).first,
+           -getEdgePointOffset(originPoint).second + getEdgePointOffset(alignPoint).second
+               - lines.size() * glText.getHeight() * 0.65f,
+           combineEdgeHalves(EdgePoint.TOP_CENTER, alignPoint)));
   }
 }

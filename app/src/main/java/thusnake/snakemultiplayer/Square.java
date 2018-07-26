@@ -102,15 +102,8 @@ public class Square implements TextureReloadable {
   }
 
   public void loadGLTexture(int id) {
-    // When loading the bitmap we first check the cache and then decode the resource if the cache
-    // doesn't have it.
-    Bitmap bitmap;
-    if ((bitmap = originActivity.getRenderer().getTextureFromCache(id)) == null) {
-      bitmap = BitmapFactory.decodeResource(originActivity.getResources(), id);
-
-      // Cache the texture for next time.
-      originActivity.getRenderer().cacheTexture(bitmap, id);
-    }
+    // Get the texture from the renderer.
+    Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(id);
 
     // generate one texture pointer
     gl.glGenTextures(1, textures, 0);
@@ -126,17 +119,10 @@ public class Square implements TextureReloadable {
 
     textureId = id;
     textureLoaded = true;
-
-    // Make sure that this texture will be reloaded when necessary.
-    originActivity.getRenderer().addToReloadTextureRoutine(this);
   }
 
   public void reloadTexture() {
-    Bitmap bitmap;
-    if ((bitmap = originActivity.getRenderer().getTextureFromCache(textureId)) == null) {
-      bitmap = BitmapFactory.decodeResource(originActivity.getResources(), textureId);
-      originActivity.getRenderer().cacheTexture(bitmap, textureId);
-    }
+    Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(textureId);
 
     gl.glDeleteTextures(1, textures, 0);
     gl.glGenTextures(1, textures, 0);

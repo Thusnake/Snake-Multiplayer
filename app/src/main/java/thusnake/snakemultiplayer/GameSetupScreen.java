@@ -9,18 +9,18 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
     super(menu);
 
     gameModeCarousel = makeCarousel();
-    listOfOptions = new MenuListOfItems(renderer, 10, gameModeCarousel.getY() - 50);
+    listOfOptions = new MenuListOfItems(renderer, 10, gameModeCarousel.getBottomY() - 50,
+                                        MenuDrawable.EdgePoint.TOP_LEFT);
     nextButton
         = new MenuButton(renderer,
         renderer.getScreenWidth() - 10,
         renderer.getScreenHeight() - 10 - (renderer.getScreenHeight() * 0.2f - 30),
         renderer.getScreenHeight() * 0.2f - 30,
         renderer.getScreenHeight() * 0.2f - 30,
-        MenuItem.Alignment.RIGHT) {
+        MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void onButtonCreated() {
-        drawables.add(new MenuItem(renderer, "next", getX() + getWidth() / 2f, getY(),
-                                   MenuItem.Alignment.CENTER));
+        drawables.add(new MenuItem(renderer, "next", 0, 0, EdgePoint.BOTTOM_CENTER));
       }
 
       @Override

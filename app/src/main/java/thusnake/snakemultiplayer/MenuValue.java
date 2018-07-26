@@ -2,8 +2,6 @@ package thusnake.snakemultiplayer;
 
 import com.android.texample.GLText;
 
-import javax.microedition.khronos.opengles.GL10;
-
 /**
  * Created by Nick on 08/01/2018.
  */
@@ -12,7 +10,6 @@ public class MenuValue extends MenuDrawable {
   private int valueInteger;
   private boolean valueBoolean;
   private String valueString;
-  private final MenuItem.Alignment align;
   public enum Type {INTEGER, BOOLEAN, STRING}
   private Type type;
   private boolean expanded, visible = true;
@@ -27,44 +24,40 @@ public class MenuValue extends MenuDrawable {
 
   // Constructors for all types.
   public MenuValue(GameRenderer renderer, int initialValue, float x, float y,
-                   MenuItem.Alignment align) {
-    this(renderer, x, y, align);
+                   EdgePoint alignPoint) {
+    this(renderer, x, y, alignPoint);
     this.valueInteger = initialValue;
     this.type = Type.INTEGER;
     this.initDimensions(x, y);
-    this.plusButton = new MenuItem(renderer, "+", x, y, align);
-    this.minusButton = new MenuItem(renderer, "-", x - this.plusButton.getWidth(), y, align);
+    this.plusButton = new MenuItem(renderer, "+", x, y, alignPoint);
+    this.minusButton = new MenuItem(renderer, "-", x - this.plusButton.getWidth(), y, alignPoint);
   }
 
   public MenuValue(GameRenderer renderer, boolean initialValue, float x, float y,
-                   MenuItem.Alignment align) {
-    this(renderer, x, y, align);
+                   EdgePoint alignPoint) {
+    this(renderer, x, y, alignPoint);
     this.valueBoolean = initialValue;
     this.type = Type.BOOLEAN;
     this.initDimensions(x, y);
   }
 
   public MenuValue(GameRenderer renderer, String initialValue, float x, float y,
-                   MenuItem.Alignment align) {
-    this(renderer, x, y, align);
+                   EdgePoint alignPoint) {
+    this(renderer, x, y, alignPoint);
     this.valueString = initialValue;
     this.type = Type.STRING;
     this.initDimensions(x, y);
   }
 
   // All constructors share some code, so have a private one handle the shared code.
-  private MenuValue(GameRenderer renderer, float x, float y, MenuItem.Alignment align) {
-    super(renderer, x, y);
-    this.align = align;
+  private MenuValue(GameRenderer renderer, float x, float y, EdgePoint alignPoint) {
+    super(renderer, x, y, alignPoint, EdgePoint.CENTER);
     this.glText = renderer.getGlText();
   }
 
   private void initDimensions(float x, float y) {
     this.setWidth(glText.getLength(this.getValueToString()));
     this.setHeight(glText.getCharHeight() * 0.65f);
-    if (align == MenuItem.Alignment.LEFT) this.setX(x);
-    else this.setX(x - this.getWidth());
-    this.setY(y);
   }
 
   // Setters for all types.
@@ -75,9 +68,6 @@ public class MenuValue extends MenuDrawable {
         else if (newValue > this.maximumValueInteger) newValue = this.maximumValueInteger;
       }
 
-      if (this.align == MenuItem.Alignment.RIGHT)
-        this.getXTimer().countDown(glText.getLength(this.getValueToString(newValue))
-                                 - glText.getLength(this.getValueToString()));
       this.setWidth(glText.getLength(this.getValueToString(newValue)));
       this.valueInteger = newValue;
 //      this.renderer.getMenu().syncValues();
@@ -85,9 +75,6 @@ public class MenuValue extends MenuDrawable {
   }
   public void setValue(boolean newValue) {
     if (this.type == Type.BOOLEAN) {
-      if (this.align == MenuItem.Alignment.RIGHT)
-        this.getXTimer().countDown(glText.getLength(this.getValueToString(newValue))
-                                 - glText.getLength(this.getValueToString()));
       this.setWidth(glText.getLength(this.getValueToString(newValue)));
       this.valueBoolean = newValue;
 //      this.renderer.getMenu().syncValues();
@@ -95,9 +82,6 @@ public class MenuValue extends MenuDrawable {
   }
   public void setValue(String newValue) {
     if (this.type == Type.STRING) {
-      if (this.align == MenuItem.Alignment.RIGHT)
-        this.getXTimer().countDown(glText.getLength(newValue)
-                                 - glText.getLength(this.getValueToString()));
       this.setWidth(glText.getLength(newValue));
       this.valueString = newValue;
 //      this.renderer.getMenu().syncValues();
@@ -108,7 +92,7 @@ public class MenuValue extends MenuDrawable {
     if (this.visible) {
       glText.begin();
       gl.glColor4f(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
-      glText.draw(this.getValueToString(), this.getX(), this.getY());
+      glText.draw(this.getValueToString(), this.getLeftX(), this.getBottomY());
       glText.end();
       if (this.type == Type.INTEGER && this.expanded) {
         minusButton.draw();
@@ -118,6 +102,7 @@ public class MenuValue extends MenuDrawable {
   }
 
   public void move(double dt) {
+    super.move(dt);
     if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, 8, this.getHeight() * 2);
     if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, 8, this.getHeight() * 2);
     if (this.type == Type.INTEGER) {
@@ -230,21 +215,6 @@ public class MenuValue extends MenuDrawable {
       this.minusButton.setDestinationYFromOrigin(offsetY);
       this.plusButton.setDestinationYFromOrigin(offsetY);
     }
-  }
-
-  @Override
-  public void setDestinationToInitial() {
-    if (this.align == MenuItem.Alignment.RIGHT)
-      this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth());
-    else
-      this.getXTimer().setEndTimeFromNow(this.getInitialX());
-    this.getYTimer().setEndTimeFromNow(this.getInitialY());
-  }
-
-  @Override
-  public void setDestinationX(double destinationX) {
-    if (this.align == MenuItem.Alignment.RIGHT) super.setDestinationX(destinationX - this.getWidth());
-    else super.setDestinationX(destinationX);
   }
 
   // Other getters.

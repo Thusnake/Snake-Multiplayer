@@ -8,25 +8,18 @@ import java.util.LinkedHashSet;
  */
 public abstract class MenuButton extends MenuDrawable implements TextureReloadable {
   private GameRenderer renderer;
-  private MenuItem.Alignment alignment;
-  private SimpleTimer scaleTimer = new SimpleTimer(1.0);
   private boolean isHeld = false;
   private SimpleTimer holdDuration = new SimpleTimer(0.0, 1.0);
   private MenuImage backgroundImage;
   final LinkedHashSet<MenuDrawable> drawables = new LinkedHashSet<>();
 
   public MenuButton(GameRenderer renderer, float x, float y, float width, float height,
-                    MenuItem.Alignment alignment) {
-    super(renderer, x, y);
+                    EdgePoint alignPoint) {
+    super(renderer, x, y, alignPoint, EdgePoint.CENTER);
 
     this.renderer = renderer;
-    this.alignment = alignment;
     setWidth(width);
     setHeight(height);
-
-    if (alignment.equals(MenuItem.Alignment.LEFT))        setX(x);
-    else if (alignment.equals(MenuItem.Alignment.CENTER)) setX(x - width/2f);
-    else                                                  setX(x - width);
 
     onButtonCreated();
   }
@@ -38,10 +31,11 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
 
   public void draw() {
     gl.glPushMatrix();
-    gl.glScalef((float) scaleTimer.getTime(), (float) scaleTimer.getTime(), 1);
-    gl.glTranslatef((getX() + getWidth()/2f) * (1/(float) scaleTimer.getTime() - 1),
-                    (getY() + getHeight()/2f) * (1/(float) scaleTimer.getTime() - 1),
-                    0);
+    gl.glTranslatef(-getEdgePointOffset(alignPoint).first + getEdgePointOffset(originPoint).first
+                        + getX(alignPoint),
+                    -getEdgePointOffset(alignPoint).second + getEdgePointOffset(originPoint).second
+                        + getY(alignPoint), 0);
+    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
     gl.glColor4f(getColors()[0], getColors()[1], getColors()[2], getColors()[3]);
 
     // Draw the background image if there is one.
@@ -63,9 +57,9 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
   }
 
   public void move(double dt) {
-    if (!scaleTimer.isDone()) {
-      if (isHeld) scaleTimer.countEaseOut(dt, 2, 120 * dt);
-      else        scaleTimer.countEaseOut(dt, 8, 5 * dt);
+    if (!scale.isDone()) {
+      if (isHeld) scale.countEaseOut(dt, 2, 120 * dt);
+      else        scale.countEaseOut(dt, 8, 5 * dt);
     }
 
     if (isHeld) if (holdDuration.count(dt)) onHeld();
@@ -87,7 +81,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
       case MotionEvent.ACTION_DOWN:
         if (isClicked(x, y)) {
           isHeld = true;
-          scaleTimer.setEndTimeFromNow(1 - event.getPressure()/3f);
+          scale.setEndTimeFromNow(1 - event.getPressure()/3f);
         }
 
         break;
@@ -95,10 +89,10 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
       case MotionEvent.ACTION_MOVE:
         if (isHeld) {
           if (isClicked(x, y))
-            scaleTimer.setEndTimeFromNow(1 - event.getPressure()/3f);
+            scale.setEndTimeFromNow(1 - event.getPressure()/3f);
           else {
             isHeld = false;
-            scaleTimer.setEndTimeFromNow(1);
+            scale.setEndTimeFromNow(1);
           }
         }
 
@@ -107,7 +101,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
       case MotionEvent.ACTION_UP:
         if (isClicked(x, y) && isHeld) {
           isHeld = false;
-          scaleTimer.setEndTimeFromNow(1);
+          scale.setEndTimeFromNow(1);
           performAction();
         }
 
@@ -124,7 +118,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
    * @return A reference to this MenuButton, for convenience.
    */
   public MenuButton withBackgroundImage(int id) {
-    backgroundImage = new MenuImage(renderer, getX(), getY(), getWidth(), getHeight());
+    backgroundImage = new MenuImage(renderer, 0, 0, getWidth(), getHeight(), EdgePoint.CENTER);
     backgroundImage.setTexture(id);
     return this;
   }
@@ -137,6 +131,4 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
 
     if (backgroundImage != null) backgroundImage.reloadTexture();
   }
-
-  public double getScale() { return scaleTimer.getTime(); }
 }

@@ -7,8 +7,13 @@ public class MenuListOfItems extends MenuDrawable implements TextureReloadable {
   private List<MenuDrawable> contents = new LinkedList<>();
   private MenuItem expandedItem;
 
-  public MenuListOfItems(GameRenderer renderer, float x, float y) {
-    super(renderer, x, y);
+  public MenuListOfItems(GameRenderer renderer, float x, float y, EdgePoint alignPoint,
+                         EdgePoint originPoint) {
+    super(renderer, x, y, alignPoint, originPoint);
+  }
+
+  public MenuListOfItems(GameRenderer renderer, float x, float y, EdgePoint alignPoint) {
+    this(renderer, x, y, alignPoint, EdgePoint.CENTER);
   }
 
   public void draw() {
@@ -17,6 +22,7 @@ public class MenuListOfItems extends MenuDrawable implements TextureReloadable {
   }
 
   public void move(double dt) {
+    super.move(dt);
     for (MenuDrawable drawable : contents)
       drawable.move(dt);
   }

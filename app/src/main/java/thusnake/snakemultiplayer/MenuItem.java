@@ -2,8 +2,6 @@ package thusnake.snakemultiplayer;
 
 import com.android.texample.GLText;
 
-import javax.microedition.khronos.opengles.GL10;
-
 /**
  * Created by Nick on 15/12/2017.
  */
@@ -12,18 +10,17 @@ import javax.microedition.khronos.opengles.GL10;
 public class MenuItem extends MenuDrawable {
   public enum Alignment {LEFT, RIGHT, CENTER}
   private String text;
-  private final Alignment align;
   private double easeOutMultiplier, easeOutInertia;
   private GLText glText;
   private MenuValue value;
   private String description;
-  private float desctiptionOpacity = 1;
+  private float descriptionOpacity = 1;
 
   // Constructor.
-  public MenuItem(GameRenderer renderer, String text, float x, float y, Alignment align) {
-    super(renderer, x, y);
+  public MenuItem(GameRenderer renderer, String text, float x, float y, EdgePoint alignPoint,
+                  EdgePoint originPoint) {
+    super(renderer, x, y, alignPoint, originPoint);
     this.text = text;
-    this.align = align;
 
     this.glText = renderer.getGlText();
     this.setWidth(glText.getLength(text));
@@ -31,10 +28,10 @@ public class MenuItem extends MenuDrawable {
 
     this.easeOutMultiplier = 8;
     this.easeOutInertia = 1/4.0;
+  }
 
-    if (align == Alignment.LEFT) this.setX(x);
-    else if (align == Alignment.RIGHT) this.setX(x - this.getWidth());
-    else this.setX(x - this.getWidth() / 2);
+  public MenuItem(GameRenderer renderer, String text, float x, float y, EdgePoint alignPoint) {
+    this(renderer, text, x, y, alignPoint, EdgePoint.CENTER);
   }
 
   // Simply draws the text representation of the button. Has to be called inside a block of
@@ -42,13 +39,13 @@ public class MenuItem extends MenuDrawable {
   @Override
   public void draw() {
     glText.begin(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
-    glText.draw(this.text, this.getX(), this.getY());
+    glText.draw(this.text, this.getLeftX(), this.getBottomY());
     glText.end();
     if (this.description != null) {
       gl.glPushMatrix();
       gl.glScalef(0.25f, 0.25f, 1f);
-      glText.begin(0.66f, 0.66f, 0.66f, desctiptionOpacity);
-      glText.draw(this.description, this.getX() * 4, this.getY() * 4);
+      glText.begin(0.66f, 0.66f, 0.66f, descriptionOpacity);
+      glText.draw(this.description, this.getLeftX() * 4, this.getBottomY() * 4);
       glText.end();
       gl.glPopMatrix();
     }
@@ -56,6 +53,7 @@ public class MenuItem extends MenuDrawable {
   }
 
   public void move(double dt) {
+    super.move(dt);
     if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, easeOutMultiplier, this.getXTimer().getDuration() * easeOutInertia);
     if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, easeOutMultiplier, this.getYTimer().getDuration() * easeOutInertia);
     if (this.value != null) this.value.move(dt);
@@ -70,10 +68,6 @@ public class MenuItem extends MenuDrawable {
   }
 
   public void setText(String text) {
-    if (this.align == Alignment.RIGHT)
-      this.getXTimer().offsetTime(glText.getLength(this.text) - glText.getLength(text));
-    else if (this.align == Alignment.CENTER)
-      this.getXTimer().offsetTime((glText.getLength(this.text) - glText.getLength(text)) / 2f);
     this.setWidth(glText.getLength(text));
     this.text = text;
   }
@@ -82,7 +76,7 @@ public class MenuItem extends MenuDrawable {
     this.description = text;
   }
 
-  public void setDescriptionOpacity(float opacity) { this.desctiptionOpacity = opacity; }
+  public void setDescriptionOpacity(float opacity) { this.descriptionOpacity = opacity; }
 
   public void setValue(MenuValue value) { this.value = value; }
 
@@ -100,33 +94,17 @@ public class MenuItem extends MenuDrawable {
 
   @Override
   public void setDestinationX(double destinationX) {
-    if (this.align == Alignment.RIGHT)
-      super.setDestinationX(destinationX - this.getWidth());
-    else if (this.align == Alignment.CENTER)
-      super.setDestinationX(destinationX - this.getWidth() / 2);
-    else
-      super.setDestinationX(destinationX);
+    super.setDestinationX(destinationX);
   }
 
   @Override
   public void setDestinationXFromOrigin(double offsetX) {
-    if (this.align == Alignment.RIGHT)
-      super.setDestinationXFromOrigin(offsetX - this.getWidth());
-    else if (this.align == Alignment.CENTER)
-      super.setDestinationXFromOrigin(offsetX - this.getWidth() / 2);
-    else
-      super.setDestinationXFromOrigin(offsetX);
+    super.setDestinationXFromOrigin(offsetX);
   }
 
   @Override
   public void setDestinationToInitial() {
-    if (this.align == Alignment.RIGHT)
-      this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth());
-    else if (this.align == Alignment.CENTER)
-      this.getXTimer().setEndTimeFromNow(this.getInitialX() - this.getWidth() / 2);
-    else
-      this.getXTimer().setEndTimeFromNow(this.getInitialX());
-
+    this.getXTimer().setEndTimeFromNow(this.getInitialX());
     this.getYTimer().setEndTimeFromNow(this.getInitialY());
   }
 

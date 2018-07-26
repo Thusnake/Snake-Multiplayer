@@ -1,46 +1,81 @@
 package thusnake.snakemultiplayer;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
-import javax.microedition.khronos.opengles.GL10;
-
 /**
  * Created by Nick on 22/01/2018.
  */
 
 public class MenuImage extends MenuDrawable implements TextureReloadable {
-  private SimpleTimer scaleX = new SimpleTimer(1.0), scaleY = new SimpleTimer(1.0);
   private Square drawable;
 
-  public MenuImage(GameRenderer renderer, float x, float y, float width, float height) {
-    super(renderer, x, y);
-    this.setWidth(width);
-    this.setHeight(height);
-    this.drawable = new Square(renderer, x, y, width, height);
+  /**
+   * Creates a rectangle drawable with given coordinates, which can be textured.
+   * @param renderer The renderer to handle the drawing.
+   * @param x The x coordinate.
+   * @param y The y coordinate.
+   * @param width The width.
+   * @param height The height.
+   * @param alignPoint The edge which (x,y) represents.
+   * @param originPoint The edge from which scaling and rotation is done.
+   */
+  public MenuImage(GameRenderer renderer, float x, float y, float width, float height,
+                   EdgePoint alignPoint, EdgePoint originPoint) {
+    super(renderer, x, y, alignPoint, originPoint);
+
+    setWidth(width);
+    setHeight(height);
+
+    drawable = new Square(renderer,
+                          -getEdgePointOffset(originPoint).first,
+                          -getEdgePointOffset(originPoint).second,
+                          width, height);
   }
 
-  public MenuImage(GameRenderer renderer, float x, float y, int resourceId) {
-    super(renderer, x, y);
-
-    // Try finding the resource in the cache.
-    Bitmap image;
-    if ((image = renderer.getTextureFromCache(resourceId)) == null) {
-      image = BitmapFactory.decodeResource(renderer.getOriginActivity().getResources(), resourceId);
-
-      // Cache the texture for next time if it had to be decoded.
-      renderer.cacheTexture(image, resourceId);
-    }
-
-    setWidth(image.getWidth());
-    setHeight(image.getHeight());
-    drawable = new Square(renderer, x, y, getWidth(), getHeight());
-    drawable.setTexture(resourceId);
+  /**
+   * {@link MenuImage#MenuImage(GameRenderer, float, float, float, float, EdgePoint, EdgePoint)}
+   * <br>
+   * The scaling and rotation point is assumed to be the center.
+   */
+  public MenuImage(GameRenderer renderer, float x, float y, float width, float height,
+                   EdgePoint alignPoint) {
+    this(renderer, x, y, width, height, alignPoint, EdgePoint.CENTER);
   }
 
-  // Drawing methods
+  /**
+   * {@link MenuImage#MenuImage(GameRenderer, float, float, float, float, EdgePoint, EdgePoint)}
+   * <br>
+   * This constructor also textures the image immediately.
+   * @param resourceId The Android resource ID of the image.
+   */
+  public MenuImage(GameRenderer renderer, float x, float y, float width, float height,
+                   EdgePoint alignPoint, EdgePoint originPoint, int resourceId) {
+    this(renderer, x, y, width, height, alignPoint, originPoint);
+    setTexture(resourceId);
+  }
+
+  /**
+   * {@link MenuImage#MenuImage(GameRenderer, float, float, float, float, EdgePoint, EdgePoint,
+   * int)}
+   * <br>
+   * Assumes the scaling and rotation point to be the center.
+   */
+  public MenuImage(GameRenderer renderer, float x, float y, float width, float height,
+                   EdgePoint alignPoint, int resourceId) {
+    this(renderer, x, y, width, height, alignPoint, EdgePoint.CENTER, resourceId);
+  }
+
+  // Drawing methods.
   public void draw() {
+    gl.glPushMatrix();
+
+    // Translate to the bottom-left corner and add the origin offset, so that the image fits.
+    gl.glTranslatef(-getEdgePointOffset(alignPoint).first + getEdgePointOffset(originPoint).first
+                        + getX(alignPoint),
+                    -getEdgePointOffset(alignPoint).second + getEdgePointOffset(originPoint).second
+                        + getY(alignPoint), 0);
+    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
     this.drawable.draw(this.gl);
+
+    gl.glPopMatrix();
   }
 
   public void setTexture(int id) {
@@ -52,5 +87,7 @@ public class MenuImage extends MenuDrawable implements TextureReloadable {
     drawable.reloadTexture();
   }
 
-  public void move(double dt) {}
+  public void move(double dt) {
+    super.move(dt);
+  }
 }
