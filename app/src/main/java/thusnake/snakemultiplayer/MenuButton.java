@@ -73,9 +73,9 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
    */
   public void onHeld() {}
 
-  public void onMotionEvent(MotionEvent event) {
-    float x = event.getX() - renderer.getMenu().getScreenTransformX();
-    float y = event.getY() - renderer.getMenu().getScreenTransformY();
+  public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
+    float x = pointerX[0];
+    float y = pointerY[0];
 
     switch(event.getActionMasked()) {
       case MotionEvent.ACTION_DOWN:

@@ -153,7 +153,7 @@ public class GameSurfaceView extends GLSurfaceView {
 
       // Pass the event to the current screen to handle.
       if (holdMode == HoldMode.NORMAL)
-        gameRenderer.getMenu().getCurrentScreen().onMotionEvent(e);
+        gameRenderer.getMenu().getCurrentScreen().onMotionEvent(e, pointerX, pointerY);
     }
     return true;
   }

@@ -34,8 +34,10 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
             gameModeCarousel.addImageChoice(R.drawable.androidcontrols, "ad");
             gameModeCarousel.addImageChoice(R.drawable.ladder_icon, "ad");
             gameModeCarousel.addImageChoice(R.drawable.singleplayer_icon, "ad");
+            gameModeCarousel.addImageChoice(R.drawable.multiplayer_icon, "ad");
+            gameModeCarousel.addImageChoice(R.drawable.options_icon, "ad");
             gameModeCarousel.confirmChoices();
-            return gameModeCarousel;
+            return gameModeCarousel.noBoundaries();
           }
 
           @Override

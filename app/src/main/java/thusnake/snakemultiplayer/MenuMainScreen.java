@@ -7,10 +7,10 @@ public final class MenuMainScreen extends MenuScreen {
     super(menu);
 
     singleplayerButton = new MenuButton(renderer,
-                                        renderer.getScreenWidth() / 2f - 10,
+                                        renderer.getScreenWidth() / 2f - renderer.getScreenWidth() / 40f,
                                         renderer.getScreenHeight() * 0.2f,
-                                        renderer.getScreenHeight() * 0.6f,
-                                        renderer.getScreenHeight() * 0.6f,
+                                        renderer.getScreenHeight() * 0.7f,
+                                        renderer.getScreenHeight() * 0.7f,
                                         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
@@ -21,10 +21,10 @@ public final class MenuMainScreen extends MenuScreen {
     }.withBackgroundImage(R.drawable.singleplayer_icon);
 
     multiplayerButton = new MenuButton(renderer,
-                                       renderer.getScreenWidth() / 2f + 10,
+                                       renderer.getScreenWidth() / 2f + renderer.getScreenWidth() / 40f,
                                        renderer.getScreenHeight() * 0.2f,
-                                       renderer.getScreenHeight() * 0.6f,
-                                       renderer.getScreenHeight() * 0.6f,
+                                       renderer.getScreenHeight() * 0.7f,
+                                       renderer.getScreenHeight() * 0.7f,
                                        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {

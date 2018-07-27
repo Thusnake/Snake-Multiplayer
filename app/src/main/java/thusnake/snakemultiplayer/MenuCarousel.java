@@ -1,15 +1,25 @@
 package thusnake.snakemultiplayer;
 
 import android.graphics.Bitmap;
+import android.view.MotionEvent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MenuCarousel extends MenuDrawable implements TextureReloadable {
   private final List<CarouselItem> choices = new LinkedList<>();
   private CarouselItem currentChoice;
-  private boolean locked = false;
+  private boolean locked = false, isHeld = false, noBoundaries = false;
+  private SimpleTimer slideX = new SimpleTimer(0.0),
+      inertiaX = new SimpleTimer(0.0) {
+    @Override
+    public void onDone() {
+      super.onDone();
+      snap();
+    }
+  };
 
   public MenuCarousel(GameRenderer renderer, float x, float y, float width, float height,
                       EdgePoint alignPoint) {
@@ -19,10 +29,15 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     setHeight(height);
   }
 
+  public MenuCarousel noBoundaries() { noBoundaries = true; return this; }
+
   @Override
   public void draw() {
     if (locked) {
       float xCenter = getLeftX() + getWidth() / 2f;
+
+      gl.glPushMatrix();
+      gl.glTranslatef((float) slideX.getTime(), 0, 0);
 
       // Draw the current choice in the middle.
       gl.glPushMatrix();
@@ -31,76 +46,88 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       currentChoice.drawable.draw();
       gl.glPopMatrix();
 
-      // Create an array of carousel items to be drawn.
-      List<CarouselItem> leftToBeDrawn = new ArrayList<>();
-      for (int index = choices.indexOf(currentChoice); index < choices.size(); index++)
-        leftToBeDrawn.add(choices.get(index));
-      for (int index = 0; index < choices.indexOf(currentChoice); index++)
-        leftToBeDrawn.add(choices.get(index));
+      // Create rotation of carousel items to be drawn on the right.
+      List<CarouselItem> rotationRight = new LinkedList<>();
+      List<CarouselItem> rotationLeft = new LinkedList<>();
+      for (int index = choices.indexOf(currentChoice) + 1; index < choices.size(); index++) {
+        rotationRight.add(choices.get(index));
+        rotationLeft.add(choices.get(index));
+      }
+      for (int index = 0; index < choices.indexOf(currentChoice); index++) {
+        rotationRight.add(choices.get(index));
+        rotationLeft.add(choices.get(index));
+      }
+
+      // Let the left rotation be the same as the right one, only reversed.
+      Collections.reverse(rotationLeft);
+
+      // Add the current choice at the end of both.
+      rotationRight.add(currentChoice);
+      rotationLeft.add(currentChoice);
 
       // Set some values for the leftmost and rightmost point currently.
       float leftBoundary = xCenter - currentChoice.getVisualWidth() / 2f;
       float rightBoundary = xCenter + currentChoice.getVisualWidth() / 2f;
 
-      boolean lastChoiceWasRight = false;
+      // These are the limiting boundaries.
+      float leftLimit = getX() - (float) slideX.getTime();
+      float rightLimit = getX(EdgePoint.RIGHT_CENTER) - (float) slideX.getTime();
 
-      // Loop until we either run out of items to draw or run out of space to draw them.
-      while(leftToBeDrawn.size() > 0
-            && leftBoundary > getLeftX() || rightBoundary < getLeftX() + getWidth()) {
-        if (lastChoiceWasRight) {
-          // We're drawing on the left.
-          if (leftBoundary > getLeftX()) { // If there is still space left.
-
-            // First check if there will be space left after this.
-            if (leftBoundary - leftToBeDrawn.get(leftToBeDrawn.size() - 1).getVisualWidth()
-                - renderer.getScreenWidth() / 18f < getLeftX()) {
-              // If not then don't do anything and just announce no space left on this side.
-              leftBoundary = getLeftX();
-              continue;
-            }
-
-            // Get the drawable we'll be working with.
-            CarouselItem leftChoice = leftToBeDrawn.remove(leftToBeDrawn.size() - 1);
-
-            // Update the left boundary.
-            leftBoundary -= leftChoice.getVisualWidth() - renderer.getScreenWidth() / 18f;
-
-            // Draw it.
-            gl.glPushMatrix();
-            gl.glTranslatef(leftBoundary,
-                            getBottomY() + getHeight() / 2f - leftChoice.getHeight() / 2f, 0);
-            leftChoice.drawable.draw();
-            gl.glPopMatrix();
-          }
-          lastChoiceWasRight = false;
-
-        } else {
-          if (rightBoundary < getLeftX() + getWidth()) {
-
-            // First check if there will be space left after this.
-            if (rightBoundary + leftToBeDrawn.get(leftToBeDrawn.size() - 1).getVisualWidth()
-                + renderer.getScreenWidth() / 18f > getLeftX() + getWidth()) {
-              // If not then don't do anything and just announce no space left on this side.
-              rightBoundary = getLeftX() + getWidth();
-              continue;
-            }
-
-            // Get the drawable we'll be working with.
-            CarouselItem rightChoice = leftToBeDrawn.remove(0);
-
-            // Update the right boundary.
-            rightBoundary += rightChoice.getVisualWidth() + renderer.getScreenWidth() / 18f;
-
-            // Draw it.
-            gl.glPushMatrix();
-            gl.glTranslatef(rightBoundary - rightChoice.getVisualWidth(),
-                            getBottomY() + getHeight() / 2f - rightChoice.getHeight() / 2f, 0);
-            rightChoice.drawable.draw();
-            gl.glPopMatrix();
-          }
-          lastChoiceWasRight = true;
+      // Loop until we run out of space for items to be drawn.
+      while(leftBoundary > leftLimit) {
+        // First check if there will be space left after this.
+        if (leftBoundary - rotationLeft.get(0).getVisualWidth()
+            - renderer.getScreenHeight() / 18f < leftLimit && !noBoundaries) {
+          // If not then don't do anything and just announce no space left on this side.
+          // No boundaries mode prevents this check.
+          leftBoundary = leftLimit;
+          continue;
         }
+
+        // Get the drawable we'll be working with.
+        CarouselItem leftChoice = rotationLeft.get(0);
+
+        // Rotate the list for next time.
+        Collections.rotate(rotationLeft, -1);
+
+        // Update the left boundary.
+        leftBoundary -= leftChoice.getVisualWidth() + renderer.getScreenHeight() / 18f;
+
+        // Draw it.
+        gl.glPushMatrix();
+        gl.glTranslatef(leftBoundary + leftChoice.getVisualWidth() / 2f,
+            getY(EdgePoint.CENTER), 0);
+        leftChoice.drawable.draw();
+        gl.glPopMatrix();
+
       }
+
+      while(rightBoundary < rightLimit) {
+        // First check if there will be space left after this.
+        if (rightBoundary + rotationRight.get(0).getVisualWidth()
+            + renderer.getScreenHeight() / 18f > rightLimit && !noBoundaries) {
+          // If not then don't do anything and just announce no space left on this side.
+          // No boundaries mode prevents this check.
+          rightBoundary = rightLimit;
+          continue;
+        }
+
+        // Get the drawable we'll be working with.
+        CarouselItem rightChoice = rotationRight.get(0);
+        Collections.rotate(rotationRight, -1);
+
+        // Update the right boundary.
+        rightBoundary += rightChoice.getVisualWidth() + renderer.getScreenHeight() / 18f;
+
+        // Draw it.
+        gl.glPushMatrix();
+        gl.glTranslatef(rightBoundary - rightChoice.getVisualWidth() / 2f,
+                        getY(EdgePoint.CENTER), 0);
+        rightChoice.drawable.draw();
+        gl.glPopMatrix();
+      }
+
+      gl.glPopMatrix();
     }
   }
 
@@ -110,16 +137,92 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     if (locked) {
       for (CarouselItem item : choices)
         item.drawable.move(dt);
+      if (!slideX.isDone()) slideX.countEaseOut(dt, 10, 10*dt);
+      if (!inertiaX.isDone()) {
+        if (!isHeld) slideX.setTime(slideX.getTime() + inertiaX.getTime());
+        inertiaX.countEaseOut(dt, 2, renderer.getScreenHeight() * 8 * dt);
+      }
     }
   }
 
   @Override
   public void reloadTexture() {
-
+    for (CarouselItem choice : choices)
+      if (choice.drawable instanceof TextureReloadable)
+        ((TextureReloadable) choice.drawable).reloadTexture();
   }
 
-  public void onMotionEvent() {
+  @Override
+  public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
+    if (event.getActionMasked() == MotionEvent.ACTION_DOWN && isClicked(pointerX[0], pointerY[0]))
+      isHeld = true;
+    else if (event.getActionMasked() == MotionEvent.ACTION_UP && isHeld) {
+      isHeld = false;
 
+    } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && isHeld) {
+      if (event.getHistorySize() > 0) {
+        // Scroll using setTime() so that the timer goal is cleared, which stops the snapping.
+        slideX.setTime(slideX.getTime() + event.getX() - event.getHistoricalX(0));
+
+        // Also set the inertia.
+        inertiaX.setTime(event.getX() - event.getHistoricalX(0));
+        inertiaX.setEndTimeFromNow(0.0);
+      }
+    }
+  }
+
+  /** Assess closest CarouselItem and snap to it. */
+  private void snap() {
+    int closestIndex = choices.indexOf(currentChoice), checkIndex = closestIndex;
+    double closestItemDistance = slideX.getTime();
+    if (slideX.getTime() < 0) {
+      // Check to the right.
+      while (true) {
+        // Rotate the checkIndex right.
+        if (++checkIndex >= choices.size()) checkIndex = 0;
+
+        double checkItemDistance
+            = closestItemDistance + choices.get(closestIndex).getVisualWidth() / 2f
+            + renderer.getScreenHeight() / 18f + choices.get(checkIndex).getVisualWidth() / 2f;
+
+        if (Math.abs(checkItemDistance) > Math.abs(closestItemDistance))
+          // There is no closer item.
+          break;
+        else {
+          // Check the next one.
+          closestIndex = checkIndex;
+          closestItemDistance = checkItemDistance;
+        }
+      }
+    } else {
+      // Check to the left.
+      while (true) {
+        // Rotate the checkIndex right.
+        if (--checkIndex < 0) checkIndex = choices.size() - 1;
+
+        double checkItemDistance
+            = closestItemDistance - choices.get(closestIndex).getVisualWidth() / 2f
+            - renderer.getScreenHeight() / 18f - choices.get(checkIndex).getVisualWidth() / 2f;
+
+        if (Math.abs(checkItemDistance) > Math.abs(closestItemDistance))
+          // There is no closer item.
+          break;
+        else {
+          // Check the next one.
+          closestIndex = checkIndex;
+          closestItemDistance = checkItemDistance;
+        }
+      }
+    }
+
+    // Select that CarouselItem.
+    currentChoice.unchoose();
+    currentChoice = choices.get(closestIndex);
+    currentChoice.choose();
+
+    // Set the slide to a value that makes it seamless.
+    slideX.setTime(closestItemDistance);
+    slideX.setEndTimeFromNow(0);
   }
 
   /**

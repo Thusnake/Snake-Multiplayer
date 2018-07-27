@@ -1,6 +1,7 @@
 package thusnake.snakemultiplayer;
 
 import android.util.Pair;
+import android.view.MotionEvent;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -80,6 +81,20 @@ public abstract class MenuDrawable {
   public void performAction() {
     if (this.action != null && this.isEnabled())
       this.action.perform(this.renderer, this);
+  }
+
+  /**
+   * Handles a MotionEvent passed to it by the current screen context.
+   * @param event The MotionEvent to be handled.
+   * @param pointerX Array of the actual X coordinates of all pointers.
+   * @param pointerY Array of the actual Y coordinates of all pointers.
+   * <br> <br> <i>pointerX</i> and <i>pointerY</i> take into consideration the current screen scroll amount.
+   * <br> <i>event.getX()</i> and <i>event.getY()</i> do not.
+   */
+  public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
+    if (event.getActionMasked() == MotionEvent.ACTION_UP && isClicked(pointerX[0], pointerY[0]))
+      performAction();
+
   }
 
   public void setColors(float[] rgba) {

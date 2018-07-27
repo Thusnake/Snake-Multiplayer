@@ -42,11 +42,14 @@ public class SimpleTimer {
    * @return Whether the timer has reached the end or not.
    */
   public boolean count(double time) {
-    this.time += time * countDirection;
-    if (this.countDirection > 0 && this.time >= this.endTime
-        || this.countDirection < 0 && this.time <= this.endTime) {
-      this.time = this.endTime;
-      return true;
+    if (!isDone()) {
+      this.time += time * countDirection;
+      if (this.countDirection > 0 && this.time >= this.endTime
+          || this.countDirection < 0 && this.time <= this.endTime) {
+        this.time = this.endTime;
+        onDone();
+        return true;
+      }
     }
     return false;
   }
@@ -58,7 +61,7 @@ public class SimpleTimer {
    * @param inertia Determines the minimum speed of the function.
    */
   public void countEaseOut(double time, double easeMultiplier, double inertia) {
-    if (this.initialTime != this.endTime) {
+    if (this.initialTime != this.endTime && !isDone()) {
       double remaining = Math.abs(this.time - this.endTime);
       if (this.countDirection == 1)
         this.time = Math.min(this.time + (remaining * easeMultiplier + inertia) * time,
@@ -66,6 +69,8 @@ public class SimpleTimer {
       else
         this.time = Math.max(this.time - (remaining * easeMultiplier + inertia) * time,
             this.endTime);
+
+      if (isDone()) onDone();
     }
   }
 
@@ -100,6 +105,8 @@ public class SimpleTimer {
   public boolean isDone() {
     return this.time == this.endTime;
   }
+
+  public void onDone() {}
 
   public double getDuration() { return this.duration; }
 }

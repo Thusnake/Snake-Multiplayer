@@ -69,11 +69,10 @@ public abstract class MenuScreen {
    * Handles a motion event passed from the active view.
    * @param event The current event to be handled.
    */
-  public void onMotionEvent(MotionEvent event) {
-    // Pass it to all buttons.
+  public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
+    // Pass it to all drawables.
     for (MenuDrawable drawable : drawables)
-      if (drawable instanceof MenuButton)
-        ((MenuButton) drawable).onMotionEvent(event);
+      drawable.onMotionEvent(event, pointerX, pointerY);
   }
 
   public Set<MenuDrawable> getAllDrawables() { return drawables; }
