@@ -1,40 +1,43 @@
 package thusnake.snakemultiplayer;
 
+import java.util.List;
+
 public abstract class GameSetupScreen extends MenuScreen implements TextureReloadable {
   private final MenuCarousel gameModeCarousel;
-  private final MenuListOfItems listOfOptions;
+  private MenuListOfItems listOfOptions;
   private final MenuButton nextButton;
 
-  public GameSetupScreen(Menu menu) {
+  public GameSetupScreen(Menu menu, List<CarouselItem> gameModeOptions) {
     super(menu);
 
-    gameModeCarousel = makeCarousel();
+    gameModeCarousel = new MenuCarousel(renderer, 0,
+                                        backButton.getBottomY(),
+                                        renderer.getScreenWidth(),
+                                        renderer.getScreenHeight() / 2f,
+                                        MenuDrawable.EdgePoint.TOP_LEFT);
+    for (CarouselItem carouselItem : gameModeOptions)
+      gameModeCarousel.addChoice(carouselItem);
+    gameModeCarousel.confirmChoices();
+
     listOfOptions = new MenuListOfItems(renderer, 10, gameModeCarousel.getBottomY() - 50,
                                         MenuDrawable.EdgePoint.TOP_LEFT);
     nextButton
         = new MenuButton(renderer,
         renderer.getScreenWidth() - 10,
         renderer.getScreenHeight() - 10 - (renderer.getScreenHeight() * 0.2f - 30),
-        renderer.getScreenHeight() * 0.2f - 30,
+        (renderer.getScreenHeight() * 0.2f - 30) * 2,
         renderer.getScreenHeight() * 0.2f - 30,
         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
-      @Override
-      public void onButtonCreated() {
-        drawables.add(new MenuItem(renderer, "next", 0, 0, EdgePoint.BOTTOM_CENTER));
-      }
-
       @Override
       public void performAction() {
         renderer.startGame(new Game(renderer, menu.getSetupBuffer()));
       }
-    };
+    }.withBackgroundImage(R.drawable.ready_button);
 
     drawables.add(gameModeCarousel);
     drawables.add(listOfOptions);
     drawables.add(nextButton);
   }
-
-  public abstract MenuCarousel makeCarousel();
 
   @Override
   public void reloadTexture() {
@@ -42,4 +45,6 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
       if (drawable instanceof TextureReloadable)
         ((TextureReloadable) drawable).reloadTexture();
   }
+
+  public void setListOfOptions(MenuListOfItems listOfOptions) {this.listOfOptions = listOfOptions;}
 }

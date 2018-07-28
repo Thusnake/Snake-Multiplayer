@@ -30,15 +30,8 @@ public abstract class MenuScreen {
                          renderer.getScreenHeight() * 0.2f - 30,
                          MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
-      public void onButtonCreated() {
-        this.drawables.add(new MenuItem(renderer, "<", 0, 0, EdgePoint.BOTTOM_CENTER));
-      }
-
-      @Override
-      public void performAction() {
-        goBack();
-      }
-    };
+      public void performAction() { goBack(); }
+    }.withBackgroundImage(R.drawable.back_button);
 
     drawables.add(backButton);
   }

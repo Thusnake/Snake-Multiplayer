@@ -1,5 +1,8 @@
 package thusnake.snakemultiplayer;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizationScreen {
   private final MenuButton nextButton;
 
@@ -10,43 +13,21 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
         = new MenuButton(renderer,
                          renderer.getScreenWidth() - 10,
                          renderer.getScreenHeight() - 10 - (renderer.getScreenHeight() * 0.2f - 30),
-                         renderer.getScreenHeight() * 0.2f - 30,
+                         (renderer.getScreenHeight() * 0.2f - 30) * 2,
                          renderer.getScreenHeight() * 0.2f - 30,
                          MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
-
-      @Override
-      public void onButtonCreated() {
-        this.drawables.add(new MenuItem(renderer, "next", 0, 0, EdgePoint.BOTTOM_CENTER));
-      }
-
       @Override
       public void performAction() {
         // Go to the single player setup screen.
-        menu.setScreen(new GameSetupScreen(menu) {
-          @Override
-          public MenuCarousel makeCarousel() {
-            MenuCarousel gameModeCarousel = new MenuCarousel(renderer, 0,
-                                                             backButton.getBottomY(),
-                                                             renderer.getScreenWidth(),
-                                                             renderer.getScreenHeight() / 2f,
-                                                             EdgePoint.TOP_LEFT);
-            gameModeCarousel.addImageChoice(R.drawable.ad_icon, "ad");
-            gameModeCarousel.addImageChoice(R.drawable.androidcontrols, "ad");
-            gameModeCarousel.addImageChoice(R.drawable.ladder_icon, "ad");
-            gameModeCarousel.addImageChoice(R.drawable.singleplayer_icon, "ad");
-            gameModeCarousel.addImageChoice(R.drawable.multiplayer_icon, "ad");
-            gameModeCarousel.addImageChoice(R.drawable.options_icon, "ad");
-            gameModeCarousel.confirmChoices();
-            return gameModeCarousel.noBoundaries();
-          }
-
+        List<CarouselItem> gameModeItems = new LinkedList<>();
+        menu.setScreen(new GameSetupScreen(menu, gameModeItems) {
           @Override
           public void goBack() {
             menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
           }
         });
       }
-    };
+    }.withBackgroundImage(R.drawable.next_button);
 
     drawables.add(nextButton);
   }

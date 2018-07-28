@@ -1,6 +1,7 @@
 package thusnake.snakemultiplayer;
 
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
@@ -235,27 +236,6 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
   }
 
   /**
-   * Adds a choice to the carousel, visually represented via an image.
-   * @param resourceId The ID of the image resource.
-   * @param name The name of the choice.
-   */
-  public void addImageChoice(int resourceId, String name) {
-    if (!locked) {
-      // Set the width and the height to fit.
-      Bitmap bitmap = renderer.loadTextureBitmap(resourceId);
-      float width = bitmap.getWidth() > bitmap.getHeight()
-                    ? getHeight()
-                    : getHeight() * bitmap.getWidth() / bitmap.getHeight();
-      float height = bitmap.getWidth() > bitmap.getHeight()
-                     ? getHeight() * bitmap.getHeight() / bitmap.getWidth()
-                     : getHeight();
-      MenuImage image = new MenuImage(renderer, 0, 0, width, height, EdgePoint.CENTER, resourceId);
-
-      choices.add(new CarouselItem(this, image, name));
-    }
-  }
-
-  /**
    * Confirms the choices you've added, locking the list and becoming drawable.
    * @return Whether or not the lock was successful.
    */
@@ -288,6 +268,7 @@ class CarouselItem {
   public void choose() {
     drawable.scale.setEndTimeFromNow(1);
     drawable.setOpacity(1);
+    onChosen();
   }
 
   public void unchoose() {
@@ -298,4 +279,27 @@ class CarouselItem {
   public float getWidth() { return drawable.getWidth(); }
   public float getHeight() { return drawable.getHeight(); }
   public float getVisualWidth() { return drawable.getWidth() * (float) drawable.scale.getTime(); }
+
+  /**
+   * Creates an image, resized to fit a carousel.
+   * @param carousel The carousel it will be part of.
+   * @param resourceId The ID of the image resource.
+   * @return The resulting MenuImage.
+   */
+  @NonNull
+  public static MenuImage makeFittingImage(MenuCarousel carousel, int resourceId) {
+    // Set the width and the height to fit.
+    Bitmap bitmap = carousel.renderer.loadTextureBitmap(resourceId);
+    float width = bitmap.getWidth() > bitmap.getHeight()
+        ? carousel.getHeight()
+        : carousel.getHeight() * bitmap.getWidth() / bitmap.getHeight();
+    float height = bitmap.getWidth() > bitmap.getHeight()
+        ? carousel.getHeight() * bitmap.getHeight() / bitmap.getWidth()
+        : carousel.getHeight();
+
+    return new MenuImage(carousel.renderer, 0, 0, width, height,
+                                    MenuDrawable.EdgePoint.CENTER, resourceId);
+  }
+
+  public void onChosen() {}
 }
