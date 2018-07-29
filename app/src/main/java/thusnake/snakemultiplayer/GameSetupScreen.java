@@ -4,7 +4,7 @@ import java.util.List;
 
 public abstract class GameSetupScreen extends MenuScreen implements TextureReloadable {
   private final MenuCarousel gameModeCarousel;
-  private MenuListOfItems listOfOptions;
+  private MenuContainer listOfOptions;
   private final MenuButton nextButton;
 
   public GameSetupScreen(Menu menu, List<CarouselItem> gameModeOptions) {
@@ -46,5 +46,5 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
         ((TextureReloadable) drawable).reloadTexture();
   }
 
-  public void setListOfOptions(MenuListOfItems listOfOptions) {this.listOfOptions = listOfOptions;}
+  public void setListOfOptions(MenuContainer listOfOptions) {this.listOfOptions = listOfOptions;}
 }

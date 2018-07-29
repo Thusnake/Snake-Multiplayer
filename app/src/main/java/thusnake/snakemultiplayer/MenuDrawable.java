@@ -20,7 +20,7 @@ public abstract class MenuDrawable {
   public enum EdgePoint {    TOP_LEFT,    TOP_CENTER,    TOP_RIGHT,
                             LEFT_CENTER,    CENTER,     RIGHT_CENTER,
                             BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT}
-  final EdgePoint originPoint, alignPoint;
+  EdgePoint originPoint, alignPoint;
 
   public MenuDrawable(GameRenderer renderer, float x, float y, EdgePoint alignPoint,
                       EdgePoint originPoint) {

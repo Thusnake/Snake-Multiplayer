@@ -488,8 +488,8 @@ public class Menu implements Activity {
     }
 
     if (transitionAnimation == null) {
-      currentScreen.drawAll();
       currentScreen.moveAll(dt);
+      currentScreen.drawAll();
     } else {
       transitionAnimation.run(dt);
     }

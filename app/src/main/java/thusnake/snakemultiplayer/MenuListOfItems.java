@@ -1,87 +1,71 @@
 package thusnake.snakemultiplayer;
 
-import java.util.LinkedList;
-import java.util.List;
-
-public class MenuListOfItems extends MenuDrawable implements TextureReloadable {
-  private List<MenuDrawable> contents = new LinkedList<>();
-  private MenuItem expandedItem;
-
-  public MenuListOfItems(GameRenderer renderer, float x, float y, EdgePoint alignPoint,
-                         EdgePoint originPoint) {
-    super(renderer, x, y, alignPoint, originPoint);
-  }
-
+/**
+ * A container which draws all of its items from top to bottom, one under another.
+ */
+public class MenuListOfItems extends MenuContainer {
   public MenuListOfItems(GameRenderer renderer, float x, float y, EdgePoint alignPoint) {
-    this(renderer, x, y, alignPoint, EdgePoint.CENTER);
-  }
-
-  public void draw() {
-    for (MenuDrawable drawable : contents)
-      drawable.draw();
-  }
-
-  public void move(double dt) {
-    super.move(dt);
-    for (MenuDrawable drawable : contents)
-      drawable.move(dt);
+    super(renderer, x, y, alignPoint);
   }
 
   @Override
-  public void reloadTexture() {
-    for (MenuDrawable drawable : contents)
-      if (drawable instanceof TextureReloadable)
-        ((TextureReloadable) drawable).reloadTexture();
+  public void draw() {
+    gl.glPushMatrix();
+
+    // Scaling.
+    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
+    gl.glTranslatef
+        (getEdgePointOffset(alignPoint).first - getEdgePointOffset(originPoint).first,
+         getEdgePointOffset(alignPoint).second - getEdgePointOffset(originPoint).second, 0);
+
+    // Drawing. We're now at the top point of this drawable.
+    for (MenuDrawable drawable : contents) {
+      drawable.draw();
+      gl.glTranslatef(0, -drawable.getHeight(), 0);
+    }
+
+    gl.glPopMatrix();
   }
 
-  // Expands an item which has an integer value, pushing all following items down to make room for
-  // the plus/minus buttons interface.
-  /*public void expandItem(MenuItem item) {
-    if (contents.contains(item) && item.getValue() != null) {
+  @Override
+  public void move(double dt) {
+    super.move(dt);
 
-      // If it has an integer value - expand it.
-      if (item.getValue().getType() == MenuValue.Type.INTEGER) {
-        if (item == expandedItem) {
-          // If the item pressed has already been expanded, then retract it and all other items.
-          for (int itemIndex = 0; itemIndex < con.length; itemIndex++) {
-            items[itemIndex].setDestinationYFromOrigin(0);
-            if (items[itemIndex].getValue() != null) {
-              items[itemIndex].getValue().setExpanded(false);
-              items[itemIndex].getValue().setDestinationYFromOrigin(0);
-            }
-          }
-          this.expandedItemIndex = -1;
-        } else {
-          if (this.expandedItemIndex >= 0 && this.expandedItemIndex < items.length
-              && items[this.expandedItemIndex].getValue() != null)
-            items[this.expandedItemIndex].getValue().setExpanded(false);
-          // Do not push items before it.
-          for (int itemIndex = 0; itemIndex < expandIndex; itemIndex++) {
-            items[itemIndex].setDestinationYFromOrigin(0);
-            if (items[itemIndex].getValue() != null)
-              items[itemIndex].getValue().setDestinationYFromOrigin(0);
-          }
-          // Expand the item itself by half its height.
-          items[expandIndex].setDestinationYFromOrigin(-items[expandIndex].getHeight() / 2);
-          // Push all following items down by the expanded item's height.
-          for (int itemIndex = expandIndex + 1; itemIndex < items.length; itemIndex++) {
-            items[itemIndex].setDestinationYFromOrigin(-items[expandIndex].getHeight());
-            if (items[itemIndex].getValue() != null)
-              items[itemIndex].getValue()
-                  .setDestinationYFromOrigin(-items[expandIndex].getHeight());
-          }
+    // Update width and height before drawing.
+    if (contents.size() > 0) {
+      MenuDrawable firstDrawable = contents.get(0);
+      float lowestX  = firstDrawable.getX(EdgePoint.LEFT_CENTER),
+            highestX = firstDrawable.getX(EdgePoint.RIGHT_CENTER),
+            heightSum = firstDrawable.getHeight();
+      for (MenuDrawable drawable : contents) {
+        if (drawable.equals(firstDrawable)) continue;
 
-          if (items[expandIndex].getValue() != null)
-            items[expandIndex].getValue().setExpanded(true);
-          this.expandedItemIndex = expandIndex;
-        }
-        // If it has a boolean value - just invert the value.
-      } else if (items[expandIndex].getValue().getType() == MenuValue.Type.BOOLEAN) {
-        items[expandIndex].getValue().setValue(!items[expandIndex].getValue().getValueBoolean());
-        // If it has a string value - open the keyboard layout to type.
-      } else {
-        // TODO
+        if (drawable.getX(EdgePoint.LEFT_CENTER) < lowestX)
+          lowestX = drawable.getX(EdgePoint.LEFT_CENTER);
+        if (drawable.getX(EdgePoint.RIGHT_CENTER) > highestX)
+          highestX = drawable.getX(EdgePoint.RIGHT_CENTER);
+
+        heightSum += drawable.getHeight();
       }
+
+      // The width is equal to the distance between its leftmost and its rightmost points.
+      setWidth(highestX - lowestX);
+      // The height is equal to the sum of all its elements' heights.
+      setHeight(heightSum);
     }
-  }*/
+  }
+
+  /**
+   * Adds an item to the list. The item's vertical alignment and its x and y coordinates are
+   * irrelevant.
+   * @param item The item to be added.
+   */
+  @Override
+  public void addItem(MenuDrawable item) {
+    item.alignPoint = MenuDrawable.combineEdgeHalves(EdgePoint.TOP_CENTER, this.alignPoint);
+    item.setX(this.getX());
+    item.setY(0);
+    super.addItem(item);
+  }
 }
