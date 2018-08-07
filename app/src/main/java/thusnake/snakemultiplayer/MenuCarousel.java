@@ -139,8 +139,8 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       for (CarouselItem item : choices)
         item.drawable.move(dt);
       if (!slideX.isDone()) slideX.countEaseOut(dt, 10, 10*dt);
-      if (!inertiaX.isDone()) {
-        if (!isHeld) slideX.setTime(slideX.getTime() + inertiaX.getTime());
+      if (!inertiaX.isDone() && !isHeld) {
+        slideX.setTime(slideX.getTime() + inertiaX.getTime());
         inertiaX.countEaseOut(dt, 2, renderer.getScreenHeight() * 8 * dt);
       }
     }
@@ -155,10 +155,15 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
   @Override
   public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
+    super.onMotionEvent(event, pointerX, pointerY);
+
     if (event.getActionMasked() == MotionEvent.ACTION_DOWN && isClicked(pointerX[0], pointerY[0]))
       isHeld = true;
     else if (event.getActionMasked() == MotionEvent.ACTION_UP && isHeld) {
       isHeld = false;
+
+      // Snap even if no inertia has been generated.
+      if (inertiaX.isDone()) snap();
 
     } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && isHeld) {
       if (event.getHistorySize() > 0) {

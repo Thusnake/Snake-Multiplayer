@@ -68,10 +68,7 @@ public class MenuImage extends MenuDrawable implements TextureReloadable {
     gl.glPushMatrix();
 
     // Translate to the bottom-left corner and add the origin offset, so that the image fits.
-    gl.glTranslatef(-getEdgePointOffset(alignPoint).first + getEdgePointOffset(originPoint).first
-                        + getX(alignPoint),
-                    -getEdgePointOffset(alignPoint).second + getEdgePointOffset(originPoint).second
-                        + getY(alignPoint), 0);
+    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
     gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
     gl.glColor4f(getColors()[0], getColors()[1], getColors()[2], getColors()[3]);
     this.drawable.draw(this.gl);

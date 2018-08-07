@@ -9,7 +9,7 @@ import java.util.LinkedHashSet;
 public abstract class MenuButton extends MenuDrawable implements TextureReloadable {
   private GameRenderer renderer;
   private boolean isHeld = false;
-  private SimpleTimer holdDuration = new SimpleTimer(0.0, 1.0);
+  private SimpleTimer holdDuration = new SimpleTimer(0.0);
   private MenuImage backgroundImage;
   final LinkedHashSet<MenuDrawable> drawables = new LinkedHashSet<>();
 
@@ -31,10 +31,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
 
   public void draw() {
     gl.glPushMatrix();
-    gl.glTranslatef(-getEdgePointOffset(alignPoint).first + getEdgePointOffset(originPoint).first
-                        + getX(alignPoint),
-                    -getEdgePointOffset(alignPoint).second + getEdgePointOffset(originPoint).second
-                        + getY(alignPoint), 0);
+    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
     gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
     gl.glColor4f(getColors()[0], getColors()[1], getColors()[2], getColors()[3]);
 
@@ -57,12 +54,19 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
   }
 
   public void move(double dt) {
+    if (!getXTimer().isDone()) getXTimer().countEaseOut(dt, 8, getXTimer().getDuration() / 4.0);
+    if (!getYTimer().isDone()) getYTimer().countEaseOut(dt, 8, getYTimer().getDuration() / 4.0);
+
     if (!scale.isDone()) {
       if (isHeld) scale.countEaseOut(dt, 2, 120 * dt);
       else        scale.countEaseOut(dt, 8, 5 * dt);
     }
 
-    if (isHeld) if (holdDuration.count(dt)) onHeld();
+    if (isHeld) {
+      holdDuration.count(dt);
+      if (getHoldDuration() - dt < 1 && getHoldDuration() >= 1)
+        onHeld();
+    }
 
     for (MenuDrawable drawable : drawables)
       drawable.move(dt);
@@ -73,42 +77,48 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
    */
   public void onHeld() {}
 
+  public double getHoldDuration() { return holdDuration.getTime(); }
+
   public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
-    float x = pointerX[0];
-    float y = pointerY[0];
+    if (isEnabled()) {
+      float x = pointerX[0];
+      float y = pointerY[0];
 
-    switch(event.getActionMasked()) {
-      case MotionEvent.ACTION_DOWN:
-        if (isClicked(x, y)) {
-          isHeld = true;
-          scale.setEndTimeFromNow(1 - event.getPressure()/3f);
-        }
+      switch (event.getActionMasked()) {
+        case MotionEvent.ACTION_DOWN:
+          if (isClicked(x, y)) {
+            isHeld = true;
+            scale.setEndTimeFromNow(1 - event.getPressure() / 3f);
+          }
 
-        break;
+          break;
 
-      case MotionEvent.ACTION_MOVE:
-        if (isHeld) {
-          if (isClicked(x, y))
-            scale.setEndTimeFromNow(1 - event.getPressure()/3f);
-          else {
+        case MotionEvent.ACTION_MOVE:
+          if (isHeld) {
+            if (isClicked(x, y))
+              scale.setEndTimeFromNow(1 - event.getPressure() / 3f);
+            else {
+              isHeld = false;
+              scale.setEndTimeFromNow(1);
+              holdDuration.reset();
+            }
+          }
+
+          break;
+
+        case MotionEvent.ACTION_UP:
+          if (isClicked(x, y) && isHeld) {
             isHeld = false;
             scale.setEndTimeFromNow(1);
+            holdDuration.reset();
+            performAction();
           }
-        }
 
-        break;
+          break;
 
-      case MotionEvent.ACTION_UP:
-        if (isClicked(x, y) && isHeld) {
-          isHeld = false;
-          scale.setEndTimeFromNow(1);
-          performAction();
-        }
-
-        break;
-
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
 

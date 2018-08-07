@@ -4,6 +4,7 @@ import android.view.MotionEvent;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * A single screen of the game's menu.
@@ -14,7 +15,7 @@ public abstract class MenuScreen {
   final OpenGLES20Activity originActivity;
   final GameRenderer renderer;
   final Menu menu;
-  final Set<MenuDrawable> drawables = new LinkedHashSet<>();
+  final Set<MenuDrawable> drawables = new CopyOnWriteArraySet<>();
   final MenuButton backButton;
 
   MenuScreen(Menu menu) {

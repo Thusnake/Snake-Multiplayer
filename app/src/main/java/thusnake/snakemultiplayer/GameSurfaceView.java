@@ -19,7 +19,7 @@ public class GameSurfaceView extends GLSurfaceView {
   private Context context;
   private GLText glText;
   private double pointerDownDuration = 0;
-  private enum HoldMode {NORMAL, HOR_SCROLL, VER_SCROLL}
+  enum HoldMode {NORMAL, HOR_SCROLL, VER_SCROLL}
   private HoldMode holdMode = HoldMode.NORMAL;
   private float holdOriginX, holdOriginY;
 
@@ -159,4 +159,6 @@ public class GameSurfaceView extends GLSurfaceView {
   }
 
   public GameRenderer getGameRenderer() { return this.gameRenderer; }
+
+  public HoldMode getHoldMode() { return holdMode; }
 }

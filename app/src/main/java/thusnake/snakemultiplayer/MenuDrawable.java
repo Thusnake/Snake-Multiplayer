@@ -92,9 +92,14 @@ public abstract class MenuDrawable {
    * <br> <i>event.getX()</i> and <i>event.getY()</i> do not.
    */
   public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
-    if (event.getActionMasked() == MotionEvent.ACTION_UP && isClicked(pointerX[0], pointerY[0]))
-      performAction();
+    if (!isEnabled()) return;
 
+    if (event.getActionMasked() == MotionEvent.ACTION_UP
+        && isClicked(pointerX[0], pointerY[0])
+        && isEnabled()
+        && renderer.getOriginActivity().getSurfaceView()
+                                              .getHoldMode() == GameSurfaceView.HoldMode.NORMAL)
+      performAction();
   }
 
   public void setColors(float[] rgba) {
@@ -118,8 +123,8 @@ public abstract class MenuDrawable {
     colors[3] = opacity;
   }
 
-  public void setX(double x) { this.x.setTime(x); }
-  public void setY(double y) { this.y.setTime(y); }
+  public void setX(double x) { this.x.setCurrentTime(x); }
+  public void setY(double y) { this.y.setCurrentTime(y); }
   public float getX() { return (float) x.getTime(); }
   public float getY() { return (float) y.getTime(); }
   public float getX(EdgePoint edgePoint) { return getCoordinates(edgePoint).first; }

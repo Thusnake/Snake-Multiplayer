@@ -158,6 +158,8 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   public GameRenderer getRenderer() {return this.gameView.getGameRenderer(); }
 
+  public GameSurfaceView getSurfaceView() { return gameView; }
+
   static int random(int min, int max){
     Random rand = new Random();
     return rand.nextInt((max-min)+1) + min;

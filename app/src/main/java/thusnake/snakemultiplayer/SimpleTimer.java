@@ -7,13 +7,14 @@ package thusnake.snakemultiplayer;
 // Will create a timer which counts down.
 public class SimpleTimer {
   private double time, initialTime, endTime, duration;
+  private boolean goalSet;
   private int countDirection;
 
   public SimpleTimer(double initialTime) {
     this.time = initialTime;
     this.initialTime = initialTime;
-    this.endTime = initialTime;
     this.countDirection = 1;
+    goalSet = false;
   }
 
   public SimpleTimer(double initialTime, double endTime) {
@@ -22,6 +23,7 @@ public class SimpleTimer {
     this.endTime = endTime;
     this.countDirection = (endTime - initialTime > 0) ? 1 : -1;
     this.duration = (endTime - initialTime > 0) ? endTime - initialTime : initialTime - endTime;
+    goalSet = true;
   }
 
   public double getTime() {
@@ -61,7 +63,7 @@ public class SimpleTimer {
    * @param inertia Determines the minimum speed of the function.
    */
   public void countEaseOut(double time, double easeMultiplier, double inertia) {
-    if (this.initialTime != this.endTime && !isDone()) {
+    if (!isDone()) {
       double remaining = Math.abs(this.time - this.endTime);
       if (this.countDirection == 1)
         this.time = Math.min(this.time + (remaining * easeMultiplier + inertia) * time,
@@ -79,7 +81,11 @@ public class SimpleTimer {
   }
 
   public void setTime(double time) { this.time = time; this.endTime = time; }
-  public void offsetTime(double offset) { this.time += offset; this.endTime += offset; }
+  public void setCurrentTime(double time) { this.time = time; }
+  public void offsetTime(double offset) {
+    this.time += offset;
+    if (goalSet) this.endTime += offset;
+  }
 
   /**
    * Sets a new end time of the timer, retaining the current time and initial time.
@@ -89,6 +95,7 @@ public class SimpleTimer {
     this.endTime = time;
     this.countDirection = (endTime - initialTime > 0) ? 1 : -1;
     this.duration = (endTime - initialTime > 0) ? endTime - initialTime : initialTime - endTime;
+    goalSet = true;
   }
 
   /**
@@ -100,10 +107,11 @@ public class SimpleTimer {
     this.endTime = time;
     this.countDirection = (endTime - initialTime > 0) ? 1 : -1;
     this.duration = (endTime - initialTime > 0) ? endTime - initialTime : initialTime - endTime;
+    goalSet = true;
   }
 
   public boolean isDone() {
-    return this.time == this.endTime;
+    return !goalSet || time == endTime;
   }
 
   public void onDone() {}

@@ -1,5 +1,7 @@
 package thusnake.snakemultiplayer;
 
+import android.view.MotionEvent;
+
 /**
  * A container which draws all of its items from top to bottom, one under another.
  */
@@ -15,15 +17,11 @@ public class MenuListOfItems extends MenuContainer {
     // Scaling.
     gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
     gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
-    gl.glTranslatef
-        (getEdgePointOffset(alignPoint).first - getEdgePointOffset(originPoint).first,
-         getEdgePointOffset(alignPoint).second - getEdgePointOffset(originPoint).second, 0);
+    gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
     // Drawing. We're now at the top point of this drawable.
-    for (MenuDrawable drawable : contents) {
+    for (MenuDrawable drawable : contents)
       drawable.draw();
-      gl.glTranslatef(0, -drawable.getHeight(), 0);
-    }
 
     gl.glPopMatrix();
   }
@@ -38,6 +36,7 @@ public class MenuListOfItems extends MenuContainer {
       float lowestX  = firstDrawable.getX(EdgePoint.LEFT_CENTER),
             highestX = firstDrawable.getX(EdgePoint.RIGHT_CENTER),
             heightSum = firstDrawable.getHeight();
+
       for (MenuDrawable drawable : contents) {
         if (drawable.equals(firstDrawable)) continue;
 
@@ -53,6 +52,14 @@ public class MenuListOfItems extends MenuContainer {
       setWidth(highestX - lowestX);
       // The height is equal to the sum of all its elements' heights.
       setHeight(heightSum);
+
+      // Once the container's coordinates have been set, arrange the items inside vertically.
+      heightSum = 0;
+      for (MenuDrawable drawable : contents) {
+        drawable.setX(this.getX());
+        drawable.setY(this.getY(EdgePoint.TOP_CENTER) - heightSum);
+        heightSum += drawable.getHeight();
+      }
     }
   }
 

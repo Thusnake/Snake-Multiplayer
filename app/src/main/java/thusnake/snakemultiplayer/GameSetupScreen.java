@@ -3,11 +3,11 @@ package thusnake.snakemultiplayer;
 import java.util.List;
 
 public abstract class GameSetupScreen extends MenuScreen implements TextureReloadable {
-  private final MenuCarousel gameModeCarousel;
-  private MenuContainer listOfOptions;
+  final MenuCarousel gameModeCarousel;
+  private MenuListOfItems listOfOptions;
   private final MenuButton nextButton;
 
-  public GameSetupScreen(Menu menu, List<CarouselItem> gameModeOptions) {
+  public GameSetupScreen(Menu menu) {
     super(menu);
 
     gameModeCarousel = new MenuCarousel(renderer, 0,
@@ -15,9 +15,6 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
                                         renderer.getScreenWidth(),
                                         renderer.getScreenHeight() / 2f,
                                         MenuDrawable.EdgePoint.TOP_LEFT);
-    for (CarouselItem carouselItem : gameModeOptions)
-      gameModeCarousel.addChoice(carouselItem);
-    gameModeCarousel.confirmChoices();
 
     listOfOptions = new MenuListOfItems(renderer, 10, gameModeCarousel.getBottomY() - 50,
                                         MenuDrawable.EdgePoint.TOP_LEFT);
@@ -46,5 +43,32 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
         ((TextureReloadable) drawable).reloadTexture();
   }
 
-  public void setListOfOptions(MenuContainer listOfOptions) {this.listOfOptions = listOfOptions;}
+  public void setListOfOptions(List<MenuDrawable> listOfDrawables) {
+    MenuListOfItems listOfItems =
+        new MenuListOfItems(renderer,
+                            10,
+                            gameModeCarousel.getY(MenuDrawable.EdgePoint.BOTTOM_LEFT),
+                            MenuDrawable.EdgePoint.TOP_LEFT);
+
+    for (MenuDrawable drawable : listOfDrawables) {
+      listOfItems.addItem(drawable);
+    }
+
+    drawables.remove(listOfOptions);
+    this.listOfOptions = listOfItems;
+    drawables.add(listOfOptions);
+  }
+
+  public void addGameModeItem(int resourceId, String name, List<MenuDrawable> options) {
+    gameModeCarousel.addChoice(
+        new CarouselItem(gameModeCarousel,
+                         CarouselItem.makeFittingImage(gameModeCarousel, resourceId),
+                         name) {
+          @Override
+          public void onChosen() {
+            super.onChosen();
+            setListOfOptions(options);
+          }
+        });
+  }
 }

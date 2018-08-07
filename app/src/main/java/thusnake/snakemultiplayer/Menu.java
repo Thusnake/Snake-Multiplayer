@@ -278,64 +278,10 @@ public class Menu implements Activity {
     this.menuItemsConnect[4].setAction((action,origin) -> renderer.getMenu().beginSearch());
     this.menuItemsConnect[6].setAction((action,origin) -> renderer.getMenu().beginHost());
 
-    this.menuItemsBoard[0].setValue(new MenuValue(this.renderer, setupBuffer.horizontalSquares,
-        screenWidth * 2 - 10,
-        this.menuItemsBoard[0].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
-      @Override
-      public void setValue(int value) {
-        super.setValue(value);
-
-        if (originActivity.isHost())
-          originActivity.writeBytesAuto(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) value});
-      }
-    });
-    this.menuItemsBoard[1].setValue(new MenuValue(this.renderer, setupBuffer.verticalSquares,
-        screenWidth * 2 - 10,
-        this.menuItemsBoard[1].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
-      @Override
-      public void setValue(int value) {
-        super.setValue(value);
-
-        if (originActivity.isHost())
-          originActivity.writeBytesAuto(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) value});
-      }
-    });
-    this.menuItemsBoard[2].setValue(new MenuValue(this.renderer, setupBuffer.speed,
-        screenWidth * 2 - 10,
-        this.menuItemsBoard[2].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
-      @Override
-      public void setValue(int value) {
-        super.setValue(value);
-
-        if (originActivity.isHost())
-          originActivity.writeBytesAuto(new byte[] {Protocol.SPEED_CHANGED, (byte) value});
-      }
-    });
-    this.menuItemsBoard[3].setValue(new MenuValue(this.renderer, setupBuffer.stageBorders,
-        screenWidth * 2 - 10,
-        this.menuItemsBoard[3].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
-      @Override
-      public void setValue(boolean newValue) {
-        super.setValue(newValue);
-
-        if (originActivity.isHost())
-          originActivity.writeBytesAuto(
-              new byte[] {Protocol.STAGE_BORDERS_CHANGED, (byte) (newValue ? 1 : 0)});
-      }
-    });
-
-    this.menuItemsBoard[0].getValue().setBoundaries(1, 100);
-    this.menuItemsBoard[1].getValue().setBoundaries(1, 100);
-    this.menuItemsBoard[2].getValue().setBoundaries(1, 100);
-
     this.addSnakeButton.setAction((action, origin) -> renderer.getMenu().addSnake());
 
     this.menuItemsPlayersOptions[0]
         .setAction((action, origin) -> renderer.getMenu().cyclePlayerControlTypes());
-
-    this.menuItemsPlayersOptions[0].setValue(new MenuValue(this.renderer, "",
-        screenWidth * 3 - 10, this.menuItemsPlayersOptions[0].getBottomY(),
-        MenuDrawable.EdgePoint.BOTTOM_RIGHT));
 
     // Create the graphics.
     this.colorSelectionSquare = new MenuButton[8];
@@ -590,9 +536,6 @@ public class Menu implements Activity {
       case WIFI:
         break;
     }
-    // Update the display value.
-    this.menuItemsPlayersOptions[0].getValue()
-        .setValue(this.players[this.playersOptionsIndex].getControlType().toString());
   }
 
   // Sets the currently selected player's color to a color from a given color square index.

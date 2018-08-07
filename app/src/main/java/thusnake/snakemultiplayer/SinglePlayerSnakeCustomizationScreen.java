@@ -19,13 +19,20 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
       @Override
       public void performAction() {
         // Go to the single player setup screen.
-        List<CarouselItem> gameModeItems = new LinkedList<>();
-        menu.setScreen(new GameSetupScreen(menu, gameModeItems) {
+        GameSetupScreen setupScreen = new GameSetupScreen(menu) {
           @Override
           public void goBack() {
             menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
           }
-        });
+        };
+
+        setupScreen.gameModeCarousel.noBoundaries();
+        setupScreen.addGameModeItem(R.drawable.options_icon, "test",
+                                    OptionsBuilder.defaultOptions(renderer));
+        setupScreen.addGameModeItem(R.drawable.singleplayer_icon, "test", new LinkedList<>());
+        setupScreen.gameModeCarousel.confirmChoices();
+
+        menu.setScreen(setupScreen);
       }
     }.withBackgroundImage(R.drawable.next_button);
 

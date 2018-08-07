@@ -8,11 +8,9 @@ import com.android.texample.GLText;
 
 // Holds a single menu item, which functions as a button.
 public class MenuItem extends MenuDrawable {
-  public enum Alignment {LEFT, RIGHT, CENTER}
   private String text;
   private double easeOutMultiplier, easeOutInertia;
   private GLText glText;
-  private MenuValue value;
   private String description;
   private float descriptionOpacity = 1;
 
@@ -34,10 +32,10 @@ public class MenuItem extends MenuDrawable {
     this(renderer, text, x, y, alignPoint, EdgePoint.CENTER);
   }
 
-  // Simply draws the text representation of the button. Has to be called inside a block of
-  // GLText.
   @Override
   public void draw() {
+    gl.glPushMatrix();
+
     glText.begin(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
     glText.draw(this.text, this.getLeftX(), this.getBottomY());
     glText.end();
@@ -49,14 +47,16 @@ public class MenuItem extends MenuDrawable {
       glText.end();
       gl.glPopMatrix();
     }
-    if (this.value != null) this.value.draw();
+
+    gl.glPopMatrix();
   }
 
   public void move(double dt) {
     super.move(dt);
-    if (!this.getXTimer().isDone()) this.getXTimer().countEaseOut(dt, easeOutMultiplier, this.getXTimer().getDuration() * easeOutInertia);
-    if (!this.getYTimer().isDone()) this.getYTimer().countEaseOut(dt, easeOutMultiplier, this.getYTimer().getDuration() * easeOutInertia);
-    if (this.value != null) this.value.move(dt);
+    if (!getXTimer().isDone())
+      getXTimer().countEaseOut(dt, easeOutMultiplier, getXTimer().getDuration() * easeOutInertia);
+    if (!getYTimer().isDone())
+      getYTimer().countEaseOut(dt, easeOutMultiplier, getYTimer().getDuration() * easeOutInertia);
   }
 
   public void setColors(float r, float g, float b, float a) {
@@ -72,41 +72,15 @@ public class MenuItem extends MenuDrawable {
     this.text = text;
   }
   public void setDescription(String text) {
-    // TODO maybe have a way for descriptions to also be right-aligned.
     this.description = text;
   }
 
   public void setDescriptionOpacity(float opacity) { this.descriptionOpacity = opacity; }
 
-  public void setValue(MenuValue value) { this.value = value; }
-
-  // Returns true if the given coordinates are in the button.
-  @Override
-  public boolean isClicked(float x, float y) {
-    return (super.isClicked(x,y) || this.value != null && this.value.isClicked(x, y));
-  }
-
   public boolean isVisible() { return this.isDrawable() || this.text.equals(""); }
   public GameRenderer getRenderer() { return this.renderer; }
-  public MenuValue getValue() { return this.value; }
   public String getText() { return this.text; }
   public String getDescription() { return this.description; }
-
-  @Override
-  public void setDestinationX(double destinationX) {
-    super.setDestinationX(destinationX);
-  }
-
-  @Override
-  public void setDestinationXFromOrigin(double offsetX) {
-    super.setDestinationXFromOrigin(offsetX);
-  }
-
-  @Override
-  public void setDestinationToInitial() {
-    this.getXTimer().setEndTimeFromNow(this.getInitialX());
-    this.getYTimer().setEndTimeFromNow(this.getInitialY());
-  }
 
   public void setEaseOutVariables(double multiplier, double inertia) {
     this.easeOutMultiplier = multiplier;
