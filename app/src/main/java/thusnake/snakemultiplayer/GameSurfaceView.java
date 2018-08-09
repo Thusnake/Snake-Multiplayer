@@ -140,6 +140,10 @@ public class GameSurfaceView extends GLSurfaceView {
           break;
       }
 
+      // Pass the event to the current screen to handle.
+      if (holdMode == HoldMode.NORMAL)
+        gameRenderer.getMenu().getCurrentScreen().onMotionEvent(e, pointerX, pointerY);
+
       // Nullify the hold mode if the user releases their pointer.
       if (e.getAction() == ACTION_UP) {
         holdMode = HoldMode.NORMAL;
@@ -150,10 +154,6 @@ public class GameSurfaceView extends GLSurfaceView {
         holdOriginX = e.getRawX();
         holdOriginY = e.getRawY();
       }
-
-      // Pass the event to the current screen to handle.
-      if (holdMode == HoldMode.NORMAL)
-        gameRenderer.getMenu().getCurrentScreen().onMotionEvent(e, pointerX, pointerY);
     }
     return true;
   }

@@ -13,7 +13,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
   private final List<CarouselItem> choices = new LinkedList<>();
   private CarouselItem currentChoice;
   private boolean locked = false, isHeld = false, noBoundaries = false;
-  private SimpleTimer slideX = new SimpleTimer(0.0),
+  private SimpleTimer slideX = new SimpleTimer(0.0), holdTimer = new SimpleTimer(0.0, 1.0),
       inertiaX = new SimpleTimer(0.0) {
     @Override
     public void onDone() {
@@ -142,6 +142,11 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       if (!inertiaX.isDone() && !isHeld) {
         slideX.setTime(slideX.getTime() + inertiaX.getTime());
         inertiaX.countEaseOut(dt, 2, renderer.getScreenHeight() * 8 * dt);
+      } else if (isHeld) {
+        if (holdTimer.count(dt)) {
+          snap();
+          isHeld = false;
+        }
       }
     }
   }
@@ -157,15 +162,18 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
   public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
     super.onMotionEvent(event, pointerX, pointerY);
 
-    if (event.getActionMasked() == MotionEvent.ACTION_DOWN && isClicked(pointerX[0], pointerY[0]))
+    if (event.getActionMasked() == MotionEvent.ACTION_DOWN && isClicked(pointerX[0], pointerY[0])) {
       isHeld = true;
-    else if (event.getActionMasked() == MotionEvent.ACTION_UP && isHeld) {
+      holdTimer.reset();
+
+    } else if (event.getActionMasked() == MotionEvent.ACTION_UP && isHeld) {
       isHeld = false;
 
       // Snap even if no inertia has been generated.
       if (inertiaX.isDone()) snap();
 
     } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && isHeld) {
+      holdTimer.reset();
       if (event.getHistorySize() > 0) {
         // Scroll using setTime() so that the timer goal is cleared, which stops the snapping.
         slideX.setTime(slideX.getTime() + event.getX() - event.getHistoricalX(0));
