@@ -14,6 +14,7 @@ public abstract class MenuDrawable {
   private float width, height, initialX, initialY;
   private float[] colors = {1f, 1f, 1f, 1f}, disabledColors = {1f, 1f, 1f, 0.5f};
   private MenuAction action;
+  private MenuAnimation animation;
   protected final GameRenderer renderer;
   protected final GL10 gl;
   private boolean drawable = true, enabled = true;
@@ -45,6 +46,8 @@ public abstract class MenuDrawable {
   public void move(double dt) {
     if (!scale.isDone())
       scale.countEaseOut(dt, 8, 5 * dt);
+
+    if (animation != null) animation.run(dt);
   }
 
   // The non-abstract methods.
@@ -183,6 +186,8 @@ public abstract class MenuDrawable {
   public void setDestinationYFromOrigin(double offsetY) {
     this.y.setEndTimeFromNow(this.initialY + offsetY);
   }
+
+  public void setAnimation(MenuAnimation animation) { this.animation = animation; }
 
 
   public void setDrawable(boolean drawable) { this.drawable = drawable; }

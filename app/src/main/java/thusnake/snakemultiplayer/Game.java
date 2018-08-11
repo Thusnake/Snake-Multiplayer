@@ -91,7 +91,13 @@ class Game extends BoardDrawer implements Activity {
                           GameSetupBuffer.gameModeToString(setupBuffer.gameMode)
                               + " - " + GameSetupBuffer.difficultyToString(setupBuffer.difficulty),
                           -10, renderer.getScreenHeight() - 10, MenuDrawable.EdgePoint.TOP_RIGHT);
-    gameModeAnnouncement.x.setEndTimeFromNow(10 + gameModeAnnouncement.getWidth()); // TODO
+    gameModeAnnouncement
+        .setAnimation(new MenuAnimation(gameModeAnnouncement)
+          .addKeyframe(new MoveKeyframe(0.5, 10 + gameModeAnnouncement.getWidth(),
+                                        gameModeAnnouncement.getY(), BezierTimer.easeOutBack))
+          .addKeyframe(new Keyframe(2.0))
+          .addKeyframe(new MoveKeyframe(0.5, -10, gameModeAnnouncement.getY(),
+                                        BezierTimer.easeInBack)));
 
     this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
         -renderer.getScreenWidth() / 2,

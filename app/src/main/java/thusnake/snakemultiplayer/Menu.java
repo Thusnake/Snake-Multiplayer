@@ -56,7 +56,7 @@ public class Menu implements Activity {
 
   private final OpenGLES20Activity originActivity;
   private MenuScreen currentScreen;
-  private MenuAnimation transitionAnimation;
+  private MenuScreenAnimation transitionAnimation;
 
   // Menu variables
   private GameSetupBuffer setupBuffer = new GameSetupBuffer();
