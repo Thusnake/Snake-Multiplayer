@@ -27,7 +27,7 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
-        renderer.startGame(new Game(renderer, menu.getSetupBuffer()));
+        renderer.startGame(menu.getSetupBuffer().createGame(renderer));
       }
     }.withBackgroundImage(R.drawable.ready_button);
 
@@ -50,16 +50,17 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
                             gameModeCarousel.getY(MenuDrawable.EdgePoint.BOTTOM_LEFT),
                             MenuDrawable.EdgePoint.TOP_LEFT);
 
-    for (MenuDrawable drawable : listOfDrawables) {
-      listOfItems.addItem(drawable);
-    }
+    if (listOfDrawables != null)
+      for (MenuDrawable drawable : listOfDrawables)
+        listOfItems.addItem(drawable);
 
     drawables.remove(listOfOptions);
     this.listOfOptions = listOfItems;
     drawables.add(listOfOptions);
   }
 
-  public void addGameModeItem(int resourceId, String name, List<MenuDrawable> options) {
+  public void addGameModeItem(int resourceId, String name, List<MenuDrawable> options,
+                              GameSetupBuffer.GameMode gameMode) {
     gameModeCarousel.addChoice(
         new CarouselItem(gameModeCarousel,
                          CarouselItem.makeFittingImage(gameModeCarousel, resourceId),
@@ -68,6 +69,7 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
           public void onChosen() {
             super.onChosen();
             setListOfOptions(options);
+            menu.getSetupBuffer().gameMode = gameMode;
           }
         });
   }

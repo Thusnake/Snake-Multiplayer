@@ -22,13 +22,13 @@ class Game extends BoardDrawer implements Activity {
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
   private SimpleTimer gameOverTimer = new SimpleTimer(0.0);
-  private enum GameMode {SINGLEPLAYER, MULTIPLAYER};
-  private GameMode gameMode;
   private int winner;
   private double speed;
   private float screenTransformX = 0f, screenTransformY = 0f;
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
+  private final String scoreKey;
+  private final MenuItem gameModeAnnouncement;
   private final Player[] players;
   private int playersPlaying;
   private final List<Apple> apples = new LinkedList<>();
@@ -53,6 +53,7 @@ class Game extends BoardDrawer implements Activity {
     this.originActivity = renderer.getOriginActivity();
     this.scores = originActivity.getSharedPreferences("scores", Context.MODE_PRIVATE);
     this.scoresEditor = scores.edit();
+    scoreKey = setupBuffer.gameMode.toString() + "-" + setupBuffer.difficulty;
 
     // Get the options from the setup buffer.
     this.players = setupBuffer.players;
@@ -69,20 +70,14 @@ class Game extends BoardDrawer implements Activity {
     for (Player player : players)
       if (player != null && player.getControlType() != Player.ControlType.OFF) playersToCreate++;
     if (playersToCreate == 0) this.renderer.quitGame();
-    else if (playersToCreate == 1) this.gameMode = GameMode.SINGLEPLAYER;
-    else this.gameMode = GameMode.MULTIPLAYER;
 
     // Prepare the players
-    if (gameMode == GameMode.SINGLEPLAYER) {
-      this.players[0].prepareForGame(this);
-    } else {
-      for (int index = 0; index < playersToCreate; index++) {
-        if (this.players[index] == null) {
-          this.playersPlaying = index;
-          break;
-        }
-        this.players[index].prepareForGame(this);
+    for (int index = 0; index < playersToCreate; index++) {
+      if (this.players[index] == null) {
+        this.playersPlaying = index;
+        break;
       }
+      this.players[index].prepareForGame(this);
     }
 
     // Create the apple.
@@ -92,6 +87,11 @@ class Game extends BoardDrawer implements Activity {
     this.boardLines[0] = new Square(renderer, 0, getScreenHeight()/3f, getScreenWidth(), 4);
     this.boardLines[1] = new Square(renderer, 0, getScreenHeight()*2f/3f, getScreenWidth(), 4);
     this.boardFade = new Square(renderer, 0.0, 0.0, getScreenWidth(), getScreenHeight());
+    gameModeAnnouncement = new MenuItem(renderer,
+                          GameSetupBuffer.gameModeToString(setupBuffer.gameMode)
+                              + " - " + GameSetupBuffer.difficultyToString(setupBuffer.difficulty),
+                          -10, renderer.getScreenHeight() - 10, MenuDrawable.EdgePoint.TOP_RIGHT);
+    gameModeAnnouncement.x.setEndTimeFromNow(10 + gameModeAnnouncement.getWidth()); // TODO
 
     this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
         -renderer.getScreenWidth() / 2,
@@ -189,6 +189,8 @@ class Game extends BoardDrawer implements Activity {
 
     // Draw countdown text.
     if (beginTimer.getTime() < 2.5) this.drawCountdownText(beginTimer);
+    gameModeAnnouncement.move(dt);
+    gameModeAnnouncement.draw();
 
     // Draw text for when the game is over.
     if (gameOver) {
@@ -196,13 +198,13 @@ class Game extends BoardDrawer implements Activity {
       gl.glColor4f(0f, 0f, 0f, Math.min((float) gameOverTimer.getTime() * 0.375f, 0.75f));
       boardFade.draw(gl);
 
-      if (gameMode == GameMode.SINGLEPLAYER) {
+      if (isSingleplayer()) {
         gl.glPushMatrix();
         gl.glScalef(0.25f, 0.25f, 1f);
         glText.begin();
         glText.drawC("Score: " + players[0].getScore(), this.getScreenWidth() * 2f,
             this.getScreenHeight() / 2f * 4 + glText.getCharHeight() * (0.077f - 2f));
-        glText.drawC("High Score: " + scores.getInt("high_score_classic", 0),
+        glText.drawC("High Score: " + scores.getInt("high_score_" + scoreKey, 0),
             this.getScreenWidth() * 2,
             this.getScreenHeight()/2 * 4 + glText.getCharHeight() * 2.077f);
         glText.end();
@@ -240,16 +242,16 @@ class Game extends BoardDrawer implements Activity {
   }
 
   protected boolean checkGameOver() {
-    if ((gameMode == GameMode.MULTIPLAYER && this.getAlivePlayers() <= 1)
-        || (gameMode == GameMode.SINGLEPLAYER && this.getAlivePlayers() == 0)
+    if ((!isSingleplayer() && this.getAlivePlayers() <= 1)
+        || (isSingleplayer() && this.getAlivePlayers() == 0)
         && !gameOver) {
       gameOver = true;
 
-      if (gameMode == GameMode.MULTIPLAYER) {
+      if (!isSingleplayer()) {
         winner = this.assessWinner();
-      } else if (gameMode == GameMode.SINGLEPLAYER) {
-        if (players[0].getScore() > scores.getInt("high_score_classic", 0)) {
-          scoresEditor.putInt("high_score_classic", players[0].getScore());
+      } else {
+        if (players[0].getScore() > scores.getInt("high_score_" + scoreKey, 0)) {
+          scoresEditor.putInt("high_score_" + scoreKey, players[0].getScore());
           scoresEditor.commit();
         }
       }
@@ -257,7 +259,7 @@ class Game extends BoardDrawer implements Activity {
       gameOverTopItem.setDestinationX(getScreenWidth() / 2);
       gameOverBottomItem.setDestinationX(getScreenWidth() / 2);
 
-      if (gameMode == GameMode.SINGLEPLAYER)
+      if (isSingleplayer())
         gameOverMiddleItem.setText("Game Over");
       else {
         if (winner == -1)
@@ -299,7 +301,6 @@ class Game extends BoardDrawer implements Activity {
 
   // Getters.
   public GameRenderer getRenderer() { return this.renderer; }
-  public GameMode getGameMode() { return this.gameMode; }
   public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
   public List<Apple> getApples() { return this.apples; }
@@ -322,6 +323,7 @@ class Game extends BoardDrawer implements Activity {
     }
     return localPlayers;
   }
+  public boolean isSingleplayer() { return players.length == 1; }
   public int assessWinner() {
     for (Player player : players) {
       if (player != null && player.isAlive()) return player.getNumber();

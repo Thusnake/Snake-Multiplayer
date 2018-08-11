@@ -13,10 +13,18 @@ final class OptionsBuilder {
     return list;
   }
 
+  static List<MenuDrawable> justDifficulty(GameRenderer renderer) {
+    List<MenuDrawable> list = new LinkedList<>();
+    list.add(difficulty(renderer));
+    return list;
+  }
+
 
   static MenuNumericalValue horizontalSquares(GameRenderer renderer) {
-    MenuNumericalValue value = new MenuNumericalValue(renderer, 20, renderer.getScreenWidth() - 10,
-                                                      0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+    MenuNumericalValue value = new MenuNumericalValue(renderer,
+                                              renderer.getMenu().getSetupBuffer().horizontalSquares,
+                                              renderer.getScreenWidth() - 10,
+                                              0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
       public void onValueChange(int newValue) {
         super.onValueChange(newValue);
@@ -29,8 +37,10 @@ final class OptionsBuilder {
   }
 
   static MenuNumericalValue verticalSquares(GameRenderer renderer) {
-    MenuNumericalValue value = new MenuNumericalValue(renderer, 20, renderer.getScreenWidth() - 10,
-                                                      0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+    MenuNumericalValue value = new MenuNumericalValue(renderer,
+                                                renderer.getMenu().getSetupBuffer().verticalSquares,
+                                                renderer.getScreenWidth() - 10,
+                                                0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
       public void onValueChange(int newValue) {
         super.onValueChange(newValue);
@@ -43,8 +53,10 @@ final class OptionsBuilder {
   }
 
   static MenuNumericalValue speed(GameRenderer renderer) {
-    MenuNumericalValue value = new MenuNumericalValue(renderer, 10, renderer.getScreenWidth() - 10,
-        0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+    MenuNumericalValue value = new MenuNumericalValue(renderer,
+                                                      renderer.getMenu().getSetupBuffer().speed,
+                                                      renderer.getScreenWidth() - 10,
+                                                      0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
       public void onValueChange(int newValue) {
         super.onValueChange(newValue);
@@ -57,8 +69,10 @@ final class OptionsBuilder {
   }
 
   static MenuBooleanValue stageBorders(GameRenderer renderer) {
-    MenuBooleanValue value = new MenuBooleanValue(renderer, false, renderer.getScreenWidth() - 10,
-        0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+    MenuBooleanValue value = new MenuBooleanValue(renderer,
+                                                  renderer.getMenu().getSetupBuffer().stageBorders,
+                                                  renderer.getScreenWidth() - 10,
+                                                  0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
       public void onValueChange(boolean newValue) {
         super.onValueChange(newValue);
@@ -66,6 +80,37 @@ final class OptionsBuilder {
       }
     };
     addDescriptionItem(value, "wall death");
+    return value;
+  }
+
+  static MenuCustomValue difficulty(GameRenderer renderer) {
+    List<String> strings = new LinkedList<>();
+    strings.add(GameSetupBuffer.difficultyToString(0));
+    strings.add(GameSetupBuffer.difficultyToString(1));
+    strings.add(GameSetupBuffer.difficultyToString(2));
+    strings.add(GameSetupBuffer.difficultyToString(3));
+    strings.add(GameSetupBuffer.difficultyToString(4));
+    MenuCustomValue value = new MenuCustomValue(renderer, strings, renderer.getScreenWidth() - 10,
+        0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+      @Override
+      public void onValueChange(String newValue) {
+        super.onValueChange(newValue);
+        switch(newValue) {
+          case "Mild":
+            renderer.getMenu().getSetupBuffer().difficulty = 0; break;
+          case "Fair":
+            renderer.getMenu().getSetupBuffer().difficulty = 1; break;
+          case "Tough":
+            renderer.getMenu().getSetupBuffer().difficulty = 2; break;
+          case "Bonkers":
+            renderer.getMenu().getSetupBuffer().difficulty = 3; break;
+          case "Ultimate":
+            renderer.getMenu().getSetupBuffer().difficulty = 4; break;
+        }
+      }
+    };
+    addDescriptionItem(value, "");
+
     return value;
   }
 

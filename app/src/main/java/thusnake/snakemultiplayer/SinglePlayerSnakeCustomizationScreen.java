@@ -27,9 +27,14 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
         };
 
         setupScreen.gameModeCarousel.noBoundaries();
-        setupScreen.addGameModeItem(R.drawable.options_icon, "test",
-                                    OptionsBuilder.defaultOptions(renderer));
-        setupScreen.addGameModeItem(R.drawable.singleplayer_icon, "test", new LinkedList<>());
+        setupScreen.addGameModeItem(R.drawable.options_icon, "classic",
+            OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.CLASSIC);
+        setupScreen.addGameModeItem(R.drawable.options_icon, "speedy",
+            OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.SPEEDY);
+        setupScreen.addGameModeItem(R.drawable.options_icon, "vs ai",
+            OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.VS_AI);
+        setupScreen.addGameModeItem(R.drawable.singleplayer_icon, "custom",
+            OptionsBuilder.defaultOptions(renderer), GameSetupBuffer.GameMode.CUSTOM);
         setupScreen.gameModeCarousel.confirmChoices();
 
         menu.setScreen(setupScreen);
