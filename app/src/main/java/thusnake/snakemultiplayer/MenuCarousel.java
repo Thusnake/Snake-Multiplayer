@@ -4,17 +4,17 @@ import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MenuCarousel extends MenuDrawable implements TextureReloadable {
+  private final float MARGIN;
   private final List<CarouselItem> choices = new LinkedList<>();
   private CarouselItem currentChoice;
-  private boolean locked = false, isHeld = false, noBoundaries = false;
-  private SimpleTimer slideX = new SimpleTimer(0.0), holdTimer = new SimpleTimer(0.0, 1.0),
-      inertiaX = new SimpleTimer(0.0) {
+  private boolean locked = false, pointerDown = false,  isHeld = false, noBoundaries = false;
+  private SimpleTimer slideX = new SimpleTimer(0.0), idleTimer = new SimpleTimer(0.0, 1.0),
+      holdTimer = new SimpleTimer(0.0, 0.5), inertiaX = new SimpleTimer(0.0) {
     @Override
     public void onDone() {
       super.onDone();
@@ -28,6 +28,8 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
     setWidth(width);
     setHeight(height);
+
+    MARGIN = renderer.getScreenHeight() / 18f;
   }
 
   public MenuCarousel noBoundaries() { noBoundaries = true; return this; }
@@ -78,7 +80,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       while(leftBoundary > leftLimit) {
         // First check if there will be space left after this.
         if (leftBoundary - rotationLeft.get(0).getVisualWidth()
-            - renderer.getScreenHeight() / 18f < leftLimit && !noBoundaries) {
+            - MARGIN < leftLimit && !noBoundaries) {
           // If not then don't do anything and just announce no space left on this side.
           // No boundaries mode prevents this check.
           leftBoundary = leftLimit;
@@ -92,7 +94,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         Collections.rotate(rotationLeft, -1);
 
         // Update the left boundary.
-        leftBoundary -= leftChoice.getVisualWidth() + renderer.getScreenHeight() / 18f;
+        leftBoundary -= leftChoice.getVisualWidth() + MARGIN;
 
         // Draw it.
         gl.glPushMatrix();
@@ -101,12 +103,14 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         leftChoice.drawable.draw();
         gl.glPopMatrix();
 
+        // Save its coordinates for input handling.
+        leftChoice.setActualX(leftBoundary + leftChoice.getVisualWidth() / 2f);
       }
 
       while(rightBoundary < rightLimit) {
         // First check if there will be space left after this.
         if (rightBoundary + rotationRight.get(0).getVisualWidth()
-            + renderer.getScreenHeight() / 18f > rightLimit && !noBoundaries) {
+            + MARGIN > rightLimit && !noBoundaries) {
           // If not then don't do anything and just announce no space left on this side.
           // No boundaries mode prevents this check.
           rightBoundary = rightLimit;
@@ -118,7 +122,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         Collections.rotate(rotationRight, -1);
 
         // Update the right boundary.
-        rightBoundary += rightChoice.getVisualWidth() + renderer.getScreenHeight() / 18f;
+        rightBoundary += rightChoice.getVisualWidth() + MARGIN;
 
         // Draw it.
         gl.glPushMatrix();
@@ -126,6 +130,9 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
                         getY(EdgePoint.CENTER), 0);
         rightChoice.drawable.draw();
         gl.glPopMatrix();
+
+        // Save its coordinates for input handling.
+        rightChoice.setActualX(rightBoundary - rightChoice.getVisualWidth() / 2f);
       }
 
       gl.glPopMatrix();
@@ -138,15 +145,25 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     if (locked) {
       for (CarouselItem item : choices)
         item.drawable.move(dt);
-      if (!slideX.isDone()) slideX.countEaseOut(dt, 10, 10*dt);
+
+      if (!slideX.isDone())
+        slideX.countEaseOut(dt, 10, 10*dt);
+
       if (!inertiaX.isDone() && !isHeld) {
         slideX.setTime(slideX.getTime() + inertiaX.getTime());
         inertiaX.countEaseOut(dt, 2, renderer.getScreenHeight() * 8 * dt);
       } else if (isHeld) {
-        if (holdTimer.count(dt)) {
+        if (idleTimer.count(dt)) {
           snap();
           isHeld = false;
+          pointerDown = false;
         }
+      }
+
+      // If the pointer is down but holding hasn't began yet, update the hold timer.
+      if (pointerDown && !isHeld && holdTimer.count(dt)) {
+        isHeld = true;
+        idleTimer.reset();
       }
     }
   }
@@ -163,17 +180,63 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     super.onMotionEvent(event, pointerX, pointerY);
 
     if (event.getActionMasked() == MotionEvent.ACTION_DOWN && isClicked(pointerX[0], pointerY[0])) {
-      isHeld = true;
+      pointerDown = true;
       holdTimer.reset();
 
-    } else if (event.getActionMasked() == MotionEvent.ACTION_UP && isHeld) {
-      isHeld = false;
-
+    } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
       // Snap even if no inertia has been generated.
-      if (inertiaX.isDone()) snap();
+      if (isHeld && inertiaX.isDone()) snap();
+
+      else if (!isHeld && isClicked(pointerX[0], pointerY[0])) {
+        // Some item may have been clicked. Check which one it is.
+        int checkIndex = choices.indexOf(currentChoice);
+        float currentX = getX(EdgePoint.CENTER);
+        if (pointerX[0] > getX(EdgePoint.CENTER)) {
+          // It's on the right.
+          while(currentX - choices.get(checkIndex).getVisualWidth() / 2f
+                                                                  < getX(EdgePoint.RIGHT_CENTER)) {
+            if (pointerX[0] > currentX - choices.get(checkIndex).getVisualWidth() / 2f
+                && pointerX[0] < currentX + choices.get(checkIndex).getVisualWidth() / 2f
+                && pointerY[0] >
+                          getY(EdgePoint.CENTER) - choices.get(checkIndex).getVisualHeight() / 2f
+                && pointerY[0] <
+                          getY(EdgePoint.CENTER) + choices.get(checkIndex).getVisualHeight() / 2f) {
+              snap(currentX);
+              break;
+            }
+
+            // Rotate the index right.
+            currentX += choices.get(checkIndex).getVisualWidth() / 2f + MARGIN;
+            if (++checkIndex >= choices.size()) checkIndex = 0;
+            currentX += choices.get(checkIndex).getVisualWidth() / 2f;
+          }
+        } else {
+          // It's on the left.
+          while(currentX + choices.get(checkIndex).getVisualWidth() / 2f
+                                                                  > getX(EdgePoint.LEFT_CENTER)) {
+            if (pointerX[0] > currentX - choices.get(checkIndex).getVisualWidth() / 2f
+                && pointerX[0] < currentX + choices.get(checkIndex).getVisualWidth() / 2f
+                && pointerY[0] >
+                getY(EdgePoint.CENTER) - choices.get(checkIndex).getVisualHeight() / 2f
+                && pointerY[0] <
+                getY(EdgePoint.CENTER) + choices.get(checkIndex).getVisualHeight() / 2f) {
+              snap(currentX);
+              break;
+            }
+
+            // Rotate the index left.
+            currentX -= choices.get(checkIndex).getVisualWidth() / 2f + MARGIN;
+            if (--checkIndex < 0) checkIndex = choices.size() - 1;
+            currentX -= choices.get(checkIndex).getVisualWidth() / 2f;
+          }
+        }
+      }
+
+      isHeld = false;
+      pointerDown = false;
 
     } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && isHeld) {
-      holdTimer.reset();
+      idleTimer.reset();
       if (event.getHistorySize() > 0) {
         // Scroll using setTime() so that the timer goal is cleared, which stops the snapping.
         slideX.setTime(slideX.getTime() + event.getX() - event.getHistoricalX(0));
@@ -182,14 +245,22 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         inertiaX.setTime(event.getX() - event.getHistoricalX(0));
         inertiaX.setEndTimeFromNow(0.0);
       }
+    } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+      if (event.getHistorySize() > 0 && Math.abs(event.getX() - event.getHistoricalX(0)) > 20) {
+        isHeld = true;
+        idleTimer.reset();
+      }
     }
   }
 
   /** Assess closest CarouselItem and snap to it. */
-  private void snap() {
+  private void snap() { snap(getX(EdgePoint.CENTER)); }
+
+  private void snap(float x) {
     int closestIndex = choices.indexOf(currentChoice), checkIndex = closestIndex;
-    double closestItemDistance = slideX.getTime();
-    if (slideX.getTime() < 0) {
+    double offset = x - getX(EdgePoint.CENTER);
+    double closestItemDistance = slideX.getTime() - offset;
+    if (slideX.getTime() - offset < 0) {
       // Check to the right.
       while (true) {
         // Rotate the checkIndex right.
@@ -197,7 +268,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
         double checkItemDistance
             = closestItemDistance + choices.get(closestIndex).getVisualWidth() / 2f
-            + renderer.getScreenHeight() / 18f + choices.get(checkIndex).getVisualWidth() / 2f;
+            + MARGIN + choices.get(checkIndex).getVisualWidth() / 2f;
 
         if (Math.abs(checkItemDistance) > Math.abs(closestItemDistance))
           // There is no closer item.
@@ -216,7 +287,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
         double checkItemDistance
             = closestItemDistance - choices.get(closestIndex).getVisualWidth() / 2f
-            - renderer.getScreenHeight() / 18f - choices.get(checkIndex).getVisualWidth() / 2f;
+            - MARGIN - choices.get(checkIndex).getVisualWidth() / 2f;
 
         if (Math.abs(checkItemDistance) > Math.abs(closestItemDistance))
           // There is no closer item.
@@ -235,7 +306,16 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     currentChoice.choose();
 
     // Set the slide to a value that makes it seamless.
-    slideX.setTime(closestItemDistance);
+    slideX.setTime(closestItemDistance + offset);
+    slideX.setEndTimeFromNow(0);
+  }
+
+  private void snap(CarouselItem item) {
+    currentChoice.unchoose();
+    currentChoice = item;
+    currentChoice.choose();
+
+    slideX.setTime(item.getActualX() + item.drawable.getWidth() / 2f - getX(EdgePoint.CENTER));
     slideX.setEndTimeFromNow(0);
   }
 
@@ -268,6 +348,7 @@ class CarouselItem {
   final MenuDrawable drawable;
   final String name;
   private final float notChosenScaleMultiplier = 0.8f;
+  private float actualX;
 
   public CarouselItem(MenuCarousel carousel, MenuDrawable drawable, String name) {
     this.carousel = carousel;
@@ -289,9 +370,17 @@ class CarouselItem {
     drawable.setOpacity(0.75f);
   }
 
+  public void setActualX(float x) { actualX = x; }
+  public float getActualX() { return actualX; }
+
+  public boolean isClicked(float x, float y) {
+    return drawable.isClicked(x-actualX, y+carousel.getY(MenuDrawable.EdgePoint.CENTER));
+  }
+
   public float getWidth() { return drawable.getWidth(); }
   public float getHeight() { return drawable.getHeight(); }
   public float getVisualWidth() { return drawable.getWidth() * (float) drawable.scale.getTime(); }
+  public float getVisualHeight() { return drawable.getHeight() * (float) drawable.scale.getTime(); }
 
   /**
    * Creates an image, resized to fit a carousel.
