@@ -6,18 +6,14 @@ import java.util.LinkedHashSet;
 /**
  * A wrapper for other MenuDrawables with the functionality of a button.
  */
-public abstract class MenuButton extends MenuDrawable implements TextureReloadable {
-  private GameRenderer renderer;
+public abstract class MenuButton extends MenuContainer implements TextureReloadable {
   private boolean isHeld = false;
   private SimpleTimer holdDuration = new SimpleTimer(0.0);
   private MenuImage backgroundImage;
-  final LinkedHashSet<MenuDrawable> drawables = new LinkedHashSet<>();
 
   public MenuButton(GameRenderer renderer, float x, float y, float width, float height,
                     EdgePoint alignPoint) {
     super(renderer, x, y, alignPoint, EdgePoint.CENTER);
-
-    this.renderer = renderer;
     setWidth(width);
     setHeight(height);
 
@@ -29,28 +25,14 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
    */
   public void onButtonCreated() {}
 
-  public void draw() {
+  public void draw(float[] parentColors) {
     gl.glPushMatrix();
     gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
     gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
-    gl.glColor4f(getColors()[0], getColors()[1], getColors()[2], getColors()[3]);
 
-    // Draw the background image if there is one.
-    if (backgroundImage != null)
-      backgroundImage.draw();
-
-    // Draw the rest of the elements.
-    drawInside();
+    super.draw(parentColors);
 
     gl.glPopMatrix();
-  }
-
-  /**
-   * Specifies what should be drawn inside of the button.
-   */
-  public void drawInside() {
-    for (MenuDrawable drawable : drawables)
-      drawable.draw();
   }
 
   public void move(double dt) {
@@ -68,8 +50,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
         onHeld();
     }
 
-    for (MenuDrawable drawable : drawables)
-      drawable.move(dt);
+    super.move(dt);
   }
 
   /**
@@ -79,6 +60,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
 
   public double getHoldDuration() { return holdDuration.getTime(); }
 
+  @Override
   public void onMotionEvent(MotionEvent event, float[] pointerX, float[] pointerY) {
     if (isEnabled()) {
       float x = pointerX[0];
@@ -130,15 +112,7 @@ public abstract class MenuButton extends MenuDrawable implements TextureReloadab
   public MenuButton withBackgroundImage(int id) {
     backgroundImage = new MenuImage(renderer, 0, 0, getWidth(), getHeight(), EdgePoint.CENTER);
     backgroundImage.setTexture(id);
+    addItem(backgroundImage);
     return this;
-  }
-
-  @Override
-  public void reloadTexture() {
-    for (MenuDrawable drawable : drawables)
-      if (drawable instanceof TextureReloadable)
-        ((TextureReloadable) drawable).reloadTexture();
-
-    if (backgroundImage != null) backgroundImage.reloadTexture();
   }
 }

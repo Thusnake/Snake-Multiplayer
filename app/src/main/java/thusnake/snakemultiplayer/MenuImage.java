@@ -64,14 +64,14 @@ public class MenuImage extends MenuDrawable implements TextureReloadable {
   }
 
   // Drawing methods.
-  public void draw() {
+  public void draw(float[] parentColors) {
     gl.glPushMatrix();
 
     // Translate to the bottom-left corner and add the origin offset, so that the image fits.
     gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
     gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
-    gl.glColor4f(getColors()[0], getColors()[1], getColors()[2], getColors()[3]);
-    this.drawable.draw(this.gl);
+    glColor4array(gl, combineColorArrays(getColors(), parentColors));
+    drawable.draw(gl);
 
     gl.glPopMatrix();
   }

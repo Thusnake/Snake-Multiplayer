@@ -41,7 +41,8 @@ public abstract class BoardDrawer {
         screenWidth - boardOffsetX*2, screenHeight - boardOffsetY*2);
 
     // Create the board mesh.
-    boardSquares = new Mesh(boardOffsetX, boardOffsetY, squareWidth, this);
+    boardSquares = new Mesh(renderer, boardOffsetX, boardOffsetY,
+                            MenuDrawable.EdgePoint.BOTTOM_LEFT, squareWidth, this);
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);

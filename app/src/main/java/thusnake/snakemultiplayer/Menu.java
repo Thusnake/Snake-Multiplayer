@@ -18,6 +18,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import thusnake.snakemultiplayer.MenuDrawable.EdgePoint;
+
 /**
  * Created by Nick on 14/12/2017.
  */
@@ -99,7 +101,7 @@ public class Menu implements Activity {
     this.menuItemsMain[0] = new MenuItem(renderer, menuItemsMainText[0], 10,
         screenHeight - glText.getCharHeight() * 0.65f
             - (screenHeight - glText.getCharHeight() * menuItemsMain.length * 0.65f) / 2,
-        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+        EdgePoint.BOTTOM_LEFT) {
       @Override
       public void move(double dt) {
         super.move(dt);
@@ -117,11 +119,11 @@ public class Menu implements Activity {
       this.menuItemsMain[i] = new MenuItem(renderer, menuItemsMainText[i], 10,
           screenHeight - glText.getCharHeight() * (i + 1) * 0.65f
               - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
-          MenuDrawable.EdgePoint.BOTTOM_LEFT);
+          EdgePoint.BOTTOM_LEFT);
     this.menuItemsMain[4] = new MenuItem(renderer, menuItemsMainText[4], 10,
         screenHeight - glText.getCharHeight() * (4 + 1) * 0.65f
             - (screenHeight - glText.getCharHeight() * menuItemsMainText.length * 0.65f) / 2,
-        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+        EdgePoint.BOTTOM_LEFT) {
       @Override
       public void move(double dt) {
         super.move(dt);
@@ -130,7 +132,7 @@ public class Menu implements Activity {
     };
 
     this.readyDevicesCounter = new MenuItem(renderer, "", screenWidth - 10,
-        menuItemsMain[0].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
+        menuItemsMain[0].getBottomY(), EdgePoint.BOTTOM_RIGHT) {
       private int readyDevices = -1;
       private int connectedDevices = -1;
 
@@ -160,21 +162,21 @@ public class Menu implements Activity {
     // Connect screen buttons.
     this.menuItemsConnect = new MenuItem[8];
     this.menuItemsConnect[0] = new MenuItem(renderer, "Host", 10 + screenWidth,
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuDrawable.EdgePoint.BOTTOM_LEFT);
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f, EdgePoint.BOTTOM_LEFT);
     this.menuItemsConnect[1] = new MenuItem(renderer, "Join", 10 + screenWidth,
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuDrawable.EdgePoint.BOTTOM_LEFT);
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, EdgePoint.BOTTOM_LEFT);
     this.menuItemsConnect[2] = new MenuItem(renderer, "Bluetooth", screenWidth * 2 - 10,
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f, MenuDrawable.EdgePoint.BOTTOM_RIGHT);
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f, EdgePoint.BOTTOM_RIGHT);
     this.menuItemsConnect[3] = new MenuItem(renderer, "Wi-Fi", screenWidth * 2 - 10,
-        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, MenuDrawable.EdgePoint.BOTTOM_RIGHT);
+        screenHeight * 4/5 - glText.getCharHeight() * 0.65f * 2, EdgePoint.BOTTOM_RIGHT);
     this.menuItemsConnect[4] = new MenuItem(renderer, "Search", screenWidth*2 - 10,
-        screenHeight / 8, MenuDrawable.EdgePoint.BOTTOM_RIGHT);
+        screenHeight / 8, EdgePoint.BOTTOM_RIGHT);
     this.menuItemsConnect[5] = new MenuItem(renderer, "Devices:", screenWidth + 10,
-        screenHeight / 8, MenuDrawable.EdgePoint.BOTTOM_LEFT);
+        screenHeight / 8, EdgePoint.BOTTOM_LEFT);
     this.menuItemsConnect[6] = new MenuItem(renderer, "Start server", screenWidth*1.5f,
-        screenHeight / 8, MenuDrawable.EdgePoint.BOTTOM_CENTER);
+        screenHeight / 8, EdgePoint.BOTTOM_CENTER);
     this.menuItemsConnect[7] = new MenuItem(renderer, "", screenWidth*1.5f,
-        screenHeight / 8, MenuDrawable.EdgePoint.BOTTOM_CENTER) {
+        screenHeight / 8, EdgePoint.BOTTOM_CENTER) {
       @Override
       public void move(double dt) {
         super.move(dt);
@@ -192,7 +194,7 @@ public class Menu implements Activity {
     };
 
     this.bluetoothStatusIcon = new MenuItem(renderer, "none", screenWidth * 2 - 10,
-        menuItemsConnect[5].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
+        menuItemsConnect[5].getBottomY(), EdgePoint.BOTTOM_RIGHT) {
       private BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
 
       @Override
@@ -212,7 +214,7 @@ public class Menu implements Activity {
     };
 
     this.disconnectButton = new MenuItem(renderer, "disconnect", screenWidth * 1.5f,
-        screenHeight / 8f, MenuDrawable.EdgePoint.BOTTOM_CENTER) {
+        screenHeight / 8f, EdgePoint.BOTTOM_CENTER) {
       @Override
       public void move(double dt) {
         super.move(dt);
@@ -235,17 +237,17 @@ public class Menu implements Activity {
     for (int i = 0; i < menuItemsBoardText.length; i++)
       this.menuItemsBoard[i] = new MenuItem(renderer, menuItemsBoardText[i], 10 + screenWidth,
           screenHeight - glText.getCharHeight() * (i * 5/4 + 1) * 0.65f - screenHeight / 5,
-          MenuDrawable.EdgePoint.BOTTOM_LEFT);
+          EdgePoint.BOTTOM_LEFT);
 
     // Players screen buttons.
     this.menuItemsPlayers = new MenuItem[4];
     for (int i = 0; i < 4; i++)
       this.menuItemsPlayers[i] = new MenuItem(renderer, "Player " + (i + 1),
           10 + screenWidth, screenHeight * 4/5f - glText.getCharHeight() * (i * 5/4f + 1) * 0.65f,
-          MenuDrawable.EdgePoint.BOTTOM_LEFT);
+          EdgePoint.BOTTOM_LEFT);
 
     this.addSnakeButton = new MenuItem(renderer, "+", screenWidth*2 - screenWidth*0.0425f,
-        menuItemsPlayers[1].getBottomY(), MenuDrawable.EdgePoint.BOTTOM_CENTER);
+        menuItemsPlayers[1].getBottomY(), EdgePoint.BOTTOM_CENTER);
 
     // Player options screen buttons.
     String[] menuItemsPlayersOptionsText = {"Type"};
@@ -254,7 +256,7 @@ public class Menu implements Activity {
       this.menuItemsPlayersOptions[i] = new MenuItem(renderer, menuItemsPlayersOptionsText[i],
           10 + screenWidth * 2,
           screenHeight * 4/5 - (screenWidth-110)/9 - glText.getCharHeight() * (i + 1) * 0.65f,
-          MenuDrawable.EdgePoint.BOTTOM_LEFT);
+          EdgePoint.BOTTOM_LEFT);
 
     // Set functionality for each menuItem.
     this.menuItemsMain[0].setAction((action, origin) -> {
@@ -294,20 +296,7 @@ public class Menu implements Activity {
                            screenHeight - glText.getCharHeight()*0.65f - squareSize,
                            squareSize,
                            squareSize,
-                           MenuDrawable.EdgePoint.BOTTOM_LEFT) {
-
-        private Square solidColor;
-
-        @Override
-        public void onButtonCreated() {
-          solidColor = new Square(renderer, getLeftX(), getBottomY(), getWidth(), getHeight());
-        }
-
-        @Override
-        public void drawInside() {
-          solidColor.draw(gl);
-        }
-      };
+                           EdgePoint.BOTTOM_LEFT) {};
 
       this.colorSelectionSquare[index].setColors(getColorFromIndex(index));
     }
@@ -326,7 +315,7 @@ public class Menu implements Activity {
 
     this.cornerSelectionSquare[0] = new MenuButton(renderer, screenWidth*2.2f + 10,
         menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
         renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_LEFT);
@@ -335,7 +324,7 @@ public class Menu implements Activity {
 
     this.cornerSelectionSquare[1] = new MenuButton(renderer, screenWidth*2.2f + 20 + squareSize,
         menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
         renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_LEFT);
@@ -344,7 +333,7 @@ public class Menu implements Activity {
 
     this.cornerSelectionSquare[2] = new MenuButton(renderer, screenWidth*2.2f + 30 + squareSize*2,
         menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
         renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_RIGHT);
@@ -353,7 +342,7 @@ public class Menu implements Activity {
 
     this.cornerSelectionSquare[3] = new MenuButton(renderer, screenWidth*2.2f + 40 + squareSize*3,
         menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
         renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_RIGHT);
@@ -649,7 +638,7 @@ public class Menu implements Activity {
       if (!pairedDevices.has(device)) {
         MenuItem deviceItem = new MenuItem(renderer, device.getName(), screenWidth + 10,
             menuItemsConnect[5].getBottomY() - (pairedDevices.size() + 1) * glText.getCharHeight() * 0.65f * 5 / 4,
-            MenuDrawable.EdgePoint.BOTTOM_LEFT);
+            EdgePoint.BOTTOM_LEFT);
         deviceItem.setDescription(device.getAddress());
         deviceItem.setAction((action,origin)
             -> renderer.getMenu().connectToDeviceViaItem((MenuItem) origin));
@@ -670,7 +659,7 @@ public class Menu implements Activity {
           (device.getName() != null) ? device.getName() : device.getAddress(),
           screenWidth + 10,
           menuItemsConnect[5].getBottomY() - (pairedDevices.size() + foundDevices.size() + 1)
-              * glText.getCharHeight() * 0.65f * 5 / 4, MenuDrawable.EdgePoint.BOTTOM_LEFT);
+              * glText.getCharHeight() * 0.65f * 5 / 4, EdgePoint.BOTTOM_LEFT);
       deviceItem.setDescription(device.getAddress());
       deviceItem.setAction((action,origin)
           -> renderer.getMenu().connectToDeviceViaItem((MenuItem) origin));
@@ -1002,7 +991,7 @@ class BackgroundSnake {
     this.movementTimer = speed;
     this.x = -((size + 1) * length);
 
-    snakeMesh = new Mesh(x, initialY, size, length, 1);
+    snakeMesh = new Mesh(menu.getRenderer(), x, initialY, EdgePoint.BOTTOM_LEFT, size, length, 1);
     for (int index = 0; index < length - 1; index++)
       snakeMesh.updateColors(index, 0.25f, 0.25f, 0.25f, 0.5f);
     snakeMesh.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
@@ -1025,7 +1014,7 @@ class BackgroundSnake {
   public void draw(GL10 gl) {
     gl.glPushMatrix();
     gl.glTranslatef(x, 0, 0);
-    snakeMesh.draw(gl);
+    snakeMesh.draw();
     gl.glPopMatrix();
   }
 

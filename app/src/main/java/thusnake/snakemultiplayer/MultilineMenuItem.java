@@ -28,12 +28,12 @@ public class MultilineMenuItem extends MenuDrawable {
     this(renderer, text, x, y, alignPoint, EdgePoint.CENTER, wrapWidth);
   }
 
-  public void draw() {
+  public void draw(float[] parentColors) {
     gl.glPushMatrix();
     translateAndScale();
 
     for (MenuItem line : lines)
-      line.draw();
+      line.draw(parentColors);
 
     gl.glPopMatrix();
   }

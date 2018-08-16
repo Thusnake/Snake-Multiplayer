@@ -190,7 +190,7 @@ public class Player {
     // Expand the bodyParts array and increase bodyLength.
     BodyPart[] holder = this.bodyParts;
     this.bodyParts = new BodyPart[this.bodyLength + 1];
-    for (int index = 0; index < holder.length; index++) this.bodyParts[index] = holder[index];
+    System.arraycopy(holder, 0, this.bodyParts, 0, holder.length);
 
     this.bodyParts[this.bodyLength] = new BodyPart(this);
     this.bodyLength++;
@@ -200,7 +200,7 @@ public class Player {
     // Expand the bodyParts array and increase bodyLength.
     BodyPart[] holder = this.bodyParts;
     this.bodyParts = new BodyPart[this.bodyLength + 1];
-    for (int index = 0; index < holder.length; index++) this.bodyParts[index] = holder[index];
+    System.arraycopy(holder, 0, this.bodyParts, 0, holder.length);
 
     this.bodyParts[this.bodyLength] = new BodyPart(this, x, y);
     this.bodyLength++;
@@ -210,7 +210,7 @@ public class Player {
     // Expand the bodyParts array and increase bodyLength.
     BodyPart[] holder = this.bodyParts;
     this.bodyParts = new BodyPart[this.bodyLength + 1];
-    for (int index = 0; index < holder.length; index++) this.bodyParts[index] = holder[index];
+    System.arraycopy(holder, 0, this.bodyParts, 0, holder.length);
 
     this.bodyParts[this.bodyLength] = new BodyPart(this, direction);
     this.bodyLength++;
@@ -302,7 +302,7 @@ public class Player {
   public void setOnlineIdentifier(int id) { this.onlineIdentifier = id; }
 
   // Static methods
-  public static Direction getOppositeDirection(Direction direction) {
+  private static Direction getOppositeDirection(Direction direction) {
     switch (direction) {
       case UP: return DOWN;
       case DOWN: return UP;

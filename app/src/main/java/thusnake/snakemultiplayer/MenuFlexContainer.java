@@ -9,7 +9,7 @@ public class MenuFlexContainer extends MenuContainer {
   }
 
   @Override
-  public void draw() {
+  public void draw(float[] parentColors) {
     gl.glPushMatrix();
 
     // Scaling.
@@ -18,7 +18,7 @@ public class MenuFlexContainer extends MenuContainer {
     gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
     // Drawing.
-    super.draw();
+    super.draw(parentColors);
 
     gl.glPopMatrix();
   }

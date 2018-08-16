@@ -184,7 +184,7 @@ class Game extends BoardDrawer implements Activity {
       }
     }
 
-    this.getBoardSquares().draw(gl);
+    this.getBoardSquares().draw();
 
     // Draw the display controllers.
     for (Player player : players) {

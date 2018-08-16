@@ -10,7 +10,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Created by Thusnake on 01-Jul-16.
  */
-public class Mesh {
+public class Mesh extends MenuDrawable {
   private FloatBuffer verticesBuffer = null;
   private ShortBuffer indicesBuffer = null;
   private int numOfIndices = -1;
@@ -21,22 +21,19 @@ public class Mesh {
   private float[] colors = null;
   private int numOfSquares = 0;
 
-  private final float x, y, squareSize;
+  private final float squareSize;
   private final int horizontalSquares;
   private final int verticalSquares;
   
-  public Mesh (float x, float y, float squareSize, BoardDrawer game) {
-    this.x = x;
-    this.y = y;
-    this.squareSize = squareSize;
-    this.horizontalSquares = game.getHorizontalSquares();
-    this.verticalSquares = game.getVerticalSquares();
-    this.addAllSquares();
+  public Mesh (GameRenderer renderer, float x, float y, EdgePoint alignPoint, float squareSize,
+               BoardDrawer game) {
+    this(renderer, x, y, alignPoint, squareSize,
+        game.getHorizontalSquares(), game.getVerticalSquares());
   }
 
-  public Mesh (float x, float y, float squareSize, int horizontalSquares, int verticalSquares) {
-    this.x = x;
-    this.y = y;
+  public Mesh (GameRenderer renderer, float x, float y, EdgePoint alignPoint, float squareSize,
+               int horizontalSquares, int verticalSquares) {
+    super(renderer, x, y, alignPoint);
     this.squareSize = squareSize;
     this.horizontalSquares = horizontalSquares;
     this.verticalSquares = verticalSquares;
@@ -46,9 +43,9 @@ public class Mesh {
   private void addAllSquares() {
     for (int y = 0; y < this.verticalSquares; y++) {
       for (int x = 0; x < this.horizontalSquares; x++) {
-        this.addSquare(this.x + squareSize * x + x + 1,
-            this.y + y + 1 + squareSize * y,
-            squareSize, squareSize);
+        this.addSquare(-getEdgePointOffset(originPoint).first + squareSize * x + x + 1,
+                       -getEdgePointOffset(originPoint).second + y + 1 + squareSize * y,
+                       squareSize, squareSize);
       }
     }
     this.applySquares();
@@ -71,14 +68,7 @@ public class Mesh {
     numOfIndices = indices.length;
   }
 
-  protected void setColor(float red, float green, float blue, float alpha) {
-    rgba[0] = red;
-    rgba[1] = green;
-    rgba[2] = blue;
-    rgba[3] = alpha;
-  }
-
-  protected void setColors(float[] colors) {
+  public void setColors(float[] colors) {
     ByteBuffer cbb = ByteBuffer.allocateDirect(colors.length * 4);
     cbb.order(ByteOrder.nativeOrder());
     colorBuffer = cbb.asFloatBuffer();
@@ -86,7 +76,7 @@ public class Mesh {
     colorBuffer.position(0);
   }
 
-  public void addSquare(float x, float y, float width, float height){
+  private void addSquare(float x, float y, float width, float height){
     short indices[] = { 0, 1, 2, 0, 2, 3 };
     float vertices[] = {x, y+height, 0.0f,   // top left
         x, y, 0.0f,   // bottom left
@@ -111,7 +101,7 @@ public class Mesh {
     this.numOfSquares++;
   }
 
-  public void applySquares(){
+  private void applySquares(){
     setVertices(this.vertices);
     setIndices(this.indices);
     setColors(this.colors);
@@ -174,8 +164,12 @@ public class Mesh {
     };
   }
 
-  public void draw(GL10 gl){
+  public void draw(GL10 gl, float[] parentColors){
     gl.glBindTexture(GL10.GL_TEXTURE_2D, 0); // Unbind textures.
+
+    gl.glPushMatrix();
+    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
 
     gl.glFrontFace(GL10.GL_CCW);
     gl.glEnable(GL10.GL_CULL_FACE);
@@ -183,18 +177,57 @@ public class Mesh {
     gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
     gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
     gl.glVertexPointer(3, GL10.GL_FLOAT, 0, verticesBuffer);
-    gl.glColor4f(rgba[0], rgba[1], rgba[2], rgba[3]);
+    glColor4array(gl, combineColorArrays(rgba, parentColors));
     if (colorBuffer != null){
       gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-      gl.glColorPointer(4,GL10.GL_FLOAT,0,colorBuffer);
+
+      FloatBuffer currentColorBuffer = colorBuffer;
+      // If the parent colors or the drawable's colors are not the default ones we want to multiply
+      // them with the entire color buffer.
+      if (!(parentColors[0] == 1f && parentColors[1] == 1f && parentColors[2] == 1f && parentColors[3] == 1f)
+          || !(getColors()[0] == 1f && getColors()[1] == 1f && getColors()[2] == 1f && getColors()[3] == 1f)) {
+        float[] multipliedColors = new float[colorBuffer.capacity()];
+        for (int index = 0; index < multipliedColors.length; index += 16) {
+          for (int n=0; n<4;n++) {
+            multipliedColors[index + n*4]     = parentColors[0] * getColors()[0] * colorBuffer.get(index + n*4);
+            multipliedColors[index + n*4 + 1] = parentColors[1] * getColors()[1] * colorBuffer.get(index + n*4 + 1);
+            multipliedColors[index + n*4 + 2] = parentColors[2] * getColors()[2] * colorBuffer.get(index + n*4 + 2);
+            multipliedColors[index + n*4 + 3] = parentColors[3] * getColors()[3] * colorBuffer.get(index + n*4 + 3);
+          }
+        }
+
+        ByteBuffer cbb = ByteBuffer.allocateDirect(colors.length * 4);
+        cbb.order(ByteOrder.nativeOrder());
+        currentColorBuffer = cbb.asFloatBuffer();
+        currentColorBuffer.put(multipliedColors);
+        currentColorBuffer.position(0);
+      }
+
+      gl.glColorPointer(4,GL10.GL_FLOAT,0,currentColorBuffer);
     }
     gl.glDrawElements(GL10.GL_TRIANGLES,numOfIndices,GL10.GL_UNSIGNED_SHORT,indicesBuffer);
     gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
     gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
     gl.glDisable(GL10.GL_CULL_FACE);
+
+    gl.glPopMatrix();
   }
 
-  public static float[] concatf(float[] a, float[] b) {
+  public void draw(float[] parentColors) {
+    draw(gl, parentColors);
+  }
+
+  @Override
+  public float getWidth() {
+    return horizontalSquares * squareSize + (horizontalSquares - 1);
+  }
+
+  @Override
+  public float getHeight() {
+    return verticalSquares * squareSize + (verticalSquares - 1);
+  }
+
+  private static float[] concatf(float[] a, float[] b) {
     int aLen = a.length;
     int bLen = b.length;
     float[] c= new float[aLen+bLen];
@@ -203,7 +236,7 @@ public class Mesh {
     return c;
   }
 
-  public static short[] concats(short[] a, short[] b) {
+  private static short[] concats(short[] a, short[] b) {
     int aLen = a.length;
     int bLen = b.length;
     short[] c= new short[aLen+bLen];

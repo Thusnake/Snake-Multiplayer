@@ -9,9 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class MenuCarousel extends MenuDrawable implements TextureReloadable {
-  private final float MARGIN;
+  protected float margin, notChosenScale, notChosenOpacity;
   private final List<CarouselItem> choices = new LinkedList<>();
-  private CarouselItem currentChoice;
+  private CarouselItem currentChoice, defaultChoice;
   private boolean locked = false, pointerDown = false,  isHeld = false, noBoundaries = false;
   private SimpleTimer slideX = new SimpleTimer(0.0), idleTimer = new SimpleTimer(0.0, 1.0),
       holdTimer = new SimpleTimer(0.0, 0.5), inertiaX = new SimpleTimer(0.0) {
@@ -29,13 +29,15 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     setWidth(width);
     setHeight(height);
 
-    MARGIN = renderer.getScreenHeight() / 18f;
+    margin = renderer.getScreenHeight() / 18f;
+    notChosenScale = 0.8f;
+    notChosenOpacity = 0.75f;
   }
 
   public MenuCarousel noBoundaries() { noBoundaries = true; return this; }
 
   @Override
-  public void draw() {
+  public void draw(float[] parentColors) {
     if (locked) {
       float xCenter = getLeftX() + getWidth() / 2f;
 
@@ -46,7 +48,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       gl.glPushMatrix();
       gl.glTranslatef(xCenter,
                       getBottomY() + getHeight() / 2f, 0);
-      currentChoice.drawable.draw();
+      currentChoice.drawable.draw(combineColorArrays(getColors(), parentColors));
       gl.glPopMatrix();
 
       // Create rotation of carousel items to be drawn on the right.
@@ -80,7 +82,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       while(leftBoundary > leftLimit) {
         // First check if there will be space left after this.
         if (leftBoundary - rotationLeft.get(0).getVisualWidth()
-            - MARGIN < leftLimit && !noBoundaries) {
+            - margin < leftLimit && !noBoundaries) {
           // If not then don't do anything and just announce no space left on this side.
           // No boundaries mode prevents this check.
           leftBoundary = leftLimit;
@@ -94,13 +96,13 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         Collections.rotate(rotationLeft, -1);
 
         // Update the left boundary.
-        leftBoundary -= leftChoice.getVisualWidth() + MARGIN;
+        leftBoundary -= leftChoice.getVisualWidth() + margin;
 
         // Draw it.
         gl.glPushMatrix();
         gl.glTranslatef(leftBoundary + leftChoice.getVisualWidth() / 2f,
             getY(EdgePoint.CENTER), 0);
-        leftChoice.drawable.draw();
+        leftChoice.drawable.draw(combineColorArrays(getColors(), parentColors));
         gl.glPopMatrix();
 
         // Save its coordinates for input handling.
@@ -110,7 +112,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
       while(rightBoundary < rightLimit) {
         // First check if there will be space left after this.
         if (rightBoundary + rotationRight.get(0).getVisualWidth()
-            + MARGIN > rightLimit && !noBoundaries) {
+            + margin > rightLimit && !noBoundaries) {
           // If not then don't do anything and just announce no space left on this side.
           // No boundaries mode prevents this check.
           rightBoundary = rightLimit;
@@ -122,13 +124,13 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         Collections.rotate(rotationRight, -1);
 
         // Update the right boundary.
-        rightBoundary += rightChoice.getVisualWidth() + MARGIN;
+        rightBoundary += rightChoice.getVisualWidth() + margin;
 
         // Draw it.
         gl.glPushMatrix();
         gl.glTranslatef(rightBoundary - rightChoice.getVisualWidth() / 2f,
                         getY(EdgePoint.CENTER), 0);
-        rightChoice.drawable.draw();
+        rightChoice.drawable.draw(combineColorArrays(getColors(), parentColors));
         gl.glPopMatrix();
 
         // Save its coordinates for input handling.
@@ -191,22 +193,23 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         // Some item may have been clicked. Check which one it is.
         int checkIndex = choices.indexOf(currentChoice);
         float currentX = getX(EdgePoint.CENTER);
+        float pointerYFix = renderer.getScreenHeight() - pointerY[0];
         if (pointerX[0] > getX(EdgePoint.CENTER)) {
           // It's on the right.
           while(currentX - choices.get(checkIndex).getVisualWidth() / 2f
                                                                   < getX(EdgePoint.RIGHT_CENTER)) {
             if (pointerX[0] > currentX - choices.get(checkIndex).getVisualWidth() / 2f
                 && pointerX[0] < currentX + choices.get(checkIndex).getVisualWidth() / 2f
-                && pointerY[0] >
+                && pointerYFix >
                           getY(EdgePoint.CENTER) - choices.get(checkIndex).getVisualHeight() / 2f
-                && pointerY[0] <
+                && pointerYFix <
                           getY(EdgePoint.CENTER) + choices.get(checkIndex).getVisualHeight() / 2f) {
               snap(currentX);
               break;
             }
 
             // Rotate the index right.
-            currentX += choices.get(checkIndex).getVisualWidth() / 2f + MARGIN;
+            currentX += choices.get(checkIndex).getVisualWidth() / 2f + margin;
             if (++checkIndex >= choices.size()) checkIndex = 0;
             currentX += choices.get(checkIndex).getVisualWidth() / 2f;
           }
@@ -216,16 +219,16 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
                                                                   > getX(EdgePoint.LEFT_CENTER)) {
             if (pointerX[0] > currentX - choices.get(checkIndex).getVisualWidth() / 2f
                 && pointerX[0] < currentX + choices.get(checkIndex).getVisualWidth() / 2f
-                && pointerY[0] >
+                && pointerYFix >
                 getY(EdgePoint.CENTER) - choices.get(checkIndex).getVisualHeight() / 2f
-                && pointerY[0] <
+                && pointerYFix <
                 getY(EdgePoint.CENTER) + choices.get(checkIndex).getVisualHeight() / 2f) {
               snap(currentX);
               break;
             }
 
             // Rotate the index left.
-            currentX -= choices.get(checkIndex).getVisualWidth() / 2f + MARGIN;
+            currentX -= choices.get(checkIndex).getVisualWidth() / 2f + margin;
             if (--checkIndex < 0) checkIndex = choices.size() - 1;
             currentX -= choices.get(checkIndex).getVisualWidth() / 2f;
           }
@@ -268,7 +271,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
         double checkItemDistance
             = closestItemDistance + choices.get(closestIndex).getVisualWidth() / 2f
-            + MARGIN + choices.get(checkIndex).getVisualWidth() / 2f;
+            + margin + choices.get(checkIndex).getVisualWidth() / 2f;
 
         if (Math.abs(checkItemDistance) > Math.abs(closestItemDistance))
           // There is no closer item.
@@ -287,7 +290,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
         double checkItemDistance
             = closestItemDistance - choices.get(closestIndex).getVisualWidth() / 2f
-            - MARGIN - choices.get(checkIndex).getVisualWidth() / 2f;
+            - margin - choices.get(checkIndex).getVisualWidth() / 2f;
 
         if (Math.abs(checkItemDistance) > Math.abs(closestItemDistance))
           // There is no closer item.
@@ -336,10 +339,20 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
     if (choices.size() == 0)
       return false;
 
-    currentChoice = choices.get(0);
+    currentChoice = defaultChoice != null ? defaultChoice : choices.get(0);
     currentChoice.choose();
     locked = true;
     return true;
+  }
+
+  public void setDefaultChoice(int index) {
+    if (!locked)
+      defaultChoice = choices.get(index);
+    else {
+      currentChoice.unchoose();
+      currentChoice = choices.get(index);
+      currentChoice.choose();
+    }
   }
 }
 
@@ -347,7 +360,6 @@ class CarouselItem {
   private final MenuCarousel carousel;
   final MenuDrawable drawable;
   final String name;
-  private final float notChosenScaleMultiplier = 0.8f;
   private float actualX;
 
   public CarouselItem(MenuCarousel carousel, MenuDrawable drawable, String name) {
@@ -366,8 +378,8 @@ class CarouselItem {
   }
 
   public void unchoose() {
-    drawable.scale.setEndTimeFromNow(notChosenScaleMultiplier);
-    drawable.setOpacity(0.75f);
+    drawable.scale.setEndTimeFromNow(carousel.notChosenScale);
+    drawable.setOpacity(carousel.notChosenOpacity);
   }
 
   public void setActualX(float x) { actualX = x; }

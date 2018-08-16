@@ -1,13 +1,10 @@
 package thusnake.snakemultiplayer;
 
-import java.util.LinkedList;
-import java.util.List;
-
 public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizationScreen {
   private final MenuButton nextButton;
 
   public SinglePlayerSnakeCustomizationScreen(Menu menu) {
-    super(menu, menu.getPlayers()[0]);
+    super(menu, menu.getSetupBuffer().players[0]);
 
     nextButton
         = new MenuButton(renderer,
@@ -41,7 +38,88 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
       }
     }.withBackgroundImage(R.drawable.next_button);
 
+    float cornerButtonSize = renderer.getScreenHeight() * 0.25f;
+    MenuButton lowerLeft = new MenuButton(renderer,
+                                          renderer.getScreenWidth() / 2f - cornerButtonSize - 15,
+                                          10, cornerButtonSize, cornerButtonSize,
+                                          MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
+      @Override
+      public void performAction() {
+        super.performAction();
+        player.setCorner(PlayerController.Corner.LOWER_LEFT);
+      }
+
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (player.getControlCorner().equals(PlayerController.Corner.LOWER_LEFT))
+          setOpacity(1);
+        else setOpacity(2/3f);
+      }
+    }.withBackgroundImage(R.drawable.lowerleft);
+
+    MenuButton upperLeft = new MenuButton(renderer,
+                                          renderer.getScreenWidth() / 2f - 5,
+                                          10, cornerButtonSize, cornerButtonSize,
+                                          MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
+      @Override
+      public void performAction() {
+        super.performAction();
+        player.setCorner(PlayerController.Corner.UPPER_LEFT);
+      }
+
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (player.getControlCorner().equals(PlayerController.Corner.UPPER_LEFT))
+          setOpacity(1f);
+        else setOpacity(2/3f);
+      }
+    }.withBackgroundImage(R.drawable.upperleft);
+
+    MenuButton upperRight = new MenuButton(renderer,
+                                           renderer.getScreenWidth() / 2f + 5,
+                                           10, cornerButtonSize, cornerButtonSize,
+                                           MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+      @Override
+      public void performAction() {
+        super.performAction();
+        player.setCorner(PlayerController.Corner.UPPER_RIGHT);
+      }
+
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (player.getControlCorner().equals(PlayerController.Corner.UPPER_RIGHT))
+          setOpacity(1f);
+        else setOpacity(2/3f);
+      }
+    }.withBackgroundImage(R.drawable.upperright);
+
+    MenuButton lowerRight = new MenuButton(renderer,
+                                           renderer.getScreenWidth() / 2f + cornerButtonSize + 15,
+                                           10, cornerButtonSize, cornerButtonSize,
+                                           MenuDrawable.EdgePoint.BOTTOM_LEFT) {
+      @Override
+      public void performAction() {
+        super.performAction();
+        player.setCorner(PlayerController.Corner.LOWER_RIGHT);
+      }
+
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        if (player.getControlCorner().equals(PlayerController.Corner.LOWER_RIGHT))
+          setOpacity(1f);
+        else setOpacity(2/3f);
+      }
+    }.withBackgroundImage(R.drawable.lowerright);
+
     drawables.add(nextButton);
+    drawables.add(lowerLeft);
+    drawables.add(upperLeft);
+    drawables.add(upperRight);
+    drawables.add(lowerRight);
   }
 
   @Override

@@ -14,9 +14,9 @@ public final class MenuMainScreen extends MenuScreen {
                                         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
-        menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
         menu.getSetupBuffer().players = new Player[1];
         menu.getSetupBuffer().players[0] = new Player(0).defaultPreset();
+        menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
       }
     }.withBackgroundImage(R.drawable.singleplayer_icon);
 

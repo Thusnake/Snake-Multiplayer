@@ -33,10 +33,11 @@ public class MenuItem extends MenuDrawable {
   }
 
   @Override
-  public void draw() {
+  public void draw(float[] parentColors) {
     gl.glPushMatrix();
 
-    glText.begin(this.getColors()[0],this.getColors()[1],this.getColors()[2],this.getColors()[3]);
+    glText.begin();
+    glColor4array(gl, combineColorArrays(getColors(), parentColors));
     glText.draw(this.text, this.getLeftX(), this.getBottomY());
     glText.end();
     if (this.description != null) {

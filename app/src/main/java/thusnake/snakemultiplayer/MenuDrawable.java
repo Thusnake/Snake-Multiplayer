@@ -42,7 +42,14 @@ public abstract class MenuDrawable {
   }
 
   // The abstract methods.
-  public abstract void draw();
+
+  /**
+   * Draws the drawable onto the screen.
+   * @param parentColors An array of colors passed by any parent drawables to be multiplied with
+   * this drawable's color array.
+   */
+  public abstract void draw(float[] parentColors);
+  public void draw() { draw(new float[] {1f, 1f, 1f, 1f}); }
   public void move(double dt) {
     if (!scale.isDone())
       scale.countEaseOut(dt, 8, 5 * dt);
@@ -116,10 +123,7 @@ public abstract class MenuDrawable {
   }
 
   public float[] getColors() {
-    if (this.isEnabled())
-      return this.colors;
-    else
-      return this.disabledColors;
+    return isEnabled() ? colors : disabledColors;
   }
 
   public void setOpacity(float opacity) {
@@ -235,5 +239,16 @@ public abstract class MenuDrawable {
       case 22: return EdgePoint.BOTTOM_RIGHT;
     }
     throw new RuntimeException("Fix combineEdgeHalves(EdgePoint, EdgePoint)");
+  }
+
+  public static float[] combineColorArrays(float[] parentColors, float[] childColors) {
+    float[] result = new float[4];
+    for (int index = 0; index < result.length; index++)
+      result[index] = parentColors[index] * childColors[index];
+    return result;
+  }
+
+  public static void glColor4array(GL10 gl, float[] colorArray) {
+    gl.glColor4f(colorArray[0], colorArray[1], colorArray[2], colorArray[3]);
   }
 }

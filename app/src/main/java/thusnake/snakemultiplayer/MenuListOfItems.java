@@ -11,7 +11,7 @@ public class MenuListOfItems extends MenuContainer {
   }
 
   @Override
-  public void draw() {
+  public void draw(float[] parentColors) {
     gl.glPushMatrix();
 
     // Scaling.
@@ -20,8 +20,7 @@ public class MenuListOfItems extends MenuContainer {
     gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
     // Drawing. We're now at the top point of this drawable.
-    for (MenuDrawable drawable : contents)
-      drawable.draw();
+    super.draw(parentColors);
 
     gl.glPopMatrix();
   }

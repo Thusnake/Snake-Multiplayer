@@ -33,7 +33,7 @@ public class MenuNumericalValue extends MenuFlexContainer {
                                 glText.getHeight() * 0.65f, EdgePoint.TOP_RIGHT) {
       @Override
       public void onButtonCreated() {
-        drawables.add(new MenuItem(renderer, "+", 0, 0, EdgePoint.CENTER));
+        addItem(new MenuItem(renderer, "+", 0, 0, EdgePoint.CENTER));
       }
 
       @Override
@@ -56,7 +56,7 @@ public class MenuNumericalValue extends MenuFlexContainer {
                                  glText.getHeight() * 0.65f, EdgePoint.TOP_LEFT) {
       @Override
       public void onButtonCreated() {
-        drawables.add(new MenuItem(renderer, "-", 0, 0, EdgePoint.CENTER));
+        addItem(new MenuItem(renderer, "-", 0, 0, EdgePoint.CENTER));
       }
 
       @Override

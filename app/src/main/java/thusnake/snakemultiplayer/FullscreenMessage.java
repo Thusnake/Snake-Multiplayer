@@ -30,8 +30,9 @@ public class FullscreenMessage implements Activity {
                                      screenWidth - 10,
                                      screenHeight - 10,
                                      MenuDrawable.EdgePoint.TOP_RIGHT);
-    this.loadingSnake = new Mesh(screenWidth / 2f - 60/720f * screenHeight,
-                                 this.message.getBottomY() / 2f - 60/720f * screenHeight,
+    this.loadingSnake = new Mesh(renderer, screenWidth / 2f,
+                                 this.message.getBottomY() / 2f,
+                                 MenuDrawable.EdgePoint.CENTER,
                                  60f / 720f * screenHeight,
                                  2, 2);
     // Set the mesh colors.
@@ -46,7 +47,7 @@ public class FullscreenMessage implements Activity {
     message.draw();
     cancelButton.draw();
     if (loading) {
-      loadingSnake.draw(gl);
+      loadingSnake.draw();
 
       if (loadingRotateTimer.count(dt)) {
         loadingRotateTimer.reset();
