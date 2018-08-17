@@ -248,7 +248,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
         inertiaX.setTime(event.getX() - event.getHistoricalX(0));
         inertiaX.setEndTimeFromNow(0.0);
       }
-    } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+    } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && pointerDown) {
       if (event.getHistorySize() > 0 && Math.abs(event.getX() - event.getHistoricalX(0)) > 20) {
         isHeld = true;
         idleTimer.reset();
