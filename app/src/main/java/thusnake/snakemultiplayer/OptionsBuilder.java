@@ -6,6 +6,7 @@ import java.util.List;
 final class OptionsBuilder {
   static List<MenuDrawable> defaultOptions(GameRenderer renderer) {
     List<MenuDrawable> list = new LinkedList<>();
+    list.add(MarginSpace.makeHorizontal(renderer, -10, 0));
     list.add(horizontalSquares(renderer));
     list.add(verticalSquares(renderer));
     list.add(speed(renderer));
@@ -15,6 +16,7 @@ final class OptionsBuilder {
 
   static List<MenuDrawable> justDifficulty(GameRenderer renderer) {
     List<MenuDrawable> list = new LinkedList<>();
+    list.add(MarginSpace.makeHorizontal(renderer, -10, 0));
     list.add(difficulty(renderer));
     return list;
   }
