@@ -90,8 +90,8 @@ final class OptionsBuilder {
     strings.add(GameSetupBuffer.difficultyToString(2));
     strings.add(GameSetupBuffer.difficultyToString(3));
     strings.add(GameSetupBuffer.difficultyToString(4));
-    MenuCustomValue value = new MenuCustomValue(renderer, strings, renderer.getScreenWidth() - 10,
-        0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+    MenuCustomValue value = new MenuCustomValue(renderer, strings, renderer.getScreenWidth() / 2f,
+        0, MenuDrawable.EdgePoint.TOP_CENTER) {
       @Override
       public void onValueChange(String newValue) {
         super.onValueChange(newValue);
