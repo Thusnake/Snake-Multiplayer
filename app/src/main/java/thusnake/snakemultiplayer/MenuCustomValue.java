@@ -69,9 +69,14 @@ public class MenuCustomValue extends MenuFlexContainer {
     // proper default one.
     textItem.setText(possibleValues.get(0));
 
+    setWidth(rightButton.getX(EdgePoint.RIGHT_CENTER) - leftButton.getX(EdgePoint.LEFT_CENTER));
+    setHeight(renderer.getGlText().getHeight() * 0.65f);
+
     addItem(textItem);
     addItem(leftButton);
     addItem(rightButton);
+
+    move(0);
   }
 
   public MenuCustomValue cyclic() { cyclic = true; return this;}

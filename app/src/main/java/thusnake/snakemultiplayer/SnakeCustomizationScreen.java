@@ -1,5 +1,8 @@
 package thusnake.snakemultiplayer;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public abstract class SnakeCustomizationScreen extends MenuScreen {
   final Player player;
   private final MenuCarousel snakeSelectionCarousel;
@@ -25,7 +28,43 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
     snakeSelectionCarousel.notChosenOpacity = 0.5f;
     snakeSelectionCarousel.confirmChoices();
 
+    List<String> possibleControlTypes = new LinkedList<>();
+    possibleControlTypes.add("Corner");
+    possibleControlTypes.add("Swipe");
+    possibleControlTypes.add("Gamepad");
+    possibleControlTypes.add("Keyboard");
+    MenuCustomValue controlType
+        = new MenuCustomValue(renderer, possibleControlTypes,
+                              renderer.getScreenWidth() / 2f,
+                              snakeSelectionCarousel.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER)/2f,
+                              MenuDrawable.EdgePoint.CENTER);
+
+    MenuButton cornerSettingsButton, controllerSettingsButton;
+    cornerSettingsButton
+        = new MenuButton(renderer, 10, controlType.getY(MenuDrawable.EdgePoint.CENTER),
+                         controlType.getHeight(), controlType.getHeight(),
+                         MenuDrawable.EdgePoint.LEFT_CENTER) {
+      @Override
+      public void performAction() {
+        // menu.setScreen(new CornerSelectionScreen(menu));
+      }
+    }.withBackgroundImage(R.drawable.lowerleft);
+
+    controllerSettingsButton
+        = new MenuButton(renderer, renderer.getScreenWidth() - 10,
+                         controlType.getY(MenuDrawable.EdgePoint.CENTER),
+                         controlType.getHeight(), controlType.getHeight(),
+                         MenuDrawable.EdgePoint.RIGHT_CENTER) {
+      @Override
+      public void performAction() {
+        // menu.setScreen(new ControllerSettingsScreen(menu, player.getController()));
+      }
+    }.withBackgroundImage(R.drawable.options_icon);
+
     drawables.add(snakeSelectionCarousel);
+    drawables.add(controlType);
+    drawables.add(cornerSettingsButton);
+    drawables.add(controllerSettingsButton);
   }
 
   private CarouselItem meshAsCarouselItem(int colorIndex, String name) {
