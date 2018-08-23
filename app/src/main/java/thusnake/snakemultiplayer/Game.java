@@ -266,7 +266,7 @@ class Game extends BoardDrawer implements Activity {
       gameOverBottomItem.setDestinationX(getScreenWidth() / 2);
 
       if (isSingleplayer())
-        gameOverMiddleItem.setText("Game Over");
+        gameOverMiddleItem.setText("Game over");
       else {
         if (winner == -1)
           gameOverMiddleItem.setText("It's a draw!");

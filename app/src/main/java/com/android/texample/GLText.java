@@ -282,7 +282,7 @@ public class GLText {
    // R: the total width of the text that was drawn
    public float drawC(String text, float x, float y)  {
       float len = getLength( text );                  // Get Text Length
-      draw( text, x - ( len / 2.0f ), y - ( getCharHeight() / 2.0f ) );  // Draw Text Centered
+      draw( text, x - ( len / 2.0f ), y - ( getHeight() / 2.0f ) );  // Draw Text Centered
       return len;                                     // Return Length
    }
    public float drawCX(String text, float x, float y)  {
@@ -377,7 +377,7 @@ public class GLText {
       return ( fontDescent * scaleY );                // Return Font Descent
    }
    public float getHeight()  {
-      return ( (fontAscent + fontDescent) * scaleY * 0.8f );                 // Return Font Height (Actual)
+      return ( fontAscent * scaleY );                 // Return Font Height (Actual)
    }
 
    //--Draw Font Texture--//
