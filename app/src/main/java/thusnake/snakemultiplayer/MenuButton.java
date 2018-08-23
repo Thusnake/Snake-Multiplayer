@@ -70,7 +70,7 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
         case MotionEvent.ACTION_DOWN:
           if (isClicked(x, y)) {
             isHeld = true;
-            scale.setEndTimeFromNow(1 - event.getPressure() / 3f);
+            scale.setEndTimeFromNow(1 + event.getPressure() / 6f);
           }
 
           break;
@@ -78,7 +78,7 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
         case MotionEvent.ACTION_MOVE:
           if (isHeld) {
             if (isClicked(x, y))
-              scale.setEndTimeFromNow(1 - event.getPressure() / 3f);
+              scale.setEndTimeFromNow(1 + event.getPressure() / 6f);
             else {
               isHeld = false;
               scale.setEndTimeFromNow(1);

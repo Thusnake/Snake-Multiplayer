@@ -87,7 +87,7 @@ public abstract class BoardDrawer {
         Integer.toString(3 - (int)(beginTimer.getTime() * 3.0 / 2.0));
     else countdownText = "Go!";
     glText.draw(countdownText, (this.getScreenWidth() - glText.getLength(countdownText)) / 2f,
-        (this.getScreenHeight() - glText.getCharHeight()) / 2f);
+        (this.getScreenHeight() - glText.getHeight()) / 2f);
     glText.end();
     gl.glPopMatrix();
   }

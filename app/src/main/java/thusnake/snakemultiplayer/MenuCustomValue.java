@@ -70,7 +70,7 @@ public class MenuCustomValue extends MenuFlexContainer {
     textItem.setText(possibleValues.get(0));
 
     setWidth(rightButton.getX(EdgePoint.RIGHT_CENTER) - leftButton.getX(EdgePoint.LEFT_CENTER));
-    setHeight(renderer.getGlText().getHeight() * 0.65f);
+    setHeight(renderer.getGlText().getHeight());
 
     addItem(textItem);
     addItem(leftButton);

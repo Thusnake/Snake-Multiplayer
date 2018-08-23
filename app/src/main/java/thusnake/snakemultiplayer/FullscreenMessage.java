@@ -23,8 +23,8 @@ public class FullscreenMessage implements Activity {
     this.message
         = new MultilineMenuItem(renderer, message,
                                 screenWidth / 2f,
-                                screenHeight * 2f / 3f,
-                                MenuDrawable.EdgePoint.TOP_CENTER,
+                                screenHeight / 2f,
+                                MenuDrawable.EdgePoint.CENTER,
                                 screenWidth);
     this.cancelButton = new MenuItem(renderer, "x",
                                      screenWidth - 10,

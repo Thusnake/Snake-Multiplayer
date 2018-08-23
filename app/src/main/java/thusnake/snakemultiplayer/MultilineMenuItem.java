@@ -30,7 +30,9 @@ public class MultilineMenuItem extends MenuDrawable {
 
   public void draw(float[] parentColors) {
     gl.glPushMatrix();
-    translateAndScale();
+    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
+    gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
     for (MenuItem line : lines)
       line.draw(parentColors);
@@ -66,7 +68,7 @@ public class MultilineMenuItem extends MenuDrawable {
 
   public void setDestinationY(double destinationY) {
     for (MenuItem line : lines)
-      line.setDestinationY(destinationY - lines.indexOf(line) * glText.getHeight() * 0.65f);
+      line.setDestinationY(destinationY - lines.indexOf(line) * glText.getHeight());
   }
 
   public void setDestinationXFromOrigin(double offsetX) {
@@ -121,7 +123,7 @@ public class MultilineMenuItem extends MenuDrawable {
     this.setWidth(maxWidth);
 
     // Figure out the height of the whole.
-    this.setHeight(glText.getHeight() * 0.65f * generatedLines.size());
+    this.setHeight(glText.getHeight() * generatedLines.size());
 
     // Create all the MenuItems so that they fit this container's width and height.
     for (String line : generatedLines)
@@ -132,9 +134,8 @@ public class MultilineMenuItem extends MenuDrawable {
       lines.add(new MenuItem
           (renderer,
            line,
-           -getEdgePointOffset(originPoint).first  + getEdgePointOffset(alignPoint).first,
-           -getEdgePointOffset(originPoint).second + getEdgePointOffset(alignPoint).second
-               - lines.size() * glText.getHeight() * 0.65f,
+           getX(alignPoint),
+           getY(EdgePoint.TOP_CENTER) - lines.size() * glText.getHeight(),
            combineEdgeHalves(EdgePoint.TOP_CENTER, alignPoint)));
   }
 }

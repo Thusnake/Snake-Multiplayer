@@ -101,7 +101,7 @@ class Game extends BoardDrawer implements Activity {
 
     this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
         -renderer.getScreenWidth() / 2,
-        renderer.getScreenHeight() * 5 / 6 - glText.getCharHeight()*0.8f / 2,
+        renderer.getScreenHeight() * 5 / 6 - glText.getHeight() / 2,
         MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public boolean isClicked(float x, float y) {
@@ -112,7 +112,7 @@ class Game extends BoardDrawer implements Activity {
 
     this.gameOverMiddleItem = new MenuItem(renderer, "Everyone loses",
         renderer.getScreenWidth() / 2,
-        renderer.getScreenHeight() / 2 - glText.getCharHeight()*0.8f / 2,
+        renderer.getScreenHeight() / 2 - glText.getHeight() / 2,
         MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public boolean isClicked(float x, float y) {
@@ -123,7 +123,7 @@ class Game extends BoardDrawer implements Activity {
 
     this.gameOverBottomItem = new MenuItem(renderer, "Menu",
         renderer.getScreenWidth() * 1.5f,
-        renderer.getScreenHeight() * 1 / 6 - glText.getCharHeight()*0.8f / 2,
+        renderer.getScreenHeight() * 1 / 6 - glText.getHeight() / 2,
         MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public boolean isClicked(float x, float y) {
@@ -209,10 +209,10 @@ class Game extends BoardDrawer implements Activity {
         gl.glScalef(0.25f, 0.25f, 1f);
         glText.begin();
         glText.drawC("Score: " + players[0].getScore(), this.getScreenWidth() * 2f,
-            this.getScreenHeight() / 2f * 4 + glText.getCharHeight() * (0.077f - 2f));
+            this.getScreenHeight() / 2f * 4 + glText.getHeight() * (- 2f));
         glText.drawC("High Score: " + scores.getInt("high_score_" + scoreKey, 0),
             this.getScreenWidth() * 2,
-            this.getScreenHeight()/2 * 4 + glText.getCharHeight() * 2.077f);
+            this.getScreenHeight() / 2f * 4 + glText.getHeight() * 2f);
         glText.end();
         gl.glPopMatrix();
       }

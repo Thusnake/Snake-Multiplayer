@@ -22,7 +22,7 @@ public class MenuItem extends MenuDrawable {
 
     this.glText = renderer.getGlText();
     this.setWidth(glText.getLength(text));
-    this.setHeight(glText.getHeight() * 0.65f);
+    this.setHeight(glText.getHeight());
 
     this.easeOutMultiplier = 8;
     this.easeOutInertia = 1/4.0;

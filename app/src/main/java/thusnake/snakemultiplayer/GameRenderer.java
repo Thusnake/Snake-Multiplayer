@@ -137,7 +137,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
     // Reload the glText.
     if (glText == null) this.glText = new GLText(gl, context.getAssets());
-    this.glText.load("pf_arma_five.ttf", this.fontSize, 2, 2);
+    this.glText.load("8bitOperatorPlusSC-Bold.ttf", this.fontSize, 2, 2);
 
     // Reload all active textures.
     if (currentActivity != null) currentActivity.refresh();
