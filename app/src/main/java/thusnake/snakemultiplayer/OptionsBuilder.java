@@ -28,13 +28,19 @@ final class OptionsBuilder {
                                               renderer.getScreenWidth() - 10,
                                               0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
+      public void move(double dt) {
+        super.move(dt);
+        setValue(renderer.getMenu().getSetupBuffer().horizontalSquares);
+      }
+
+      @Override
       public void onValueChange(int newValue) {
         super.onValueChange(newValue);
         renderer.getMenu().getSetupBuffer().horizontalSquares = newValue;
       }
     };
     value.setValueBoundaries(1, 100);
-    addDescriptionItem(value, "hor squares");
+    addDescriptionItem(value, "Hor Squares");
     return value;
   }
 
@@ -44,13 +50,19 @@ final class OptionsBuilder {
                                                 renderer.getScreenWidth() - 10,
                                                 0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
+      public void move(double dt) {
+        super.move(dt);
+        setValue(renderer.getMenu().getSetupBuffer().verticalSquares);
+      }
+
+      @Override
       public void onValueChange(int newValue) {
         super.onValueChange(newValue);
         renderer.getMenu().getSetupBuffer().verticalSquares = newValue;
       }
     };
     value.setValueBoundaries(1, 100);
-    addDescriptionItem(value, "ver squares");
+    addDescriptionItem(value, "Ver Squares");
     return value;
   }
 
@@ -60,13 +72,19 @@ final class OptionsBuilder {
                                                       renderer.getScreenWidth() - 10,
                                                       0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
+      public void move(double dt) {
+        super.move(dt);
+        setValue(renderer.getMenu().getSetupBuffer().speed);
+      }
+
+      @Override
       public void onValueChange(int newValue) {
         super.onValueChange(newValue);
         renderer.getMenu().getSetupBuffer().speed = newValue;
       }
     };
     value.setValueBoundaries(1, 64);
-    addDescriptionItem(value, "speed");
+    addDescriptionItem(value, "Speed");
     return value;
   }
 
@@ -76,12 +94,18 @@ final class OptionsBuilder {
                                                   renderer.getScreenWidth() - 10,
                                                   0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
+      public void move(double dt) {
+        super.move(dt);
+        setValue(renderer.getMenu().getSetupBuffer().stageBorders);
+      }
+
+      @Override
       public void onValueChange(boolean newValue) {
         super.onValueChange(newValue);
         renderer.getMenu().getSetupBuffer().stageBorders = newValue;
       }
     };
-    addDescriptionItem(value, "wall death");
+    addDescriptionItem(value, "Stage Borders");
     return value;
   }
 
@@ -94,6 +118,13 @@ final class OptionsBuilder {
     strings.add(GameSetupBuffer.difficultyToString(4));
     MenuCustomValue value = new MenuCustomValue(renderer, strings, renderer.getScreenWidth() / 2f,
         0, MenuDrawable.EdgePoint.TOP_CENTER) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        setValue(GameSetupBuffer
+                            .difficultyToString(renderer.getMenu().getSetupBuffer().difficulty));
+      }
+
       @Override
       public void onValueChange(String newValue) {
         super.onValueChange(newValue);
