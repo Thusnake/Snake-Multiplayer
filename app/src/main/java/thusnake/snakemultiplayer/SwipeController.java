@@ -3,12 +3,16 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.view.MotionEvent;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
 public class SwipeController extends PlayerController {
   private final Player player;
   private boolean holding;
   private float originX, originY;
+  private int sensitivity = 10;
 
   public SwipeController(GameRenderer renderer, Player player) {
     super(renderer, player);
@@ -60,4 +64,33 @@ public class SwipeController extends PlayerController {
 
   @Override
   public void setTexture(Context context) {}
+
+  @Override
+  public String toString() { return "Swipe"; }
+
+  @Override
+  public String identifier() { return "Swipe"; }
+
+  @Override
+  public List<MenuDrawable> optionsList(GameRenderer renderer) {
+    List<MenuDrawable> list = new LinkedList<>();
+    list.add(
+        OptionsBuilder.addDescriptionItem(
+            new MenuNumericalValue(renderer, sensitivity, renderer.getScreenWidth() - 10,
+                                   0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+              @Override
+              public void move(double dt) {
+                super.move(dt);
+                setValue(sensitivity);
+              }
+
+              @Override
+              public void onValueChange(int newValue) {
+                super.onValueChange(newValue);
+                sensitivity = newValue;
+              }
+            }, "Sensitivity"));
+
+    return list;
+  }
 }

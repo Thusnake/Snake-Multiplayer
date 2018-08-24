@@ -17,4 +17,10 @@ public class GamepadController extends CornerLayoutController {
   public void onMotionEvent(MotionEvent event) {
 
   }
+
+  @Override
+  public String toString() { return "Gamepad"; }
+
+  @Override
+  public String identifier() { return "Gamepad"; }
 }

@@ -3,14 +3,16 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.view.MotionEvent;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class CornerLayoutController extends PlayerController {
-  private final GameRenderer renderer;
   private final Player player;
+  private boolean horizontalMirror = false;
   
   public CornerLayoutController(GameRenderer renderer, Player player) {
     super(renderer, player);
-    
-    this.renderer = renderer;
+
     this.player = player;
   }
 
@@ -33,6 +35,35 @@ public class CornerLayoutController extends PlayerController {
       default: break;
     }
   }
+
+  @Override
+  public List<MenuDrawable> optionsList(GameRenderer renderer) {
+    List<MenuDrawable> list = new LinkedList<>();
+    list.add(
+        OptionsBuilder.addDescriptionItem(
+            new MenuBooleanValue(renderer, horizontalMirror, renderer.getScreenWidth() - 10, 0,
+                                 MenuDrawable.EdgePoint.TOP_RIGHT) {
+              @Override
+              public void move(double dt) {
+                super.move(dt);
+                setValue(horizontalMirror);
+              }
+
+              @Override
+              public void onValueChange(boolean newValue) {
+                super.onValueChange(newValue);
+                horizontalMirror = newValue;
+              }
+            }, "Mirror"));
+
+    return list;
+  }
+
+  @Override
+  public String toString() { return "Virtual Controller"; }
+
+  @Override
+  public String identifier() { return "Corner"; }
 
   private boolean checkCoordinates(float x, float y) {
     float originX = getX() + getWidth() / 2f;

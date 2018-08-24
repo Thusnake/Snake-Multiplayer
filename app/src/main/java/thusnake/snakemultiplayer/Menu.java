@@ -84,7 +84,8 @@ public class Menu implements Activity {
     setupBuffer.stageBorders = true;
 
     // Initialize the players. TODO get the snake values from the options strings.
-    for (int index = 0; index < players.length; index++) players[index] = new Player(index);
+    for (int index = 0; index < players.length; index++)
+      players[index] = new Player(renderer, index);
     this.players[0].setName("Player 1");
     this.players[1].setName("Player 2");
     this.players[2].setName("Player 3");

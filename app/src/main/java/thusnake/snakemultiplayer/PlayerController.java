@@ -3,6 +3,8 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.view.MotionEvent;
 
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -11,17 +13,15 @@ import javax.microedition.khronos.opengles.GL10;
 
 public abstract class PlayerController {
   public enum Corner {UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT}
-  private final Corner corner;
+  final Corner corner;
   private Square drawableLayout;
-  private final float x, y, width;
-  private final Player player;
-  private final GameRenderer renderer;
-  private final GL10 gl;
+  final float x, y, width;
+  final Player player;
+  final GL10 gl;
 
   public PlayerController(GameRenderer renderer, Player player) {
     this.player = player;
     this.gl = renderer.getGl();
-    this.renderer = renderer;
     this.width = renderer.getScreenHeight() / 720f * 300f;
     this.corner = player.getControlCorner();
     switch(corner) {
@@ -61,6 +61,8 @@ public abstract class PlayerController {
 
   public abstract void onMotionEvent(MotionEvent event);
 
+  public abstract List<MenuDrawable> optionsList(GameRenderer renderer);
+
   public Corner getCorner() { return this.corner; }
   public Square getDrawableLayout() { return drawableLayout; }
   public GL10 getGl() { return this.gl; }
@@ -76,4 +78,8 @@ public abstract class PlayerController {
           Protocol.encodeDirection(player.getDirection())
       });
   }
+
+  public abstract String toString();
+
+  public abstract String identifier();
 }

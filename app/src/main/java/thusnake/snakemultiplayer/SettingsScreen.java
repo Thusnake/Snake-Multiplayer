@@ -6,8 +6,11 @@ public abstract class SettingsScreen extends MenuScreen {
   public SettingsScreen(Menu menu, String title) {
     super(menu);
 
-    MenuItem titleItem = new MenuItem(renderer, title, renderer.getScreenWidth() / 2f, 10,
-                                      MenuDrawable.EdgePoint.TOP_CENTER);
+    MultilineMenuItem titleItem
+        = new MultilineMenuItem(renderer, title, renderer.getScreenWidth() / 2f,
+                                renderer.getScreenHeight() - 10,
+                                MenuDrawable.EdgePoint.TOP_CENTER,
+                                renderer.getScreenWidth() - backButton.getWidth() * 2);
 
     MenuListOfItems listOfOptions = new MenuListOfItems(renderer, 10,
         titleItem.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER), MenuDrawable.EdgePoint.TOP_LEFT);

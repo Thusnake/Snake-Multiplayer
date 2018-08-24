@@ -149,7 +149,7 @@ final class OptionsBuilder {
 
 
 
-  private static void addDescriptionItem(MenuFlexContainer value, String description) {
+  public static MenuFlexContainer addDescriptionItem(MenuFlexContainer value, String description) {
     value.addItem(new MenuItem(value.renderer, description, 10,
                                value.getY(MenuDrawable.EdgePoint.CENTER),
                                MenuDrawable.EdgePoint.LEFT_CENTER) {
@@ -167,5 +167,7 @@ final class OptionsBuilder {
           ((MenuNumericalValue) value).expand();
       }
     });
+
+    return value;
   }
 }

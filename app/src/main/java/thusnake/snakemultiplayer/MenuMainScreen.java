@@ -15,7 +15,7 @@ public final class MenuMainScreen extends MenuScreen {
       @Override
       public void performAction() {
         menu.getSetupBuffer().players = new Player[1];
-        menu.getSetupBuffer().players[0] = new Player(0).defaultPreset();
+        menu.getSetupBuffer().players[0] = new Player(renderer, 0).defaultPreset();
         menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
       }
     }.withBackgroundImage(R.drawable.singleplayer_icon);

@@ -6,6 +6,7 @@ import java.util.List;
 public abstract class SnakeCustomizationScreen extends MenuScreen {
   final Player player;
   private final MenuCarousel snakeSelectionCarousel;
+  private final SnakeCustomizationScreen reference = this;
 
   public SnakeCustomizationScreen(Menu menu, Player player) {
     super(menu);
@@ -37,7 +38,30 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
         = new MenuCustomValue(renderer, possibleControlTypes,
                               renderer.getScreenWidth() / 2f,
                               snakeSelectionCarousel.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER)/2f,
-                              MenuDrawable.EdgePoint.CENTER);
+                              MenuDrawable.EdgePoint.CENTER) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        setValue(player.getPlayerController().identifier());
+      }
+
+      @Override
+      public void onValueChange(String newValue) {
+        super.onValueChange(newValue);
+        switch(newValue) {
+          case "Corner":
+            player.setController(new CornerLayoutController(renderer, player));
+            break;
+          case "Swipe":
+            player.setController(new SwipeController(renderer, player));
+            break;
+          case "Gamepad":
+            player.setController(new GamepadController(renderer, player));
+            break;
+          default: break;
+        }
+      }
+    };
 
     MenuButton cornerSettingsButton, controllerSettingsButton;
     cornerSettingsButton
@@ -57,7 +81,18 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
                          MenuDrawable.EdgePoint.RIGHT_CENTER) {
       @Override
       public void performAction() {
-        // menu.setScreen(new ControllerSettingsScreen(menu, player.getController()));
+        menu.setScreen(new SettingsScreen(menu,
+                                          player.getPlayerController().toString() + " Options") {
+          @Override
+          public List<MenuDrawable> createListOfOptions() {
+            return player.getPlayerController().optionsList(renderer);
+          }
+
+          @Override
+          public void goBack() {
+            menu.setScreen(reference);
+          }
+        });
       }
     }.withBackgroundImage(R.drawable.options_icon);
 

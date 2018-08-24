@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import static thusnake.snakemultiplayer.Player.Direction.DOWN;
@@ -19,6 +21,7 @@ public class Player {
   public enum Direction {UP, DOWN, LEFT, RIGHT}
   private Direction direction, previousDirection;
   private boolean alive = false, drawable = false, flashing;
+  private GameRenderer renderer;
   private int number, score;
   private String name;
   private ControlType controlType;
@@ -36,7 +39,8 @@ public class Player {
   private ConnectedThread onlineControllerThread;
 
   // Constructor for a corner layout player.
-  public Player(int number) {
+  public Player(GameRenderer renderer, int number) {
+    this.renderer = renderer;
     this.controlType = ControlType.OFF;
     this.number = number;
     this.setColors(0);
@@ -49,18 +53,22 @@ public class Player {
       case 0:
         setCorner(PlayerController.Corner.LOWER_LEFT);
         setControlType(ControlType.CORNER);
+        setController(new CornerLayoutController(renderer, this));
         break;
 
       case 1:
         setCorner(PlayerController.Corner.UPPER_LEFT);
+        setController(new CornerLayoutController(renderer, this));
         break;
 
       case 2:
         setCorner(PlayerController.Corner.UPPER_RIGHT);
+        setController(new CornerLayoutController(renderer, this));
         break;
 
       case 3:
         setCorner(PlayerController.Corner.LOWER_RIGHT);
+        setController(new CornerLayoutController(renderer, this));
         break;
 
       default:
@@ -73,7 +81,7 @@ public class Player {
   // Gets called upon game start.
   public void prepareForGame(BoardDrawer game) {
     this.game = game;
-    this.vibrator = (Vibrator) game.getRenderer().getContext()
+    this.vibrator = (Vibrator) renderer.getContext()
         .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
     if (this.getControlCorner() == PlayerController.Corner.UPPER_LEFT
@@ -84,32 +92,6 @@ public class Player {
     this.drawable = true;
     this.flashing = false;
     this.score = 0;
-
-    switch(this.controlType) {
-      case CORNER:
-        this.playerController = new CornerLayoutController(game.getRenderer(), this);
-        break;
-      case SWIPE:
-        this.playerController = new SwipeController(game.getRenderer(), this);
-        break;
-      case GAMEPAD:
-        this.playerController = new GamepadController(game.getRenderer(), this);
-        break;
-      case BLUETOOTH:
-        this.playerController = new PlayerController(game.getRenderer(), this) {
-          @Override
-          public void setTexture(Context context) {}
-
-          @Override
-          public void onMotionEvent(MotionEvent event) {}
-
-          @Override
-          public void draw(GL10 gl) {}
-        };
-        break;
-      case OFF: break;
-      default: break;
-    }
 
     this.bodyParts = new BodyPart[0];
     this.bodyLength = 0;
