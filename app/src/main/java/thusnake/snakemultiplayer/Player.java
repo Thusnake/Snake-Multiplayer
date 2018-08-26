@@ -34,7 +34,6 @@ public class Player {
   private BoardDrawer game;
   private Vibrator vibrator;
   private Mesh boardSquares;
-  private int onlineIdentifier;
   private ConnectedThread onlineControllerThread;
   private final List<PlayerController> controllersCache = new LinkedList<>();
 
@@ -108,6 +107,8 @@ public class Player {
     for (int index = 1; index < 4; index++) {
       this.expandBody(Player.getOppositeDirection(this.direction));
     }
+
+    playerController.prepareForGame();
   }
 
   public boolean move() {

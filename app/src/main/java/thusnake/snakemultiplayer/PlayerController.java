@@ -13,18 +13,21 @@ import javax.microedition.khronos.opengles.GL10;
 
 public abstract class PlayerController {
   public enum Corner {UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT}
-  final Corner corner;
+  final GameRenderer renderer;
   private MenuImage drawableLayout;
-  final float x, y, width;
+  private float x, y, width;
   final Player player;
   final GL10 gl;
 
   public PlayerController(GameRenderer renderer, Player player) {
+    this.renderer = renderer;
     this.player = player;
     this.gl = renderer.getGl();
     this.width = renderer.getScreenHeight() / 720f * 300f;
-    this.corner = player.getControlCorner();
-    switch(corner) {
+  }
+
+  public void prepareForGame() {
+    switch(player.getControlCorner()) {
       case UPPER_LEFT:
         this.x = 10;
         this.y = 10;
@@ -49,7 +52,7 @@ public abstract class PlayerController {
 
     this.drawableLayout
         = new MenuImage(renderer, x, renderer.getScreenHeight() - y, width, width,
-                        MenuDrawable.EdgePoint.TOP_LEFT);
+        MenuDrawable.EdgePoint.TOP_LEFT);
 
     setTexture(renderer.getOriginActivity());
   }
@@ -63,7 +66,6 @@ public abstract class PlayerController {
 
   public abstract List<MenuDrawable> optionsList(GameRenderer renderer);
 
-  public Corner getCorner() { return this.corner; }
   public MenuImage getDrawableLayout() { return drawableLayout; }
   public GL10 getGl() { return this.gl; }
   public float getX() { return x; }

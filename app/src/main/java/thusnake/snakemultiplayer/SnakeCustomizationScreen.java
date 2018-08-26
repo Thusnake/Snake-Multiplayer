@@ -3,6 +3,8 @@ package thusnake.snakemultiplayer;
 import java.util.LinkedList;
 import java.util.List;
 
+import thusnake.snakemultiplayer.PlayerController.Corner;
+
 public abstract class SnakeCustomizationScreen extends MenuScreen {
   final Player player;
   private final MenuCarousel snakeSelectionCarousel;
@@ -69,8 +71,100 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
                          controlType.getHeight(), controlType.getHeight(),
                          MenuDrawable.EdgePoint.LEFT_CENTER) {
       @Override
+      public void move(double dt) {
+        super.move(dt);
+        int id;
+        switch (player.getControlCorner()) {
+          case LOWER_LEFT: id = R.drawable.lowerleft; break;
+          case UPPER_LEFT: id = R.drawable.upperleft; break;
+          case UPPER_RIGHT: id = R.drawable.upperright; break;
+          case LOWER_RIGHT: id = R.drawable.lowerright; break;
+          default: throw new RuntimeException(player + "'s corner is null");
+        }
+        withBackgroundImage(id);
+      }
+
+      @Override
       public void performAction() {
-        // menu.setScreen(new CornerSelectionScreen(menu));
+        MenuScreen cornerSelectScreen = new MenuScreen(menu) {
+          @Override
+          public void goBack() {
+            menu.setScreen(reference);
+          }
+        };
+
+        MultilineMenuItem title
+            = new MultilineMenuItem(renderer, "Select corner",
+                                    cornerSelectScreen.backButton.getX(EdgePoint.RIGHT_CENTER) + 10,
+                                    renderer.getScreenHeight() - 10, EdgePoint.TOP_LEFT,
+                                    renderer.getScreenWidth() - backButton.getWidth() / 2f - 20);
+
+        cornerSelectScreen.drawables.add(title);
+
+        float size = renderer.getScreenHeight() / 4f, centerX = renderer.getScreenWidth() / 2f,
+              centerY = title.getY(EdgePoint.BOTTOM_CENTER) / 2f;
+
+        cornerSelectScreen.drawables.add(
+            new MenuImage(renderer, centerX, centerY, size, size, EdgePoint.TOP_RIGHT) {
+              @Override
+              public void move(double dt) {
+                super.move(dt);
+                setOpacity(player.getControlCorner().equals(Corner.LOWER_LEFT) ? 1 : 0.25f);
+              }
+
+              @Override
+              public void performAction() {
+                super.performAction();
+                player.setCorner(Corner.LOWER_LEFT);
+              }
+            });
+
+        cornerSelectScreen.drawables.add(
+            new MenuImage(renderer, centerX, centerY, size, size, EdgePoint.BOTTOM_RIGHT) {
+              @Override
+              public void move(double dt) {
+                super.move(dt);
+                setOpacity(player.getControlCorner().equals(Corner.UPPER_LEFT) ? 1 : 0.25f);
+              }
+
+              @Override
+              public void performAction() {
+                super.performAction();
+                player.setCorner(Corner.UPPER_LEFT);
+              }
+            });
+
+        cornerSelectScreen.drawables.add(
+            new MenuImage(renderer, centerX, centerY, size, size, EdgePoint.BOTTOM_LEFT) {
+              @Override
+              public void move(double dt) {
+                super.move(dt);
+                setOpacity(player.getControlCorner().equals(Corner.UPPER_RIGHT) ? 1 : 0.25f);
+              }
+
+              @Override
+              public void performAction() {
+                super.performAction();
+                player.setCorner(Corner.UPPER_RIGHT);
+              }
+            });
+
+        cornerSelectScreen.drawables.add(
+            new MenuImage(renderer, centerX, centerY, size, size, EdgePoint.TOP_LEFT) {
+              @Override
+              public void move(double dt) {
+                super.move(dt);
+                setOpacity(player.getControlCorner().equals(Corner.LOWER_RIGHT) ? 1 : 0.25f);
+              }
+
+              @Override
+              public void performAction() {
+                super.performAction();
+                player.setCorner(Corner.LOWER_RIGHT);
+              }
+            });
+
+        menu.setScreen(cornerSelectScreen);
       }
     }.withBackgroundImage(R.drawable.lowerleft);
 
@@ -98,8 +192,8 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
 
     drawables.add(snakeSelectionCarousel);
     drawables.add(controlType);
-    drawables.add(cornerSettingsButton);
     drawables.add(controllerSettingsButton);
+    if (menu.getSetupBuffer().players.length == 1) drawables.add(cornerSettingsButton);
   }
 
   private CarouselItem meshAsCarouselItem(int colorIndex, String name) {

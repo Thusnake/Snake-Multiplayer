@@ -67,10 +67,10 @@ public class CornerLayoutController extends PlayerController {
       switch(player.getControlCorner()) {
         case LOWER_LEFT:
         case UPPER_LEFT:
-          offset = player.getGame().getRenderer().getScreenWidth() - 10 - width - 10; break;
+          offset = player.getGame().getRenderer().getScreenWidth() - 10 - getWidth() - 10; break;
         case LOWER_RIGHT:
         case UPPER_RIGHT:
-          offset = -player.getGame().getRenderer().getScreenWidth() + 10 + width + 10; break;
+          offset = -player.getGame().getRenderer().getScreenWidth() + 10 + getWidth() + 10; break;
         default:
           throw new RuntimeException(player + "'s corner is null");
       }
