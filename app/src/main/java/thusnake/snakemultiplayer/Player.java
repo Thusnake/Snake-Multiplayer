@@ -4,9 +4,8 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 
+import java.util.LinkedList;
 import java.util.List;
-
-import javax.microedition.khronos.opengles.GL10;
 
 import static thusnake.snakemultiplayer.Player.Direction.DOWN;
 import static thusnake.snakemultiplayer.Player.Direction.LEFT;
@@ -37,6 +36,7 @@ public class Player {
   private Mesh boardSquares;
   private int onlineIdentifier;
   private ConnectedThread onlineControllerThread;
+  private final List<PlayerController> controllersCache = new LinkedList<>();
 
   // Constructor for a corner layout player.
   public Player(GameRenderer renderer, int number) {
@@ -267,21 +267,45 @@ public class Player {
     return bodyColors;
   }
 
-  public int getOnlineIdentifier() { return this.onlineIdentifier; }
-
   public void setControllerThread(ConnectedThread thread) { this.onlineControllerThread = thread; }
   public ConnectedThread getControllerThread() { return this.onlineControllerThread; }
 
   // Setters
   public void setControlType(ControlType type) { this.controlType = type; }
-  public void setController(PlayerController controller) { this.playerController = controller; }
+
+  /**
+   * Sets the controller of this player to a controller of a given type.
+   * @param controller An example controller of the wanted type. If a controller of this type
+   *                   exists already in the cache then the cached controller will be used.
+   *                   Otherwise the passed controller will be assigned to that player.
+   */
+  public void setController(PlayerController controller) {
+    for (PlayerController cachedController : controllersCache)
+      if (cachedController.getClass().equals(controller.getClass())) {
+        playerController = cachedController;
+        return;
+      }
+
+    playerController = controller;
+    controllersCache.add(controller);
+  }
+
+  /**
+   * Sets the player's controller to a passed PlayerController. It is recommended that you instead
+   * use setController() as this method will not check the cache and will therefore constantly
+   * create new controllers with default settings if implemented in the menu as an option.
+   * @param controller The controller to be used.
+   */
+  public void setControllerForced(PlayerController controller) {
+    playerController = controller;
+  }
+
   public void setCorner(PlayerController.Corner corner) { this.corner = corner; }
   public void setName(String name) { this.name = name; }
   public void setColors(int colorIndex) {
     this.colors = Menu.getColorFromIndex(colorIndex);
     this.colorIndex = colorIndex;
   }
-  public void setOnlineIdentifier(int id) { this.onlineIdentifier = id; }
 
   // Static methods
   private static Direction getOppositeDirection(Direction direction) {

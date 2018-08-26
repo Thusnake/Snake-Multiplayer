@@ -60,7 +60,7 @@ public class SwipeController extends PlayerController {
   }
 
   @Override
-  public void draw(GL10 gl) {}
+  public void draw() {}
 
   @Override
   public void setTexture(Context context) {}

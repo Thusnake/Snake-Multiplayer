@@ -63,7 +63,7 @@ public abstract class BoardDrawer {
     gl.glColor4f(player.getColors()[0], player.getColors()[1],
         player.getColors()[2], player.getColors()[3]);
 
-    player.getPlayerController().draw(gl);
+    player.getPlayerController().draw();
   }
 
   public void drawPlayerSnake(Player player) {

@@ -14,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 public abstract class PlayerController {
   public enum Corner {UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT}
   final Corner corner;
-  private Square drawableLayout;
+  private MenuImage drawableLayout;
   final float x, y, width;
   final Player player;
   final GL10 gl;
@@ -48,7 +48,8 @@ public abstract class PlayerController {
     }
 
     this.drawableLayout
-        = new Square(renderer, x, renderer.getScreenHeight() - y - width, width, width);
+        = new MenuImage(renderer, x, renderer.getScreenHeight() - y, width, width,
+                        MenuDrawable.EdgePoint.TOP_LEFT);
 
     setTexture(renderer.getOriginActivity());
   }
@@ -56,15 +57,14 @@ public abstract class PlayerController {
   public abstract void setTexture(Context context);
   public void reloadTexture() { drawableLayout.reloadTexture(); }
 
-  public void draw() { this.draw(gl); }
-  public void draw(GL10 gl) { this.drawableLayout.draw(gl); }
+  public void draw() { drawableLayout.draw(); }
 
   public abstract void onMotionEvent(MotionEvent event);
 
   public abstract List<MenuDrawable> optionsList(GameRenderer renderer);
 
   public Corner getCorner() { return this.corner; }
-  public Square getDrawableLayout() { return drawableLayout; }
+  public MenuImage getDrawableLayout() { return drawableLayout; }
   public GL10 getGl() { return this.gl; }
   public float getX() { return x; }
   public float getY() { return y; }
