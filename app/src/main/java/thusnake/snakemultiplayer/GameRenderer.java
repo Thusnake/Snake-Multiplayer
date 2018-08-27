@@ -133,11 +133,11 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.gl.glMatrixMode(GL10.GL_MODELVIEW);
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-    this.fontSize = Math.min((int)((float)height * (1f/6f)), (int)(width / 6f));
+    this.fontSize = Math.min((int)((float)height * (1f/8f)), (int)(width / 8f));
 
     // Reload the glText.
     if (glText == null) this.glText = new GLText(gl, context.getAssets());
-    this.glText.load("8bitOperatorPlusSC-Bold.ttf", this.fontSize, 2, 2);
+    this.glText.load("PressStart2P.ttf", this.fontSize, 2, 2);
 
     // Reload all active textures.
     if (currentActivity != null) currentActivity.refresh();

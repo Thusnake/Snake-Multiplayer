@@ -377,7 +377,7 @@ public class GLText {
       return ( fontDescent * scaleY );                // Return Font Descent
    }
    public float getHeight()  {
-      return ( fontAscent * scaleY );                 // Return Font Height (Actual)
+      return ( fontHeight * scaleY );                 // Return Font Height (Actual)
    }
 
    //--Draw Font Texture--//
