@@ -95,9 +95,9 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
 
         MultilineMenuItem title
             = new MultilineMenuItem(renderer, "Select corner",
-                                    cornerSelectScreen.backButton.getX(EdgePoint.RIGHT_CENTER) + 10,
-                                    renderer.getScreenHeight() - 10, EdgePoint.TOP_LEFT,
-                                    renderer.getScreenWidth() - backButton.getWidth() / 2f - 20);
+                                    renderer.getScreenWidth() / 2f,
+                                    renderer.getScreenHeight() - 10, EdgePoint.TOP_CENTER,
+                                    renderer.getScreenWidth() - backButton.getWidth()  * 2f - 20);
 
         cornerSelectScreen.drawables.add(title);
 
@@ -188,7 +188,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
           }
         });
       }
-    }.withBackgroundImage(R.drawable.options_icon);
+    }.withBackgroundImage(R.drawable.wrench);
 
     drawables.add(snakeSelectionCarousel);
     drawables.add(controlType);

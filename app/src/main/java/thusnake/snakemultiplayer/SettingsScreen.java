@@ -13,7 +13,8 @@ public abstract class SettingsScreen extends MenuScreen {
                                 renderer.getScreenWidth() - backButton.getWidth() * 2);
 
     MenuListOfItems listOfOptions = new MenuListOfItems(renderer, 10,
-        titleItem.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER), MenuDrawable.EdgePoint.TOP_LEFT);
+        titleItem.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) - renderer.getScreenHeight() / 9f,
+        MenuDrawable.EdgePoint.TOP_LEFT);
     for (MenuDrawable drawable : createListOfOptions())
       listOfOptions.addItem(drawable);
 
