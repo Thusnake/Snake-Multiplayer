@@ -10,17 +10,19 @@ public class MenuFlexContainer extends MenuContainer {
 
   @Override
   public void draw(float[] parentColors) {
-    gl.glPushMatrix();
+    if (isDrawable()) {
+      gl.glPushMatrix();
 
-    // Scaling.
-    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
-    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
-    gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
+      // Scaling.
+      gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+      gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
+      gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
-    // Drawing.
-    super.draw(parentColors);
+      // Drawing.
+      super.draw(parentColors);
 
-    gl.glPopMatrix();
+      gl.glPopMatrix();
+    }
   }
 
   @Override

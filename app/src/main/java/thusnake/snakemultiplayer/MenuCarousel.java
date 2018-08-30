@@ -38,7 +38,7 @@ public class MenuCarousel extends MenuDrawable implements TextureReloadable {
 
   @Override
   public void draw(float[] parentColors) {
-    if (locked) {
+    if (locked && isDrawable()) {
       float xCenter = getLeftX() + getWidth() / 2f;
 
       gl.glPushMatrix();

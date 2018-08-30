@@ -19,8 +19,9 @@ public abstract class MenuContainer extends MenuDrawable implements TextureReloa
   }
 
   public void draw(float[] parentColors) {
-    for (MenuDrawable drawable : contents)
-      drawable.draw(combineColorArrays(getColors(), parentColors));
+    if (isDrawable())
+      for (MenuDrawable drawable : contents)
+        drawable.draw(combineColorArrays(getColors(), parentColors));
   }
 
   public void move(double dt) {

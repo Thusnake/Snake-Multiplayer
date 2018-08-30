@@ -34,26 +34,28 @@ public class MenuItem extends MenuDrawable {
 
   @Override
   public void draw(float[] parentColors) {
-    gl.glPushMatrix();
-
-    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
-    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 1);
-    gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
-
-    glText.begin();
-    glColor4array(gl, combineColorArrays(getColors(), parentColors));
-    glText.draw(this.text, this.getLeftX(), this.getBottomY());
-    glText.end();
-    if (this.description != null) {
+    if (isDrawable()) {
       gl.glPushMatrix();
-      gl.glScalef(0.25f, 0.25f, 1f);
-      glText.begin(0.66f, 0.66f, 0.66f, descriptionOpacity);
-      glText.draw(this.description, this.getLeftX() * 4, this.getBottomY() * 4);
+
+      gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+      gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 1);
+      gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
+
+      glText.begin();
+      glColor4array(gl, combineColorArrays(getColors(), parentColors));
+      glText.draw(this.text, this.getLeftX(), this.getBottomY());
       glText.end();
+      if (this.description != null) {
+        gl.glPushMatrix();
+        gl.glScalef(0.25f, 0.25f, 1f);
+        glText.begin(0.66f, 0.66f, 0.66f, descriptionOpacity);
+        glText.draw(this.description, this.getLeftX() * 4, this.getBottomY() * 4);
+        glText.end();
+        gl.glPopMatrix();
+      }
+
       gl.glPopMatrix();
     }
-
-    gl.glPopMatrix();
   }
 
   public void move(double dt) {

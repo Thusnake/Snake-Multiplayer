@@ -214,7 +214,8 @@ public class Mesh extends MenuDrawable {
   }
 
   public void draw(float[] parentColors) {
-    draw(gl, parentColors);
+    if (isDrawable())
+      draw(gl, parentColors);
   }
 
   @Override

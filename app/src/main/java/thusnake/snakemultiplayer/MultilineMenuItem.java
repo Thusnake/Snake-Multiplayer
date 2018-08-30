@@ -29,15 +29,17 @@ public class MultilineMenuItem extends MenuDrawable {
   }
 
   public void draw(float[] parentColors) {
-    gl.glPushMatrix();
-    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
-    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
-    gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
+    if (isDrawable()) {
+      gl.glPushMatrix();
+      gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+      gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0);
+      gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
-    for (MenuItem line : lines)
-      line.draw(parentColors);
+      for (MenuItem line : lines)
+        line.draw(parentColors);
 
-    gl.glPopMatrix();
+      gl.glPopMatrix();
+    }
   }
 
   public void move(double dt) {

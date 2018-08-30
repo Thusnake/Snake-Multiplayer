@@ -26,13 +26,15 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
   public void onButtonCreated() {}
 
   public void draw(float[] parentColors) {
-    gl.glPushMatrix();
-    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
-    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
+    if (isDrawable()) {
+      gl.glPushMatrix();
+      gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+      gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
 
-    super.draw(parentColors);
+      super.draw(parentColors);
 
-    gl.glPopMatrix();
+      gl.glPopMatrix();
+    }
   }
 
   public void move(double dt) {
