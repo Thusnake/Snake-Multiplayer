@@ -21,10 +21,10 @@ public class Player {
   private Direction direction, previousDirection;
   private boolean alive = false, drawable = false, flashing;
   private GameRenderer renderer;
+  private GameSetupBuffer setupBuffer;
   private int number, score;
   private String name;
   private ControlType controlType;
-  private PlayerController.Corner corner;
   public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
   private PlayerController playerController;
   private BodyPart[] bodyParts = new BodyPart[0];
@@ -47,35 +47,11 @@ public class Player {
 
   public Player defaultPreset() {
     setName("Player " + (number + 1));
-
-    switch(number) {
-      case 0:
-        setCorner(PlayerController.Corner.LOWER_LEFT);
-        setControlType(ControlType.CORNER);
-        setController(new CornerLayoutController(renderer, this));
-        break;
-
-      case 1:
-        setCorner(PlayerController.Corner.UPPER_LEFT);
-        setController(new CornerLayoutController(renderer, this));
-        break;
-
-      case 2:
-        setCorner(PlayerController.Corner.UPPER_RIGHT);
-        setController(new CornerLayoutController(renderer, this));
-        break;
-
-      case 3:
-        setCorner(PlayerController.Corner.LOWER_RIGHT);
-        setController(new CornerLayoutController(renderer, this));
-        break;
-
-      default:
-        throw new RuntimeException("Player number not between 0 and 3");
-
-    }
+    setController(new CornerLayoutController(renderer, this));
     return this;
   }
+
+  public void setSetupBuffer(GameSetupBuffer buffer) { setupBuffer = buffer; }
 
   // Gets called upon game start.
   public void prepareForGame(BoardDrawer game) {
@@ -248,7 +224,7 @@ public class Player {
   public int getScore() { return this.score; }
   public ControlType getControlType() { return this.controlType; }
   public PlayerController getPlayerController() { return this.playerController; }
-  public PlayerController.Corner getControlCorner() { return this.corner; }
+  public PlayerController.Corner getControlCorner() { return setupBuffer.getPlayerCorner(this); }
 
   public BodyPart getBodyPart(int bodyPartIndex) {
     if (bodyPartIndex >= 0)
@@ -301,7 +277,6 @@ public class Player {
     playerController = controller;
   }
 
-  public void setCorner(PlayerController.Corner corner) { this.corner = corner; }
   public void setName(String name) { this.name = name; }
   public void setColors(int colorIndex) {
     this.colors = Menu.getColorFromIndex(colorIndex);

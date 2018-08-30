@@ -22,15 +22,14 @@ class Game extends BoardDrawer implements Activity {
   private SimpleTimer moveTimer;
   private SimpleTimer screenRumbleTimer = new SimpleTimer(0.0);
   private SimpleTimer gameOverTimer = new SimpleTimer(0.0);
-  private int winner;
+  private Player winner;
   private double speed;
   private float screenTransformX = 0f, screenTransformY = 0f;
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
   private final String scoreKey;
   private final MenuItem gameModeAnnouncement;
-  private final Player[] players;
-  private int playersPlaying;
+  private final List<Player> players;
   private final List<Apple> apples = new LinkedList<>();
   private final Square[] boardLines = new Square[2];
   private final Square boardFade;
@@ -56,7 +55,7 @@ class Game extends BoardDrawer implements Activity {
     scoreKey = setupBuffer.gameMode.toString() + "-" + setupBuffer.difficulty;
 
     // Get the options from the setup buffer.
-    this.players = setupBuffer.players;
+    this.players = setupBuffer.getPlayers();
     this.speed = setupBuffer.speed;
 
     this.moveTimer = new SimpleTimer(1.0 / speed);
@@ -64,21 +63,11 @@ class Game extends BoardDrawer implements Activity {
     this.gameOverTimer.reset();
     this.screenRumbleTimer.reset();
     this.gameOver = false;
-    this.winner = -1;
-
-    int playersToCreate = 0;
-    for (Player player : players)
-      if (player != null && player.getControlType() != Player.ControlType.OFF) playersToCreate++;
-    if (playersToCreate == 0) this.renderer.quitGame();
+    this.winner = null;
 
     // Prepare the players
-    for (int index = 0; index < playersToCreate; index++) {
-      if (this.players[index] == null) {
-        this.playersPlaying = index;
-        break;
-      }
-      this.players[index].prepareForGame(this);
-    }
+    for (Player player : players)
+      player.prepareForGame(this);
 
     // Create the apple.
     this.createApples();
@@ -99,7 +88,7 @@ class Game extends BoardDrawer implements Activity {
           .addKeyframe(new MoveKeyframe(0.5, -10, gameModeAnnouncement.getY(),
                                         BezierTimer.easeInBack)));
 
-    this.gameOverTopItem = new MenuItem(renderer, playersToCreate == 1 ? "Try again" : "Rematch",
+    this.gameOverTopItem = new MenuItem(renderer, isSingleplayer() ? "Try again" : "Rematch",
         -renderer.getScreenWidth() / 2,
         renderer.getScreenHeight() * 5 / 6 - glText.getHeight() / 2,
         MenuDrawable.EdgePoint.BOTTOM_CENTER) {
@@ -208,7 +197,7 @@ class Game extends BoardDrawer implements Activity {
         gl.glPushMatrix();
         gl.glScalef(0.25f, 0.25f, 1f);
         glText.begin();
-        glText.drawC("Score: " + players[0].getScore(), this.getScreenWidth() * 2f,
+        glText.drawC("Score: " + players.get(0).getScore(), this.getScreenWidth() * 2f,
             this.getScreenHeight() / 2f * 4 + glText.getHeight() * (- 2f));
         glText.drawC("High Score: " + scores.getInt("high_score_" + scoreKey, 0),
             this.getScreenWidth() * 2,
@@ -256,8 +245,8 @@ class Game extends BoardDrawer implements Activity {
       if (!isSingleplayer()) {
         winner = this.assessWinner();
       } else {
-        if (players[0].getScore() > scores.getInt("high_score_" + scoreKey, 0)) {
-          scoresEditor.putInt("high_score_" + scoreKey, players[0].getScore());
+        if (players.get(0).getScore() > scores.getInt("high_score_" + scoreKey, 0)) {
+          scoresEditor.putInt("high_score_" + scoreKey, players.get(0).getScore());
           scoresEditor.commit();
         }
       }
@@ -268,12 +257,12 @@ class Game extends BoardDrawer implements Activity {
       if (isSingleplayer())
         gameOverMiddleItem.setText("Game over");
       else {
-        if (winner == -1)
+        if (winner == null)
           gameOverMiddleItem.setText("It's a draw!");
         else {
-          gameOverMiddleItem.setColors(players[winner].getColors()[0], players[winner].getColors()[1],
-              players[winner].getColors()[2], players[winner].getColors()[3]);
-          gameOverMiddleItem.setText(players[winner].getName() + " wins!");
+          gameOverMiddleItem.setColors(winner.getColors()[0], winner.getColors()[1],
+              winner.getColors()[2], winner.getColors()[3]);
+          gameOverMiddleItem.setText(winner.getName() + " wins!");
         }
       }
 
@@ -310,7 +299,7 @@ class Game extends BoardDrawer implements Activity {
   public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
   public List<Apple> getApples() { return this.apples; }
-  public Player[] getPlayers() { return this.players; }
+  public List<Player> getPlayers() { return this.players; }
   public int getAlivePlayers() {
     int playersAlive = 0;
     for (Player player : players) {
@@ -318,26 +307,16 @@ class Game extends BoardDrawer implements Activity {
     }
     return playersAlive;
   }
-  public int getPlayingLocal() {
-    int localPlayers = 0;
-    for (Player player : players) {
-      if (player != null
-          && player.getControlType() != Player.ControlType.BLUETOOTH
-          && player.getControlType() != Player.ControlType.WIFI) {
-        localPlayers++;
-      }
-    }
-    return localPlayers;
+
+  public boolean isSingleplayer() { return players.size() == 1; }
+  public Player assessWinner() {
+    for (Player player : players)
+      if (player != null && player.isAlive()) 
+        return player;
+    
+    // If no players are alive it returns null.
+    return null;
   }
-  public boolean isSingleplayer() { return players.length == 1; }
-  public int assessWinner() {
-    for (Player player : players) {
-      if (player != null && player.isAlive()) return player.getNumber();
-    }
-    // If no players are alive it returns -1.
-    return -1;
-  }
-  public int getPlayersPlaying() { return this.playersPlaying; }
   public SimpleTimer getGameOverTimer() { return this.gameOverTimer; }
 
   public List<MenuItem> getGameOverItems() { return this.gameOverItems; }

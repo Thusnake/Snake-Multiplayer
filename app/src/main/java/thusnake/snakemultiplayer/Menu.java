@@ -90,10 +90,6 @@ public class Menu implements Activity {
     this.players[1].setName("Player 2");
     this.players[2].setName("Player 3");
     this.players[3].setName("Player 4");
-    this.players[0].setCorner(PlayerController.Corner.LOWER_LEFT);
-    this.players[1].setCorner(PlayerController.Corner.LOWER_RIGHT);
-    this.players[2].setCorner(PlayerController.Corner.UPPER_LEFT);
-    this.players[3].setCorner(PlayerController.Corner.UPPER_RIGHT);
 
     // Create menuItem instances for each button.
     // Main screen buttons.
@@ -579,12 +575,7 @@ public class Menu implements Activity {
   public void setPlayerCorner(int playerIndex, PlayerController.Corner corner) {
     // Find the other player that uses the selected corner and set it to the current player's.
     for (int index = 0; index < this.players.length; index++)
-      if (index != playerIndex && this.players[index].getControlCorner() == corner)
-        this.players[index]
-            .setCorner(players[playerIndex].getControlCorner());
-
-    // Then set the current player's corner to the selected one.
-    this.players[playerIndex].setCorner(corner);
+      if (index != playerIndex && this.players[index].getControlCorner() == corner);
   }
 
   // Sets the connection type to a given value and handles the connection menu animation.

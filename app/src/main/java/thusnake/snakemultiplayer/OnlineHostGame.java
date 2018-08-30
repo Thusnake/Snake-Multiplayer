@@ -101,14 +101,15 @@ public class OnlineHostGame extends Game {
 
   public List<byte[]> createInitializationCalls(ConnectedThread thread) {
     List<byte[]> allInformation = new ArrayList<>();
-    allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers()[0].getColorIndex()});
-    allInformation.add(new byte[] {SNAKE2_COLOR_CHANGED, (byte) getPlayers()[1].getColorIndex()});
-    allInformation.add(new byte[] {SNAKE3_COLOR_CHANGED, (byte) getPlayers()[2].getColorIndex()});
-    allInformation.add(new byte[] {SNAKE4_COLOR_CHANGED, (byte) getPlayers()[3].getColorIndex()});
-    allInformation.add(new byte[] {SNAKE1_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[0].getControlCorner())});
-    allInformation.add(new byte[] {SNAKE2_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[1].getControlCorner())});
-    allInformation.add(new byte[] {SNAKE3_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[2].getControlCorner())});
-    allInformation.add(new byte[] {SNAKE4_CORNER_CHANGED, Protocol.encodeCorner(getPlayers()[3].getControlCorner())});
+    // TODO This ain't an array anymore, clean it up.
+    allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers().get(0).getColorIndex()});
+    allInformation.add(new byte[] {SNAKE2_COLOR_CHANGED, (byte) getPlayers().get(1).getColorIndex()});
+    allInformation.add(new byte[] {SNAKE3_COLOR_CHANGED, (byte) getPlayers().get(2).getColorIndex()});
+    allInformation.add(new byte[] {SNAKE4_COLOR_CHANGED, (byte) getPlayers().get(3).getColorIndex()});
+    allInformation.add(new byte[] {SNAKE1_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(0).getControlCorner())});
+    allInformation.add(new byte[] {SNAKE2_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(1).getControlCorner())});
+    allInformation.add(new byte[] {SNAKE3_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(2).getControlCorner())});
+    allInformation.add(new byte[] {SNAKE4_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(3).getControlCorner())});
     allInformation.add(getRenderer().getMenu().getDetailedSnakesList(thread));
     allInformation.add(new byte[] {READY_NUMBER_AND_STATUS, 0, 0});
     allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) horizontalSquares});
@@ -140,7 +141,7 @@ public class OnlineHostGame extends Game {
   @Override
   protected boolean checkGameOver() {
     if (super.checkGameOver()) {
-      this.sendBytes(new byte[] {Protocol.END_GAME, (byte) this.assessWinner()});
+      this.sendBytes(new byte[] {Protocol.END_GAME, (byte) assessWinner().getNumber()});
       return true;
     }
     return false;
@@ -151,16 +152,16 @@ public class OnlineHostGame extends Game {
     super.moveAllSnakes();
     moveCount++;
 
-    Player[] players = this.getPlayers();
+    List<Player> players = this.getPlayers();
     this.moveCodes.add(new byte[] {
         Protocol.GAME_MOVEMENT_OCCURRED,
         Protocol.encodeMoveID(moveCount).first,  // The rest of the bytes are not handled
         Protocol.encodeMoveID(moveCount).second, // and so everything goes wrong if the
         Protocol.getMovementCode(                // game becomes longer than 32768 moves.
-          (players[0].getDirection() != null) ? players[0].getDirection() : Player.Direction.UP,
-          (players[1].getDirection() != null) ? players[1].getDirection() : Player.Direction.UP,
-          (players[2].getDirection() != null) ? players[2].getDirection() : Player.Direction.UP,
-          (players[3].getDirection() != null) ? players[3].getDirection() : Player.Direction.UP
+          (players.size() >= 1 && players.get(0).getDirection() != null) ? players.get(0).getDirection() : Player.Direction.UP,
+          (players.size() >= 2 && players.get(1).getDirection() != null) ? players.get(1).getDirection() : Player.Direction.UP,
+          (players.size() >= 3 && players.get(2).getDirection() != null) ? players.get(2).getDirection() : Player.Direction.UP,
+          (players.size() >= 4 && players.get(3).getDirection() != null) ? players.get(3).getDirection() : Player.Direction.UP
         )
     });
 
@@ -206,7 +207,7 @@ public class OnlineHostGame extends Game {
         break;
 
       case Protocol.SNAKE_DIRECTION_CHANGE:
-        getPlayers()[bytes[1]].changeDirection(Protocol.decodeDirection(bytes[2]));
+        getPlayers().get(bytes[1]).changeDirection(Protocol.decodeDirection(bytes[2]));
         break;
 
       default:

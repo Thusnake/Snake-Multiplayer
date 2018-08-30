@@ -2,6 +2,8 @@ package thusnake.snakemultiplayer;
 
 import com.android.texample.GLText;
 
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
 public abstract class BoardDrawer {
@@ -102,5 +104,5 @@ public abstract class BoardDrawer {
   public Mesh getBoardSquares() { return this.boardSquares; }
   public float[] getBoardSquareColors() { return this.boardSquareColors; }
   public GameRenderer getRenderer() { return this.renderer; }
-  public abstract Player[] getPlayers();
+  public abstract List<Player> getPlayers();
 }

@@ -1,5 +1,7 @@
 package thusnake.snakemultiplayer;
 
+import thusnake.snakemultiplayer.PlayerController.Corner;
+
 public final class MenuMainScreen extends MenuScreen {
   private final MenuButton singleplayerButton, multiplayerButton, videoAdButton, optionsButton;
 
@@ -14,8 +16,7 @@ public final class MenuMainScreen extends MenuScreen {
                                         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
-        menu.getSetupBuffer().players = new Player[1];
-        menu.getSetupBuffer().players[0] = new Player(renderer, 0).defaultPreset();
+        menu.getSetupBuffer().addPlayer(new Player(renderer, 0).defaultPreset(), Corner.LOWER_LEFT);
         menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
       }
     }.withBackgroundImage(R.drawable.singleplayer_icon);
@@ -28,7 +29,8 @@ public final class MenuMainScreen extends MenuScreen {
                                        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
-//        menu.setScreen(new MultiPlayerSnakeSetupScreen(menu));
+        menu.getSetupBuffer().addPlayer(new Player(renderer, 0).defaultPreset(), Corner.LOWER_LEFT);
+        menu.setScreen(new MultiplayerSnakeOverviewScreen(menu));
       }
     }.withBackgroundImage(R.drawable.multiplayer_icon);
 

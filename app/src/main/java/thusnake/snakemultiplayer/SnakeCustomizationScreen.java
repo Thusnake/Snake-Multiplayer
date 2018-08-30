@@ -115,7 +115,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                player.setCorner(Corner.LOWER_LEFT);
+                menu.getSetupBuffer().setPlayerCorner(player, Corner.LOWER_LEFT);
               }
             });
 
@@ -130,7 +130,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                player.setCorner(Corner.UPPER_LEFT);
+                menu.getSetupBuffer().setPlayerCorner(player, Corner.UPPER_LEFT);
               }
             });
 
@@ -145,7 +145,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                player.setCorner(Corner.UPPER_RIGHT);
+                menu.getSetupBuffer().setPlayerCorner(player, Corner.UPPER_RIGHT);
               }
             });
 
@@ -160,7 +160,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                player.setCorner(Corner.LOWER_RIGHT);
+                menu.getSetupBuffer().setPlayerCorner(player, Corner.LOWER_RIGHT);
               }
             });
 
@@ -193,7 +193,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
     drawables.add(snakeSelectionCarousel);
     drawables.add(controlType);
     drawables.add(controllerSettingsButton);
-    if (menu.getSetupBuffer().players.length == 1) drawables.add(cornerSettingsButton);
+    drawables.add(cornerSettingsButton);
   }
 
   private CarouselItem meshAsCarouselItem(int colorIndex, String name) {

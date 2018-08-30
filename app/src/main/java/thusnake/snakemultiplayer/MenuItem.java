@@ -36,6 +36,10 @@ public class MenuItem extends MenuDrawable {
   public void draw(float[] parentColors) {
     gl.glPushMatrix();
 
+    gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
+    gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 1);
+    gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
+
     glText.begin();
     glColor4array(gl, combineColorArrays(getColors(), parentColors));
     glText.draw(this.text, this.getLeftX(), this.getBottomY());
