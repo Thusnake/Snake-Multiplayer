@@ -36,20 +36,24 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
     }.withBackgroundImage(R.drawable.next_button);
 
     drawables.add(nextButton);
-    drawables.add(new SnakeOverviewButton(this, renderer.getScreenWidth() / 2f,
-        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f,
+    drawables.add(new SnakeOverviewButton(this,
+        renderer.getScreenWidth() / 2f - renderer.smallDistance()/2,
+        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
         MenuDrawable.EdgePoint.TOP_RIGHT, PlayerController.Corner.LOWER_LEFT));
-    drawables.add(new SnakeOverviewButton(this, renderer.getScreenWidth() / 2f,
-        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f,
+    drawables.add(new SnakeOverviewButton(this,
+        renderer.getScreenWidth() / 2f - renderer.smallDistance()/2,
+        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f + renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
         MenuDrawable.EdgePoint.BOTTOM_RIGHT, PlayerController.Corner.UPPER_LEFT));
-    drawables.add(new SnakeOverviewButton(this, renderer.getScreenWidth() / 2f,
-        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f,
+    drawables.add(new SnakeOverviewButton(this,
+        renderer.getScreenWidth() / 2f + renderer.smallDistance()/2,
+        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f + renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
         MenuDrawable.EdgePoint.BOTTOM_LEFT, PlayerController.Corner.UPPER_RIGHT));
-    drawables.add(new SnakeOverviewButton(this, renderer.getScreenWidth() / 2f,
-        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f,
+    drawables.add(new SnakeOverviewButton(this,
+        renderer.getScreenWidth() / 2f + renderer.smallDistance(),
+        backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
         MenuDrawable.EdgePoint.TOP_LEFT, PlayerController.Corner.LOWER_RIGHT));
   }
@@ -77,10 +81,10 @@ class SnakeOverviewButton extends MenuButton {
                             -getWidth() / 2f,
                             getHeight() / 2f,
                             EdgePoint.TOP_LEFT, EdgePoint.TOP_LEFT);
-    nameItem.scale.setTime(0.5);
     skinPreview = new Mesh(renderer, getWidth() / 2f,
                            getHeight() / 2f,
                            EdgePoint.TOP_RIGHT, height / 3f, 1, 3);
+    nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX(), 0);
     plusIcon = new MenuItem(renderer, "+", 0, 0, EdgePoint.CENTER);
     background.setOpacity(0.1f);
     addItem(background);
@@ -98,6 +102,7 @@ class SnakeOverviewButton extends MenuButton {
 
     if (getPlayer() != null) {
       nameItem.setText(getPlayer().getName());
+      nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX(), 0);
       skinPreview.updateColors(0, getPlayer().getColors());
     }
   }

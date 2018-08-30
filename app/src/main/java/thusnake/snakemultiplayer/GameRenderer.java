@@ -133,7 +133,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.gl.glMatrixMode(GL10.GL_MODELVIEW);
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-    this.fontSize = Math.min((int)((float)height * (1f/8f)), (int)(width / 8f));
+    this.fontSize = Math.min((int)(height / 8f), (int)(width / 8f));
 
     // Reload the glText.
     if (glText == null) this.glText = new GLText(gl, context.getAssets());
@@ -159,6 +159,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public Game getGame() { return this.game; }
   public float getScreenWidth() { return this.screenWidth; }
   public float getScreenHeight() { return this.screenHeight; }
+  public float smallDistance() { return screenHeight / 72f; }
 
   public void startGame(Game game) {
     /*

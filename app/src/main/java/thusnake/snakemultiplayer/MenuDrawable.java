@@ -149,6 +149,24 @@ public abstract class MenuDrawable {
   public float getHeight() { return this.height; }
 
   /**
+   * Sets the scale of this MenuDrawable to one that fits within given limits for width and height,
+   * without stretching it.
+   * @param horizontalLimit The maximum width. A value of 0 implies no limit.
+   * @param verticalLimit The maximum height. A value of 0 implies no limit.
+   */
+  public void scaleToFit(float horizontalLimit, float verticalLimit) {
+    double horizontalScale = horizontalLimit / getWidth();
+    double verticalScale = verticalLimit / getHeight();
+
+    if (horizontalScale != 0 && verticalScale != 0)
+      scale.setTime(Math.min(horizontalScale, verticalScale));
+    else if (horizontalScale == 0)
+      scale.setTime(verticalScale);
+    else
+      scale.setTime(horizontalScale);
+  }
+
+  /**
    * @param edgePoint A given edge point of the drawable's rectangle.
    * @return The edge point's offset as a Pair, relative to the bottom-left edge point.
    */
