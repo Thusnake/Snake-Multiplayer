@@ -112,9 +112,13 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
    * @return A reference to this MenuButton, for convenience.
    */
   public MenuButton withBackgroundImage(int id) {
-    backgroundImage = new MenuImage(renderer, 0, 0, getWidth(), getHeight(), EdgePoint.CENTER);
+    // If backgroundImage has not been created yet - create it and add it to the list of drawables.
+    if (backgroundImage == null) {
+      backgroundImage = new MenuImage(renderer, 0, 0, getWidth(), getHeight(), EdgePoint.CENTER);
+      addItem(backgroundImage);
+    }
+
     backgroundImage.setTexture(id);
-    addItem(backgroundImage);
     return this;
   }
 }
