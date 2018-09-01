@@ -122,16 +122,18 @@ public class Square implements TextureReloadable {
   }
 
   public void reloadTexture() {
-    Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(textureId);
+    if (textureId != 0) {
+      Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(textureId);
 
-    gl.glDeleteTextures(1, textures, 0);
-    gl.glGenTextures(1, textures, 0);
-    gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
+      gl.glDeleteTextures(1, textures, 0);
+      gl.glGenTextures(1, textures, 0);
+      gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
 
-    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
-    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+      GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+    }
   }
 
 
