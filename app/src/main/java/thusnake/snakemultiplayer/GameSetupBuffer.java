@@ -39,6 +39,25 @@ final class GameSetupBuffer {
   }
 
   /**
+   * Removes a player from the setup buffer. Its corner is emptied.
+   * @param player The player to be removed.
+   */
+  void removePlayer(Player player) {
+    if (cornerMap.containsValue(player))
+      for (PlayerController.Corner corner : cornerMap.keySet())
+        if (cornerMap.get(corner).equals(player))
+          cornerMap.put(corner, null);
+  }
+
+  /**
+   * Empties a corner from the setup buffer, removing the snake in it.
+   * @param corner The corner to be emptied.
+   */
+  void emptyCorner(PlayerController.Corner corner) {
+    cornerMap.put(corner, null);
+  }
+
+  /**
    * Sets the corner of an already entered player to a new one. If the new one is occupied with
    * another snake it will switch both snakes' corners.
    * @param player The player whose corner will be moved.
