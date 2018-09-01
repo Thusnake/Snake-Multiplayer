@@ -134,11 +134,13 @@ public abstract class MenuDrawable {
   public void setY(double y) { this.y.setCurrentTime(y); }
   public float getX() { return (float) x.getTime(); }
   public float getY() { return (float) y.getTime(); }
-  public float getX(EdgePoint edgePoint) { return getCoordinates(edgePoint).first; }
-  public float getY(EdgePoint edgePoint) { return getCoordinates(edgePoint).second; }
+  public float getX(EdgePoint edgePoint) { return getX() - getEdgePointOffset(alignPoint).first
+                                                         + getEdgePointOffset(edgePoint).first; }
+  public float getY(EdgePoint edgePoint) { return getY() - getEdgePointOffset(alignPoint).second
+                                                         + getEdgePointOffset(edgePoint).second; }
 
-  public float getLeftX() { return getCoordinates(EdgePoint.BOTTOM_LEFT).first; }
-  public float getBottomY() { return getCoordinates(EdgePoint.BOTTOM_LEFT).second; }
+  public float getLeftX() { return getX(EdgePoint.BOTTOM_LEFT); }
+  public float getBottomY() { return getY(EdgePoint.BOTTOM_LEFT); }
   public SimpleTimer getXTimer() { return this.x; }
   public SimpleTimer getYTimer() { return this.y; }
   public float getInitialX() { return this.initialX; }
@@ -183,17 +185,6 @@ public abstract class MenuDrawable {
       case BOTTOM_RIGHT:  return new Pair<>(getWidth(),   0f);
       default:            return new Pair<>(0f, 0f);
     }
-  }
-
-  /**
-   * @param edgePoint A given edge point of the drawable's rectangle.
-   * @return The edge point's coordinates as a Pair.
-   */
-  public Pair<Float, Float> getCoordinates(EdgePoint edgePoint) {
-    return new Pair<>(getX() - getEdgePointOffset(alignPoint).first
-                              + getEdgePointOffset(edgePoint).first,
-                      getY() - getEdgePointOffset(alignPoint).second
-                              + getEdgePointOffset(edgePoint).second);
   }
 
   public void setDestinationX(double destinationX) { this.x.setEndTimeFromNow(destinationX); }
