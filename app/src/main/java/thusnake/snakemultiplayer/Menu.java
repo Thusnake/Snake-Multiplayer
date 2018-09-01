@@ -83,14 +83,6 @@ public class Menu implements Activity {
     setupBuffer.speed = 12;
     setupBuffer.stageBorders = true;
 
-    // Initialize the players. TODO get the snake values from the options strings.
-    for (int index = 0; index < players.length; index++)
-      players[index] = new Player(renderer, index);
-    this.players[0].setName("Player 1");
-    this.players[1].setName("Player 2");
-    this.players[2].setName("Player 3");
-    this.players[3].setName("Player 4");
-
     // Create menuItem instances for each button.
     // Main screen buttons.
     String[] menuItemsMainText = {"Play", "Connect", "Board", "Players", "Watch ad"};
@@ -379,9 +371,6 @@ public class Menu implements Activity {
     drawablesPlayersOptions.addAll(Arrays.asList(colorSelectionSquare));
     drawablesPlayersOptions.addAll(Arrays.asList(cornerSelectionSquare));
 
-    // Add one snake to initialize the add and remove buttons.
-    this.addSnake();
-
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
     this.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
@@ -527,8 +516,8 @@ public class Menu implements Activity {
   // Sets the currently selected player's color to a color from a given color square index.
   private void onColorSquareTouch(int index) {
     // Only guests have to wait for a signal from somewhere else before setting the color.
-    if (!this.isGuest())
-      this.setPlayerColor(playersOptionsIndex, index);
+//    if (!this.isGuest())
+//      this.setPlayerColor(playersOptionsIndex, index);
 
     // If it's an online user have it send the information.
     if (originActivity.isGuest() || originActivity.isHost()) {
@@ -542,12 +531,8 @@ public class Menu implements Activity {
       }
 
       originActivity.writeBytesAuto(
-          new byte[] {protocolId, (byte) players[playersOptionsIndex].getColorIndex()});
+          new byte[] {protocolId, (byte) players[playersOptionsIndex].getSkinIndex()});
     }
-  }
-
-  public void setPlayerColor(int playerIndex, int index) {
-    this.players[playerIndex].setColors(index);
   }
 
   // Sets the currently selected player's control corner to a Corner represented by a corner square.
@@ -809,10 +794,10 @@ public class Menu implements Activity {
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
     switch(inputBytes[0]) {
-      case Protocol.SNAKE1_COLOR_CHANGED: setPlayerColor(0, inputBytes[1]); break;
-      case Protocol.SNAKE2_COLOR_CHANGED: setPlayerColor(1, inputBytes[1]); break;
-      case Protocol.SNAKE3_COLOR_CHANGED: setPlayerColor(2, inputBytes[1]); break;
-      case Protocol.SNAKE4_COLOR_CHANGED: setPlayerColor(3, inputBytes[1]); break;
+//      case Protocol.SNAKE1_COLOR_CHANGED: setPlayerColor(0, inputBytes[1]); break;
+//      case Protocol.SNAKE2_COLOR_CHANGED: setPlayerColor(1, inputBytes[1]); break;
+//      case Protocol.SNAKE3_COLOR_CHANGED: setPlayerColor(2, inputBytes[1]); break;
+//      case Protocol.SNAKE4_COLOR_CHANGED: setPlayerColor(3, inputBytes[1]); break;
       case Protocol.SNAKE1_CORNER_CHANGED: setPlayerCorner(0, Protocol.decodeCorner(inputBytes[1])); break;
       case Protocol.SNAKE2_CORNER_CHANGED: setPlayerCorner(1, Protocol.decodeCorner(inputBytes[1])); break;
       case Protocol.SNAKE3_CORNER_CHANGED: setPlayerCorner(2, Protocol.decodeCorner(inputBytes[1])); break;

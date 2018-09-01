@@ -260,8 +260,8 @@ class Game extends BoardDrawer implements Activity {
         if (winner == null)
           gameOverMiddleItem.setText("It's a draw!");
         else {
-          gameOverMiddleItem.setColors(winner.getColors()[0], winner.getColors()[1],
-              winner.getColors()[2], winner.getColors()[3]);
+          float[] colors = winner.getSkin().headColors();
+          gameOverMiddleItem.setColors(colors[0], colors[1], colors[2], colors[3]);
           gameOverMiddleItem.setText(winner.getName() + " wins!");
         }
       }

@@ -21,8 +21,8 @@ public class BodyPart {
     this.y = player.getBodyPart(-1).getY();
     this.isHead = player.getBodyLength() == 0;
     this.index = player.getBodyLength();
-    if (this.isHead) this.colors = player.getColors();
-    else this.colors = player.getBodyColors();
+    if (this.isHead) this.colors = player.getSkin().headColors();
+    else this.colors = player.getSkin().tailColors();
   }
 
   // Fixed constructor
@@ -34,8 +34,8 @@ public class BodyPart {
     this.y = y;
     this.isHead = player.getBodyLength() == 0;
     this.index = player.getBodyLength();
-    if (this.isHead) this.colors = player.getColors();
-    else this.colors = player.getBodyColors();
+    if (this.isHead) this.colors = player.getSkin().headColors();
+    else this.colors = player.getSkin().tailColors();
   }
 
   // Offset constructor
@@ -64,8 +64,8 @@ public class BodyPart {
     }
     this.isHead = player.getBodyLength() == 0;
     this.index = player.getBodyLength();
-    if (this.isHead) this.colors = player.getColors();
-    else this.colors = player.getBodyColors();
+    if (this.isHead) this.colors = player.getSkin().headColors();
+    else this.colors = player.getSkin().tailColors();
   }
 
   public void move() {

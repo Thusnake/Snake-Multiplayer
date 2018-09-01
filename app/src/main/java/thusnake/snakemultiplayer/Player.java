@@ -29,8 +29,7 @@ public class Player {
   private PlayerController playerController;
   private BodyPart[] bodyParts = new BodyPart[0];
   private int bodyLength = 0;
-  private float[] colors = new float[4];
-  private int colorIndex = 0;
+  private SnakeSkin skin = SnakeSkin.white;
   private BoardDrawer game;
   private Vibrator vibrator;
   private Mesh boardSquares;
@@ -42,7 +41,7 @@ public class Player {
     this.renderer = renderer;
     this.controlType = ControlType.OFF;
     this.number = number;
-    this.setColors(0);
+    this.setSkin(SnakeSkin.white);
   }
 
   public Player defaultPreset() {
@@ -236,13 +235,9 @@ public class Player {
   public BodyPart[] getBodyParts() { return this.bodyParts; }
   public int getBodyLength() { return this.bodyLength; }
 
-  public float[] getColors() { return this.colors; }
-  public int getColorIndex() { return this.colorIndex; }
-  public float[] getBodyColors() {
-    float[] bodyColors = {this.colors[0] / 2f, this.colors[1] / 2f,
-                          this.colors[2] / 2f, this.colors[3]};
-    return bodyColors;
-  }
+  public void setSkin(SnakeSkin skin) { this.skin = skin; }
+  public SnakeSkin getSkin() { return skin; }
+  public int getSkinIndex() { return SnakeSkin.allSkins.indexOf(skin); }
 
   public void setControllerThread(ConnectedThread thread) { this.onlineControllerThread = thread; }
   public ConnectedThread getControllerThread() { return this.onlineControllerThread; }
@@ -278,10 +273,6 @@ public class Player {
   }
 
   public void setName(String name) { this.name = name; }
-  public void setColors(int colorIndex) {
-    this.colors = Menu.getColorFromIndex(colorIndex);
-    this.colorIndex = colorIndex;
-  }
 
   // Static methods
   private static Direction getOppositeDirection(Direction direction) {

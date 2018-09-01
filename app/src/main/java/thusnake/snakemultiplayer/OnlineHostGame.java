@@ -102,10 +102,10 @@ public class OnlineHostGame extends Game {
   public List<byte[]> createInitializationCalls(ConnectedThread thread) {
     List<byte[]> allInformation = new ArrayList<>();
     // TODO This ain't an array anymore, clean it up.
-    allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers().get(0).getColorIndex()});
-    allInformation.add(new byte[] {SNAKE2_COLOR_CHANGED, (byte) getPlayers().get(1).getColorIndex()});
-    allInformation.add(new byte[] {SNAKE3_COLOR_CHANGED, (byte) getPlayers().get(2).getColorIndex()});
-    allInformation.add(new byte[] {SNAKE4_COLOR_CHANGED, (byte) getPlayers().get(3).getColorIndex()});
+    allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers().get(0).getSkinIndex()});
+    allInformation.add(new byte[] {SNAKE2_COLOR_CHANGED, (byte) getPlayers().get(1).getSkinIndex()});
+    allInformation.add(new byte[] {SNAKE3_COLOR_CHANGED, (byte) getPlayers().get(2).getSkinIndex()});
+    allInformation.add(new byte[] {SNAKE4_COLOR_CHANGED, (byte) getPlayers().get(3).getSkinIndex()});
     allInformation.add(new byte[] {SNAKE1_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(0).getControlCorner())});
     allInformation.add(new byte[] {SNAKE2_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(1).getControlCorner())});
     allInformation.add(new byte[] {SNAKE3_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(2).getControlCorner())});

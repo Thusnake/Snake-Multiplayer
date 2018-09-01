@@ -62,8 +62,8 @@ public abstract class BoardDrawer {
   }
 
   public void drawControllerLayout(Player player) {
-    gl.glColor4f(player.getColors()[0], player.getColors()[1],
-        player.getColors()[2], player.getColors()[3]);
+    float[] colors = player.getSkin().headColors();
+    gl.glColor4f(colors[0], colors[1], colors[2], colors[3]);
 
     player.getPlayerController().draw();
   }

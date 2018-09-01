@@ -103,7 +103,9 @@ class SnakeOverviewButton extends MenuButton {
     if (getPlayer() != null) {
       nameItem.setText(getPlayer().getName());
       nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX(), 0);
-      skinPreview.updateColors(0, getPlayer().getColors());
+      skinPreview.updateColors(0, getPlayer().getSkin().headColors());
+      skinPreview.updateColors(1, getPlayer().getSkin().tailColors());
+      skinPreview.updateColors(2, getPlayer().getSkin().tailColors());
     }
   }
 

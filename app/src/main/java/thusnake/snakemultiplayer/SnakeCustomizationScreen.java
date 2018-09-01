@@ -18,15 +18,16 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
                                               renderer.getScreenWidth(),
                                               renderer.getScreenHeight() / 2f,
                                               MenuDrawable.EdgePoint.TOP_LEFT);
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(0, "White"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(1, "Red"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(2, "Orange"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(3, "Yellow"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(4, "Green"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(5, "Teal"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(6, "Blue"));
-    snakeSelectionCarousel.addChoice(meshAsCarouselItem(7, "Pink"));
-    snakeSelectionCarousel.setDefaultChoice(player.getColorIndex());
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.white, "White"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.red, "Red"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.orange, "Orange"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.yellow, "Yellow"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.green, "Green"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.teal, "Teal"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.blue, "Blue"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.purple, "Purple"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.black, "Black"));
+    snakeSelectionCarousel.setDefaultChoice(player.getSkinIndex());
     snakeSelectionCarousel.noBoundaries();
     snakeSelectionCarousel.notChosenOpacity = 0.5f;
     snakeSelectionCarousel.confirmChoices();
@@ -196,25 +197,15 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
     drawables.add(cornerSettingsButton);
   }
 
-  private CarouselItem meshAsCarouselItem(int colorIndex, String name) {
-    Mesh snake = new Mesh(renderer, 0, 0, MenuDrawable.EdgePoint.CENTER,
-                          snakeSelectionCarousel.getHeight() / 3f, 1, 3);
-
-    float[] colors = Menu.getColorFromIndex(colorIndex);
-    float[] tailColors = new float[colors.length];
-    for (int i = 0; i < colors.length - 1; i++)
-      tailColors[i] = colors[i] / 2f;
-    tailColors[3] = 1f;
-
-    snake.updateColors(0, colors);
-    snake.updateColors(1, tailColors);
-    snake.updateColors(2, tailColors);
+  private CarouselItem skinAsCarouselItem(SnakeSkin skin, String name) {
+    Mesh snake = skin.previewMesh(renderer, 0, 0, MenuDrawable.EdgePoint.CENTER,
+                                  snakeSelectionCarousel.getHeight(), 3);
 
     return new CarouselItem(snakeSelectionCarousel, snake, name) {
       @Override
       public void onChosen() {
         super.onChosen();
-        player.setColors(colorIndex);
+        player.setSkin(skin);
       }
     };
   }
