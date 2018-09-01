@@ -48,4 +48,8 @@ public abstract class MenuContainer extends MenuDrawable implements TextureReloa
   public void addItem(MenuDrawable item) {
     contents.add(item);
   }
+
+  public void removeItem(MenuDrawable item) {
+    contents.remove(item);
+  }
 }
