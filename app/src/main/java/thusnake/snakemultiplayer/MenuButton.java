@@ -47,8 +47,8 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
     }
 
     if (isHeld) {
-      holdDuration.count(dt);
-      if (getHoldDuration() - dt < 1 && getHoldDuration() >= 1)
+      holdDuration.countUp(dt);
+      if (getHoldDuration() - dt < 0.5 && getHoldDuration() >= 0.5)
         onHeld();
     }
 
@@ -91,11 +91,12 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
           break;
 
         case MotionEvent.ACTION_UP:
-          if (isClicked(x, y) && isHeld) {
+          if (isHeld) {
             isHeld = false;
             scale.setEndTimeFromNow(1);
             holdDuration.reset();
-            performAction();
+            if (isClicked(x, y))
+              performAction();
           }
 
           break;
