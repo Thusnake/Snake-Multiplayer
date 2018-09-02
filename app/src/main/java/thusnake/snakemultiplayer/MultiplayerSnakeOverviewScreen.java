@@ -168,16 +168,18 @@ class SnakeOverviewButton extends MenuButton {
   @Override
   public void move(double dt) {
     super.move(dt);
-    plusIcon.setDrawable(getPlayer() == null);
-    nameItem.setDrawable(getPlayer() != null);
-    skinPreview.setDrawable(getPlayer() != null);
 
-    if (getPlayer() != null) {
-      nameItem.setText(getPlayer().getName());
+    Player player = getPlayer();
+
+    plusIcon.setDrawable(player == null);
+    nameItem.setDrawable(player != null);
+    skinPreview.setDrawable(player != null);
+    if (player != null) {
+      nameItem.setText(player.getName());
       nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX(), 0);
-      skinPreview.updateColors(0, getPlayer().getSkin().headColors());
-      skinPreview.updateColors(1, getPlayer().getSkin().tailColors());
-      skinPreview.updateColors(2, getPlayer().getSkin().tailColors());
+      skinPreview.updateColors(0, player.getSkin().headColors());
+      skinPreview.updateColors(1, player.getSkin().tailColors());
+      skinPreview.updateColors(2, player.getSkin().tailColors());
     }
   }
 
@@ -185,8 +187,9 @@ class SnakeOverviewButton extends MenuButton {
   public void performAction() {
     super.performAction();
 
-    if (!isHeld && getPlayer() != null) {
-      parentScreen.menu.setScreen(new SnakeCustomizationScreen(parentScreen.menu, getPlayer()) {
+    Player player = getPlayer();
+    if (!isHeld && player != null) {
+      parentScreen.menu.setScreen(new SnakeCustomizationScreen(parentScreen.menu, player) {
         @Override
         public void goBack() {
           parentScreen.menu.setScreen(parentScreen);
