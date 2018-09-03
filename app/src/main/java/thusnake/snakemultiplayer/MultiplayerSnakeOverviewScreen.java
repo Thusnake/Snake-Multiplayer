@@ -69,8 +69,8 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
             getX(EdgePoint.LEFT_CENTER) + renderer.smallDistance() * 2, getY(EdgePoint.LEFT_CENTER),
             EdgePoint.LEFT_CENTER);
 
-        defaultText.scaleToFit(0, getHeight() / 2.2f);
-        hostName.scaleToFit(0, getHeight() / 2.2f);
+        defaultText.scaleToFit(0, getHeight() / 2.4f);
+        hostName.scaleToFit(0, getHeight() / 2.4f);
 
         defaultText.setColors(0.35f, 0.55f, 0.59f);
         hostName.setColors(0.35f, 0.55f, 0.59f);
@@ -92,7 +92,7 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         super.performAction();
         if (originActivity.isGuest());
         else if (originActivity.isHost());
-        else ;
+        else menu.setScreen(new ConnectScreen(menu));
       }
     };
 
