@@ -76,6 +76,12 @@ final class GameSetupBuffer {
     return false;
   }
 
+  void swapCorners(PlayerController.Corner corner1, PlayerController.Corner corner2) {
+    Player playerToBeMoved = cornerMap.get(corner1);
+    cornerMap.put(corner1, cornerMap.get(corner2));
+    cornerMap.put(corner2, playerToBeMoved);
+  }
+
   @Nullable
   PlayerController.Corner getPlayerCorner(Player player) {
     for (PlayerController.Corner corner : cornerMap.keySet())

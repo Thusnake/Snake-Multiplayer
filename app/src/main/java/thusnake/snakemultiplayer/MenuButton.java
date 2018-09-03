@@ -30,6 +30,7 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
       gl.glPushMatrix();
       gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
       gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 0); // Scale it.
+      gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
 
       super.draw(parentColors);
 
@@ -115,7 +116,7 @@ public abstract class MenuButton extends MenuContainer implements TextureReloada
   public MenuButton withBackgroundImage(int id) {
     // If backgroundImage has not been created yet - create it and add it to the list of drawables.
     if (backgroundImage == null) {
-      backgroundImage = new MenuImage(renderer, 0, 0, getWidth(), getHeight(), EdgePoint.CENTER);
+      backgroundImage = new MenuImage(renderer, getX(), getY(), getWidth(), getHeight(),alignPoint);
       addItem(backgroundImage);
     }
 
