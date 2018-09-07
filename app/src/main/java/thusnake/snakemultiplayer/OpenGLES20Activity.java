@@ -44,6 +44,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   // Bluetooth related variables
   private boolean isReady = false;
+  private boolean discoveryStarted = false;
 
   // Guest-only
   public int numberOfRemoteDevices = 0;
@@ -67,9 +68,9 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
         arrayAdapter.add(device.getName() + "\n" + device.getAddress());
         gameView.getGameRenderer().getMenu().addFoundDevice(device);
       } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
-        getRenderer().getMenu().onDiscoveryStarted();
+        discoveryStarted = true;
       } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-        getRenderer().getMenu().onDiscoveryFinished();
+        discoveryStarted = false;
       }
     }
   };
@@ -234,6 +235,8 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   }
 
   public boolean isReady() { return this.isReady; }
+
+  public boolean discoveryStarted() { return discoveryStarted; }
 
 
   public int getNumberOfRemoteDevices() {

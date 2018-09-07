@@ -29,7 +29,7 @@ public class MenuItem extends MenuDrawable {
   }
 
   public MenuItem(GameRenderer renderer, String text, float x, float y, EdgePoint alignPoint) {
-    this(renderer, text, x, y, alignPoint, EdgePoint.CENTER);
+    this(renderer, text, x, y, alignPoint, alignPoint);
   }
 
   @Override
@@ -49,7 +49,7 @@ public class MenuItem extends MenuDrawable {
         gl.glPushMatrix();
         gl.glScalef(0.25f, 0.25f, 1f);
         glText.begin(0.66f, 0.66f, 0.66f, descriptionOpacity);
-        glText.draw(this.description, this.getLeftX() * 4, this.getBottomY() * 4);
+        glText.draw(description, getLeftX() * 4, getBottomY() * 4 - glText.getHeight() * 0.7f);
         glText.end();
         gl.glPopMatrix();
       }
@@ -88,6 +88,11 @@ public class MenuItem extends MenuDrawable {
   public GameRenderer getRenderer() { return this.renderer; }
   public String getText() { return this.text; }
   public String getDescription() { return this.description; }
+
+  @Override
+  public float getHeight() {
+    return description == null ? super.getHeight() : super.getHeight() + glText.getHeight() / 4;
+  }
 
   public void setEaseOutVariables(double multiplier, double inertia) {
     this.easeOutMultiplier = multiplier;

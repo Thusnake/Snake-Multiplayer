@@ -28,7 +28,7 @@ public class ConnectScreen extends MenuScreen {
       @Override
       public void performAction() {
         super.performAction();
-//        menu.setScreen(new JoinScreen(menu));
+        menu.setScreen(new JoinScreen(menu));
       }
     }.withBackgroundImage(R.drawable.join_icon);
 

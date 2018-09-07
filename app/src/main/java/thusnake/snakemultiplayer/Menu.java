@@ -42,8 +42,8 @@ public class Menu implements Activity {
   private enum ConnectionRole {HOST, GUEST}
   private ConnectionType connectionType = null;
   private ConnectionRole connectionRole = null;
-  private final DeviceItemMap pairedDevices = new DeviceItemMap();
-  private final DeviceItemMap foundDevices = new DeviceItemMap();
+  final DeviceItemMap pairedDevices = new DeviceItemMap();
+  final DeviceItemMap foundDevices = new DeviceItemMap();
   private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
   private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
   private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
@@ -622,10 +622,6 @@ public class Menu implements Activity {
         pairedDevices.add(device, deviceItem);
       }
     }
-    bluetoothGuestMenu.removeAll(pairedDevices.getItems());
-    drawablesConnect.removeAll(pairedDevices.getItems());
-    bluetoothGuestMenu.addAll(pairedDevices.getItems());
-    drawablesConnect.addAll(pairedDevices.getItems());
   }
 
   // Adds a newly found device to the list and displays it.
@@ -1024,8 +1020,8 @@ class DeviceItemMap{
 
   public int size() { return deviceMap.size(); }
 
-  public ArrayList<MenuItem> getItems() {
-    ArrayList<MenuItem> itemsList = new ArrayList<>();
+  public List<MenuDrawable> getItems() {
+    List<MenuDrawable> itemsList = new ArrayList<>();
     for (Pair<BluetoothDevice, MenuItem> pair : deviceMap)
       itemsList.add(pair.second);
     return itemsList;
