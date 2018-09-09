@@ -629,6 +629,8 @@ public class Menu implements Activity {
           }.withLoadingSnake(true));
 
       originActivity.connectThread.run();
+
+      setScreen(new MultiplayerSnakeOverviewScreen(this));
     }
   }
 
@@ -696,16 +698,7 @@ public class Menu implements Activity {
 
   // Sets up the menu to work as if you're not a guest anymore.
   public void endGuest() {
-    // Re-enable the items.
-    for (MenuDrawable drawable : guestDisabledDrawables)
-      if (!drawable.isEnabled())
-        drawable.setEnabled(true);
-    // Set the add snake button action back to the old one.
-    addSnakeButton.setAction((action, origin) -> renderer.getMenu().addSnake());
     // Turn all players back to off (except the first one). TODO Make it revert to saved.
-    for (Player player : players)
-      player.setControlType(Player.ControlType.OFF);
-    players[0].setControlType(Player.ControlType.CORNER);
   }
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {

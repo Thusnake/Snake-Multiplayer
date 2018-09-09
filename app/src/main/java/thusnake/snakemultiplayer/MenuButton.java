@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 /**
  * A wrapper for other MenuDrawables with the functionality of a button.
  */
-public abstract class MenuButton extends MenuContainer implements TextureReloadable {
+public abstract class MenuButton extends MenuDynamicContainer implements TextureReloadable {
   private boolean isHeld = false;
   private SimpleTimer holdDuration = new SimpleTimer(0.0);
   private MenuImage backgroundImage;

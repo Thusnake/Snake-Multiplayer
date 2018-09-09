@@ -7,6 +7,8 @@ public class JoinScreen extends MenuScreen {
   public JoinScreen(Menu menu) {
     super(menu);
 
+    menu.updatePairedDevices();
+
     searchButton = new MenuButton(renderer, renderer.getScreenWidth() - renderer.smallDistance(),
                                   renderer.getScreenHeight() - renderer.smallDistance(),
                                   backButton.getHeight(), backButton.getHeight(),

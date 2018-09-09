@@ -192,11 +192,13 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   public void closeConnectedGuestThread(ConnectedThread thread) {
     int index;
     for (index = 0; index < connectedThreads.length; index++)
-      if (connectedThreads[index].equals(thread))
-        break;
-      else if (index == connectedThreads.length - 1)
-        // Reached the end and found no match to break the loop.
-        return;
+      if (connectedThreads[index] != null) {
+        if (connectedThreads[index].equals(thread))
+          break;
+        else if (index == connectedThreads.length - 1)
+          // Reached the end and found no match to break the loop.
+          return;
+      }
 
     connectedThreads[index].cancel();
     connectedThreads[index] = null;

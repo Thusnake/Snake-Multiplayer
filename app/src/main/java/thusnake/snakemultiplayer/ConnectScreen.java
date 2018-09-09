@@ -17,7 +17,7 @@ public class ConnectScreen extends MenuScreen {
       public void performAction() {
         super.performAction();
         menu.beginHost();
-        goBack();
+        menu.setScreen(new HostManagementScreen(menu));
       }
     }.withBackgroundImage(R.drawable.host_icon);
 
