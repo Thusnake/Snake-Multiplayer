@@ -116,7 +116,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                menu.getSetupBuffer().setPlayerCorner(player, Corner.LOWER_LEFT);
+                menu.getSetupBuffer().cornerMap.setPlayerCorner(player, Corner.LOWER_LEFT);
               }
             });
 
@@ -131,7 +131,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                menu.getSetupBuffer().setPlayerCorner(player, Corner.UPPER_LEFT);
+                menu.getSetupBuffer().cornerMap.setPlayerCorner(player, Corner.UPPER_LEFT);
               }
             });
 
@@ -146,7 +146,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                menu.getSetupBuffer().setPlayerCorner(player, Corner.UPPER_RIGHT);
+                menu.getSetupBuffer().cornerMap.setPlayerCorner(player, Corner.UPPER_RIGHT);
               }
             });
 
@@ -161,7 +161,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
               @Override
               public void performAction() {
                 super.performAction();
-                menu.getSetupBuffer().setPlayerCorner(player, Corner.LOWER_RIGHT);
+                menu.getSetupBuffer().cornerMap.setPlayerCorner(player, Corner.LOWER_RIGHT);
               }
             });
 

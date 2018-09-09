@@ -1,114 +1,17 @@
 package thusnake.snakemultiplayer;
 
-import android.support.annotation.Nullable;
-
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 final class GameSetupBuffer {
   protected enum GameMode {CLASSIC, SPEEDY, VS_AI, CUSTOM}
   protected GameMode gameMode;
   protected int horizontalSquares, verticalSquares, speed;
   protected int difficulty;
-  private Map<PlayerController.Corner, Player> cornerMap = new HashMap<>();
+  final protected CornerMap cornerMap = new CornerMap();
   protected boolean stageBorders;
 
-  GameSetupBuffer() {
-    cornerMap.put(PlayerController.Corner.LOWER_LEFT, null);
-    cornerMap.put(PlayerController.Corner.UPPER_LEFT, null);
-    cornerMap.put(PlayerController.Corner.UPPER_RIGHT, null);
-    cornerMap.put(PlayerController.Corner.LOWER_RIGHT, null);
-  }
-
-  /**
-   * Adds a player to the setup buffer.
-   * @param player The player to be added.
-   * @param corner The control corner to be occupied by that player.
-   * @return Whether the player was successfully added. This will return false only if the corner
-   * had been previously occupied or the player is already in the game.
-   */
-  boolean addPlayer(Player player, PlayerController.Corner corner) {
-    if (cornerMap.get(corner) == null && !cornerMap.containsValue(player)) {
-      cornerMap.put(corner, player);
-      player.setSetupBuffer(this);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Removes a player from the setup buffer. Its corner is emptied.
-   * @param player The player to be removed.
-   */
-  void removePlayer(Player player) {
-    if (cornerMap.containsValue(player))
-      for (PlayerController.Corner corner : cornerMap.keySet())
-        if (cornerMap.get(corner).equals(player))
-          cornerMap.put(corner, null);
-  }
-
-  /**
-   * Empties a corner from the setup buffer, removing the snake in it.
-   * @param corner The corner to be emptied.
-   */
-  void emptyCorner(PlayerController.Corner corner) {
-    cornerMap.put(corner, null);
-  }
-
-  /**
-   * Sets the corner of an already entered player to a new one. If the new one is occupied with
-   * another snake it will switch both snakes' corners.
-   * @param player The player whose corner will be moved.
-   * @param corner The new corner.
-   * @return Whether that player was present in the buffer. If it's not present then the function
-   * will do nothing.
-   */
-  boolean setPlayerCorner(Player player, PlayerController.Corner corner) {
-    if (cornerMap.containsValue(player)) {
-      Player playerToBeMoved = cornerMap.get(corner);
-      PlayerController.Corner previousCorner = player.getControlCorner();
-      cornerMap.put(corner, player);
-      cornerMap.put(previousCorner, playerToBeMoved);
-      return true;
-    }
-    return false;
-  }
-
-  void swapCorners(PlayerController.Corner corner1, PlayerController.Corner corner2) {
-    Player playerToBeMoved = cornerMap.get(corner1);
-    cornerMap.put(corner1, cornerMap.get(corner2));
-    cornerMap.put(corner2, playerToBeMoved);
-  }
-
-  @Nullable
-  PlayerController.Corner getPlayerCorner(Player player) {
-    for (PlayerController.Corner corner : cornerMap.keySet())
-      if (cornerMap.get(corner) != null && cornerMap.get(corner).equals(player))
-        return corner;
-    return null;
-  }
-
-  Player getPlayer(PlayerController.Corner corner) {
-    return cornerMap.get(corner);
-  }
-
-  int getNumberOfPlayers() {
-    int count = 0;
-    for (PlayerController.Corner corner : cornerMap.keySet())
-      if (cornerMap.get(corner) != null)
-        count++;
-    return count;
-  }
-
-  List<Player> getPlayers() {
-    List<Player> players = new LinkedList<>();
-    for (PlayerController.Corner corner : cornerMap.keySet())
-      if (cornerMap.get(corner) != null)
-        players.add(cornerMap.get(corner));
-    return players;
-  }
+  CornerMap getCornerMap() { return cornerMap; }
 
   public void adjustToDifficultyAndGameMode() {
     switch(gameMode) {
@@ -150,6 +53,57 @@ final class GameSetupBuffer {
       default:
         throw new RuntimeException("This game mode is not supported.");
     }
+  }
+
+  public List<byte[]> allInformationCallList(ConnectedThread thread) {
+    List<byte[]> calls = new LinkedList<>();
+    // Game calls.
+    calls.add(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) horizontalSquares});
+    calls.add(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) verticalSquares});
+    calls.add(new byte[] {Protocol.SPEED_CHANGED, (byte) speed});
+    calls.add(new byte[] {Protocol.STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
+
+    // Player calls.
+    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+      Player player = cornerMap.getPlayer(corner);
+      if (player == null) continue;
+
+      // Player skin index.
+      byte skinCallByte = Protocol.SNAKE_LL_SKIN;
+      switch(corner) {
+        case LOWER_LEFT: skinCallByte = Protocol.SNAKE_LL_SKIN; break;
+        case UPPER_LEFT: skinCallByte = Protocol.SNAKE_UL_SKIN; break;
+        case UPPER_RIGHT: skinCallByte = Protocol.SNAKE_UR_SKIN; break;
+        case LOWER_RIGHT: skinCallByte = Protocol.SNAKE_LR_SKIN; break;
+      }
+      calls.add(new byte[] {skinCallByte, (byte) player.getSkinIndex()});
+    }
+
+    calls.add(makeDetailedSnakesList(thread));
+    calls.add(new byte[] {Protocol.NUM_DEVICES_AND_READY_WITH_STATUS,
+                          (byte) thread.originActivity.getNumberOfRemoteDevices(),
+                          (byte) thread.originActivity.getNumberOfReadyRemoteDevices(),
+                          (byte) (thread.isReady() ? 1 : 0)});
+
+    return calls;
+  }
+
+  public byte[] makeDetailedSnakesList(ConnectedThread thread) {
+    byte[] output = new byte[5];
+    output[0] = Protocol.DETAILED_SNAKES_LIST;
+    int outputIndex = 1;
+
+    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+      Player player = cornerMap.getPlayer(corner);
+      if (player == null) output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
+      else if (player.getPlayerController() instanceof BluetoothController
+               && player.getControllerThread().equals(thread))
+        output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
+      else
+        output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;
+    }
+
+    return output;
   }
 
   public static String gameModeToString(GameMode gameMode) {

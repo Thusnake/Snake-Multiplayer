@@ -4,7 +4,7 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
   private final MenuButton nextButton;
 
   public SinglePlayerSnakeCustomizationScreen(Menu menu) {
-    super(menu, menu.getSetupBuffer().getPlayers().get(0));
+    super(menu, menu.getSetupBuffer().cornerMap.getPlayers().get(0));
 
     nextButton
         = new MenuButton(renderer,

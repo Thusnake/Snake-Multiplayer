@@ -21,7 +21,6 @@ public class Player {
   private Direction direction, previousDirection;
   private boolean alive = false, drawable = false, flashing;
   private GameRenderer renderer;
-  private GameSetupBuffer setupBuffer;
   private int number, score;
   private String name;
   private ControlType controlType;
@@ -49,8 +48,6 @@ public class Player {
     setController(new CornerLayoutController(renderer, this));
     return this;
   }
-
-  public void setSetupBuffer(GameSetupBuffer buffer) { setupBuffer = buffer; }
 
   // Gets called upon game start.
   public void prepareForGame(BoardDrawer game) {
@@ -223,7 +220,9 @@ public class Player {
   public int getScore() { return this.score; }
   public ControlType getControlType() { return this.controlType; }
   public PlayerController getPlayerController() { return this.playerController; }
-  public PlayerController.Corner getControlCorner() { return setupBuffer.getPlayerCorner(this); }
+  public PlayerController.Corner getControlCorner() {
+    return renderer.getMenu().getSetupBuffer().getCornerMap().getPlayerCorner(this);
+  }
 
   public BodyPart getBodyPart(int bodyPartIndex) {
     if (bodyPartIndex >= 0)

@@ -3,7 +3,6 @@ package thusnake.snakemultiplayer;
 import android.util.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -13,7 +12,7 @@ import java.util.List;
 public class Protocol {
   // Guest codes
   public static final byte REQUEST_MOVE = 1; // Followed by the move's id.
-  public static final byte REQUEST_ADD_SNAKE = 2;
+  public static final byte REQUEST_ADD_SNAKE = 2; // Followed by 1 corner byte.
   public static final byte REQUEST_AVAILABLE_SNAKES = 3;
   public static final byte REQUEST_CONTROLLED_SNAKES = 4;
   public static final byte IS_READY = 5;
@@ -26,26 +25,24 @@ public class Protocol {
   // Universal codes
   public static final byte ALL_DIRECTIONS = 10; // Followed by 1 movement byte.
   public static final byte SNAKE_DIRECTION_CHANGE = 11; // Followed by 1 snake byte and 1 direction byte.
-  public static final byte SNAKE1_COLOR_CHANGED = 20; // Followed by 1 color byte.
-  public static final byte SNAKE2_COLOR_CHANGED = 21; // Followed by 1 color byte.
-  public static final byte SNAKE3_COLOR_CHANGED = 22; // Followed by 1 color byte.
-  public static final byte SNAKE4_COLOR_CHANGED = 23; // Followed by 1 color byte.
-  public static final byte SNAKE1_CORNER_CHANGED = 30; // Followed by 1 corner byte.
-  public static final byte SNAKE2_CORNER_CHANGED = 31; // Followed by 1 corner byte.
-  public static final byte SNAKE3_CORNER_CHANGED = 32; // Followed by 1 corner byte.
-  public static final byte SNAKE4_CORNER_CHANGED = 33; // Followed by 1 corner byte.
-  public static final byte SNAKE1_NAME_CHANGED = 40; // Followed by 1 length byte and a string of chars.
-  public static final byte SNAKE2_NAME_CHANGED = 41; // Followed by 1 length byte and a string of chars.
-  public static final byte SNAKE3_NAME_CHANGED = 42; // Followed by 1 length byte and a string of chars.
-  public static final byte SNAKE4_NAME_CHANGED = 43; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_LL_SKIN = 20; // Followed by 1 color byte.
+  public static final byte SNAKE_UL_SKIN = 21; // Followed by 1 color byte.
+  public static final byte SNAKE_UR_SKIN = 22; // Followed by 1 color byte.
+  public static final byte SNAKE_LR_SKIN = 23; // Followed by 1 color byte.
+  public static final byte SNAKE_LL_NAME = 40; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_UL_NAME = 41; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_UR_NAME = 42; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_LR_NAME = 43; // Followed by 1 length byte and a string of chars.
   public static final byte SPEED_CHANGED = 50; // Followed by 1 byte.
   public static final byte HOR_SQUARES_CHANGED = 51; // Followed by 1 byte.
   public static final byte VER_SQUARES_CHANGED = 52; // Followed by 1 byte.
   public static final byte STAGE_BORDERS_CHANGED = 53; // Followed by 1 boolean byte.
 
-  public static final byte AGGREGATE_CALL = 60; // Followed by series of calls and NEXT_CALL bytes.
+  // Aggregate call codes.
+  public static final byte BASIC_AGGREGATE_CALL = 60; // Followed by series of calls and NEXT_CALL bytes.
   public static final byte NEXT_CALL = 61;
-  public static final byte AGGREGATE_CALL_RECEIVED = 62;
+  public static final byte GAME_START_CALL = 62;
+  public static final byte GAME_START_RECEIVED = 63;
 
   public static final byte PING = 68;
   public static final byte PING_ANSWER = 69;
@@ -57,7 +54,7 @@ public class Protocol {
   public static final byte NUMBER_OF_READY = -4; // Followed by number of ready devices.
   public static final byte NUMBER_OF_DEVICES = -5; // Followed by number of devices.
   public static final byte READY_STATUS = -6; // Followed by a device's personal boolean ready value.
-  public static final byte READY_NUMBER_AND_STATUS = -7; // Followed by number of ready devices and device's personal boolean ready value.
+  public static final byte NUM_DEVICES_AND_READY_WITH_STATUS = -7; // Followed by number of connected devices, ready devices and device's personal boolean ready value.
 
   public static final byte DETAILED_SNAKES_LIST = -8; // Followed by 4 bytes representing one of the following states:
   public static final byte DSL_SNAKE_OFF = 0;
@@ -148,13 +145,13 @@ public class Protocol {
     return firstInt | secondInt << 8;
   }
 
-  public static byte[] encodeSeveralCalls(List<byte[]> callsList) {
+  public static byte[] encodeSeveralCalls(List<byte[]> callsList, byte header) {
     int totalLength = 1;
     for (byte[] call : callsList)
       totalLength += call.length + 1;
 
     byte[] outputCall = new byte[totalLength];
-    outputCall[0] = AGGREGATE_CALL;
+    outputCall[0] = header;
     int outputIndex = 1;
     for (byte[] call : callsList) {
       outputCall[outputIndex++] = (byte) call.length;
@@ -170,7 +167,7 @@ public class Protocol {
 
     int currentIndex = 1;
     while(currentIndex < aggregateCall.length) {
-      if (aggregateCall[currentIndex] == Protocol.AGGREGATE_CALL) break;
+      if (aggregateCall[currentIndex] == Protocol.GAME_START_CALL) break;
 
       // Go through as many bytes as the current one decides to and add them to an array.
       byte[] currentCall = new byte[aggregateCall[currentIndex]];

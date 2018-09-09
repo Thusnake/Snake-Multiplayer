@@ -55,6 +55,7 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         backButton.getHeight(),
         MenuDrawable.EdgePoint.CENTER) {
       private MenuItem defaultText, hostName;
+      private MenuImage[] deviceStatusIcons;
 
       @Override
       public void onButtonCreated() {
@@ -75,6 +76,17 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         defaultText.setColors(0.35f, 0.55f, 0.59f);
         hostName.setColors(0.35f, 0.55f, 0.59f);
 
+        deviceStatusIcons = new MenuImage[4];
+        float iconsHeight = getHeight(), iconsWidth = iconsHeight * 81f / 168f;
+        for (int index = 0; index < deviceStatusIcons.length; index++) {
+          deviceStatusIcons[index] = new MenuImage(renderer,
+              this.getX(EdgePoint.RIGHT_CENTER) - iconsWidth * (3 - index)
+                                  - renderer.smallDistance() * (4 - index),
+              this.getY(EdgePoint.CENTER), iconsWidth, iconsHeight, EdgePoint.RIGHT_CENTER);
+
+          addItem(deviceStatusIcons[index]);
+        }
+
         addItem(defaultText);
         addItem(hostName);
       }
@@ -82,16 +94,42 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
       @Override
       public void move(double dt) {
         super.move(dt);
+        // Text.
         defaultText.setDrawable(!originActivity.isGuest() && !originActivity.isHost());
         hostName.setDrawable(originActivity.isGuest() || originActivity.isHost());
-        hostName.setText("Some host");
+
+        if (originActivity.isGuest())
+          hostName.setText(originActivity.connectedThread.device.getName());
+        else if (originActivity.isHost())
+          hostName.setText("Hosting..");
+
+        if (originActivity.isGuest() || originActivity.isHost())
+          hostName.scaleToFit(0, getHeight() / 2.4f);
+
+        // Device status icons.
+        for (MenuImage icon : deviceStatusIcons)
+          icon.setDrawable(originActivity.isGuest() || originActivity.isHost());
+
+        if (originActivity.isGuest() || originActivity.isHost()) {
+          for (MenuImage icon : deviceStatusIcons)
+            icon.setTexture(R.drawable.phone_icon_free);
+
+          deviceStatusIcons[0].setTexture(originActivity.isReady()
+              ? R.drawable.phone_icon_ready : R.drawable.phone_icon_joined);
+
+          for (int index = 1; index < originActivity.getNumberOfRemoteDevices(); index++)
+            deviceStatusIcons[index].setTexture(R.drawable.phone_icon_joined);
+
+          for (int index = 1; index < originActivity.getNumberOfReadyRemoteDevices(); index++)
+            deviceStatusIcons[index].setTexture(R.drawable.phone_icon_ready);
+        }
       }
 
       @Override
       public void performAction() {
         super.performAction();
         if (originActivity.isGuest());
-        else if (originActivity.isHost());
+        else if (originActivity.isHost()) menu.setScreen(new HostManagementScreen(menu));
         else menu.setScreen(new ConnectScreen(menu));
       }
     };
@@ -165,7 +203,7 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
       button.removePlayer();
     } else if (closestButton != button) {
       // Otherwise do the swap.
-      menu.getSetupBuffer().swapCorners(button.getCorner(), closestButton.getCorner());
+      menu.getSetupBuffer().cornerMap.swapCorners(button.getCorner(), closestButton.getCorner());
     }
 
     // Retract the trash icon.
@@ -254,8 +292,10 @@ class SnakeOverviewButton extends MenuButton {
       });
     } else {
       GameSetupBuffer setupBuffer = parentScreen.menu.getSetupBuffer();
-      setupBuffer.addPlayer(new Player(renderer, setupBuffer.getNumberOfPlayers()).defaultPreset(),
-                            corner);
+      setupBuffer.cornerMap.addPlayer(new Player(renderer,
+                                                 setupBuffer.cornerMap.getNumberOfPlayers())
+                                                                                  .defaultPreset(),
+                                      corner);
     }
   }
 
@@ -300,11 +340,11 @@ class SnakeOverviewButton extends MenuButton {
   }
 
   public void removePlayer() {
-    parentScreen.menu.getSetupBuffer().emptyCorner(corner);
+    parentScreen.menu.getSetupBuffer().cornerMap.emptyCorner(corner);
   }
 
   public Player getPlayer() {
-    return parentScreen.menu.getSetupBuffer().getPlayer(corner);
+    return parentScreen.menu.getSetupBuffer().cornerMap.getPlayer(corner);
   }
 
   public PlayerController.Corner getCorner() { return corner; }

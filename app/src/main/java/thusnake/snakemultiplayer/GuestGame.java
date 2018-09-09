@@ -54,7 +54,7 @@ public class GuestGame extends Game {
       }
     };
 
-    for (Player player : setupBuffer.getPlayers())
+    for (Player player : getPlayers())
       if (player != null && !player.getControlType().equals(Player.ControlType.OFF)
                          && !player.getControlType().equals(Player.ControlType.BLUETOOTH))
         player.setControllerThread(originActivity.connectedThread);
@@ -105,9 +105,10 @@ public class GuestGame extends Game {
 
         Player.Direction[] directions = new Player.Direction[4];
         Protocol.decodeMovementCode(encodedMove, directions);
-        for (int index = 0; index < 4; index++)
-          if (this.getPlayers().get(index) != null && this.getPlayers().get(index).isAlive())
-            this.getPlayers().get(index).changeDirection(directions[index]);
+        cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT).changeDirection(directions[0]);
+        cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT).changeDirection(directions[1]);
+        cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT).changeDirection(directions[2]);
+        cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT).changeDirection(directions[3]);
 
         // Move all the snakes.
         for (Player player : this.getPlayers())

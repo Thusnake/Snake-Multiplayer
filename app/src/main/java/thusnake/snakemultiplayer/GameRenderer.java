@@ -9,9 +9,6 @@ import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -304,10 +301,11 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           originActivity.forceSetReady(receivedReady);
         }
         break;
-      case Protocol.READY_NUMBER_AND_STATUS:
+      case Protocol.NUM_DEVICES_AND_READY_WITH_STATUS:
         if (originActivity.isGuest()) {
-          originActivity.numberOfReadyRemoteDevices = bytes[1];
-          originActivity.forceSetReady(bytes[2] == 1);
+          originActivity.numberOfRemoteDevices = bytes[1];
+          originActivity.numberOfReadyRemoteDevices = bytes[2];
+          originActivity.forceSetReady(bytes[3] == 1);
         }
         break;
       case Protocol.PING:

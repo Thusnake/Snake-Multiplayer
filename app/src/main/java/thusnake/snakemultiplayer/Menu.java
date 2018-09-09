@@ -49,7 +49,7 @@ public class Menu implements Activity {
   private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
   private final MenuDrawable bluetoothStatusIcon, readyDevicesCounter, disconnectButton;
 
-  private final MenuButton[] colorSelectionSquare, cornerSelectionSquare;
+  private final MenuButton[] colorSelectionSquare;
   private final MenuItem addSnakeButton;
   private int playersOptionsIndex, expandedItemIndex = -1;
   private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
@@ -298,46 +298,6 @@ public class Menu implements Activity {
     this.colorSelectionSquare[6].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(6));
     this.colorSelectionSquare[7].setAction((action, origin)-> renderer.getMenu().onColorSquareTouch(7));
 
-    this.cornerSelectionSquare = new MenuButton[4];
-    squareSize = (screenWidth*0.6f - 10 - 10*this.cornerSelectionSquare.length)
-                  / (float) this.cornerSelectionSquare.length;
-
-    this.cornerSelectionSquare[0] = new MenuButton(renderer, screenWidth*2.2f + 10,
-        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
-      @Override
-      public void performAction() {
-        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_LEFT);
-      }
-    }.withBackgroundImage(R.drawable.lowerleft);
-
-    this.cornerSelectionSquare[1] = new MenuButton(renderer, screenWidth*2.2f + 20 + squareSize,
-        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
-      @Override
-      public void performAction() {
-        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_LEFT);
-      }
-    }.withBackgroundImage(R.drawable.upperleft);
-
-    this.cornerSelectionSquare[2] = new MenuButton(renderer, screenWidth*2.2f + 30 + squareSize*2,
-        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
-      @Override
-      public void performAction() {
-        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.UPPER_RIGHT);
-      }
-    }.withBackgroundImage(R.drawable.upperright);
-
-    this.cornerSelectionSquare[3] = new MenuButton(renderer, screenWidth*2.2f + 40 + squareSize*3,
-        menuItemsPlayersOptions[menuItemsPlayersOptions.length - 1].getBottomY() - squareSize,
-        squareSize, squareSize, EdgePoint.BOTTOM_LEFT) {
-      @Override
-      public void performAction() {
-        renderer.getMenu().onCornerSquareTouch(PlayerController.Corner.LOWER_RIGHT);
-      }
-    }.withBackgroundImage(R.drawable.lowerright);
-
     // Some items should be disabled for online game guests.
     guestDisabledDrawables.add(menuItemsMain[2]);     // The board menu button.
     guestDisabledDrawables.add(menuItemsConnect[0]);  // The 4 connection specifiers.
@@ -369,7 +329,6 @@ public class Menu implements Activity {
     drawablesPlayersOptions = new ArrayList<>();
     drawablesPlayersOptions.addAll(Arrays.asList(menuItemsPlayersOptions));
     drawablesPlayersOptions.addAll(Arrays.asList(colorSelectionSquare));
-    drawablesPlayersOptions.addAll(Arrays.asList(cornerSelectionSquare));
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
@@ -523,10 +482,10 @@ public class Menu implements Activity {
     if (originActivity.isGuest() || originActivity.isHost()) {
       byte protocolId;
       switch (playersOptionsIndex) {
-        case 0: protocolId = Protocol.SNAKE1_COLOR_CHANGED; break;
-        case 1: protocolId = Protocol.SNAKE2_COLOR_CHANGED; break;
-        case 2: protocolId = Protocol.SNAKE3_COLOR_CHANGED; break;
-        case 3: protocolId = Protocol.SNAKE4_COLOR_CHANGED; break;
+        case 0: protocolId = Protocol.SNAKE_LL_SKIN; break;
+        case 1: protocolId = Protocol.SNAKE_UL_SKIN; break;
+        case 2: protocolId = Protocol.SNAKE_UR_SKIN; break;
+        case 3: protocolId = Protocol.SNAKE_LR_SKIN; break;
         default: return;
       }
 
@@ -535,7 +494,7 @@ public class Menu implements Activity {
     }
   }
 
-  // Sets the currently selected player's control corner to a Corner represented by a corner square.
+  /* Sets the currently selected player's control corner to a Corner represented by a corner square.
   private void onCornerSquareTouch(PlayerController.Corner representedCorner) {
     // Only guests have to wait for a signal from somewhere else before setting the corner.
     if (!this.isGuest())
@@ -555,7 +514,7 @@ public class Menu implements Activity {
       originActivity.writeBytesAuto(
           new byte[] {protocolId, Protocol.encodeCorner(representedCorner)});
     }
-  }
+  }*/
 
   public void setPlayerCorner(int playerIndex, PlayerController.Corner corner) {
     // Find the other player that uses the selected corner and set it to the current player's.
@@ -675,13 +634,9 @@ public class Menu implements Activity {
 
   // Begins the search for nearby devices.
   public void beginSearch() {
-    // Set the search button to invisible.
-    this.menuItemsConnect[4].setDrawable(false);
     BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
     if (adapter == null) {
       // There is no bluetooth adapter, so don't do anything.
-      this.menuItemsConnect[4].setDrawable(true);
-      this.menuItemsConnect[4].setText("error :/");
     } else {
       if (!adapter.isEnabled()) {
         // There is an adapter, but it's not enabled.
@@ -693,21 +648,7 @@ public class Menu implements Activity {
       // Begin device discovery.
       ActivityCompat.requestPermissions(originActivity,
           new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-
-      if (!adapter.startDiscovery()) {
-        menuItemsConnect[4].setDrawable(true);
-        menuItemsConnect[4].setText("error :/");
-      }
     }
-  }
-
-  public void onDiscoveryStarted() {
-    menuItemsConnect[4].setDrawable(false);
-  }
-
-  public void onDiscoveryFinished() {
-    menuItemsConnect[4].setDrawable(true);
-    menuItemsConnect[4].setText("Search");
   }
 
   // Begins the hosting of a bluetooth game.
@@ -720,13 +661,10 @@ public class Menu implements Activity {
       discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
       originActivity.startActivity(discoverableIntent);
     }
+
     // Begin the thread for accepting devices.
     originActivity.acceptThread = new AcceptThread(originActivity);
     originActivity.acceptThread.start();
-
-    menuItemsConnect[6].setText("Stop server");
-    menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().stopHost());
-    menuItemsConnect[6].setDestinationYFromOrigin(-glText.getCharHeight() * 0.65f);
   }
 
   // Cancels the hosting of a bluetooth game.
@@ -747,31 +685,13 @@ public class Menu implements Activity {
     for (Player player : players)
       if (player != null && player.getControlType().equals(Player.ControlType.BLUETOOTH))
         this.removeSnake(player.getNumber());
-
-    menuItemsConnect[6].setText("Start server");
-    menuItemsConnect[6].setAction((action, origin) -> renderer.getMenu().beginHost());
-    menuItemsConnect[6].setDestinationToInitial();
   }
 
   // Sets up the menu to work as if you're a guest.
   public void beginGuest() {
-    // Disable some items.
-    for (MenuDrawable drawable : guestDisabledDrawables)
-      if (drawable.isEnabled())
-        drawable.setEnabled(false);
-
-    // Hide the list of devices.
-    this.setConnectionType(null);
-    this.setConnectionRole(null);
-
-    // Set the new action for the add snake button.
-    addSnakeButton.setAction((action, origin)
-        -> originActivity.connectedThread.write(new byte[] {Protocol.REQUEST_ADD_SNAKE}));
-
-    // Make all players uncontrollable.
-    for (Player player : players) {
-      player.setControlType(Player.ControlType.OFF);
-    }
+    // Clear all corners.
+    for (PlayerController.Corner corner : PlayerController.Corner.values())
+      setupBuffer.cornerMap.emptyCorner(corner);
   }
 
   // Sets up the menu to work as if you're not a guest anymore.
@@ -790,14 +710,6 @@ public class Menu implements Activity {
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
     switch(inputBytes[0]) {
-//      case Protocol.SNAKE1_COLOR_CHANGED: setPlayerColor(0, inputBytes[1]); break;
-//      case Protocol.SNAKE2_COLOR_CHANGED: setPlayerColor(1, inputBytes[1]); break;
-//      case Protocol.SNAKE3_COLOR_CHANGED: setPlayerColor(2, inputBytes[1]); break;
-//      case Protocol.SNAKE4_COLOR_CHANGED: setPlayerColor(3, inputBytes[1]); break;
-      case Protocol.SNAKE1_CORNER_CHANGED: setPlayerCorner(0, Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE2_CORNER_CHANGED: setPlayerCorner(1, Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE3_CORNER_CHANGED: setPlayerCorner(2, Protocol.decodeCorner(inputBytes[1])); break;
-      case Protocol.SNAKE4_CORNER_CHANGED: setPlayerCorner(3, Protocol.decodeCorner(inputBytes[1])); break;
       case Protocol.HOR_SQUARES_CHANGED: setupBuffer.horizontalSquares = inputBytes[1]; break;
       case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares = inputBytes[1]; break;
       case Protocol.SPEED_CHANGED: setupBuffer.speed = inputBytes[1]; break;
@@ -835,15 +747,20 @@ public class Menu implements Activity {
         }
         break;
 
-      case Protocol.AGGREGATE_CALL:
+      case Protocol.BASIC_AGGREGATE_CALL:
+        for (byte[] call : Protocol.decodeSeveralCalls(inputBytes))
+          if (call.length > 0)
+            renderer.handleInputBytes(call, sourceThread);
+        break;
+
+      case Protocol.GAME_START_CALL:
         if (this.isGuest()) {
           // Tell the host you've received the aggregate call.
-          sourceThread.write(new byte[] {Protocol.AGGREGATE_CALL_RECEIVED});
+          sourceThread.write(new byte[] {Protocol.GAME_START_RECEIVED});
 
           // Decode all calls and execute them.
-          for (byte[] call : Protocol.decodeSeveralCalls(inputBytes))
-            if (call.length > 0 && call[0] != Protocol.AGGREGATE_CALL)
-              renderer.handleInputBytes(call, sourceThread);
+          inputBytes[0] = Protocol.BASIC_AGGREGATE_CALL;
+          renderer.handleInputBytes(inputBytes, sourceThread);
 
           // Start the game.
           renderer.startGame(new GuestGame(renderer, setupBuffer));
@@ -907,12 +824,10 @@ public class Menu implements Activity {
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
   public MenuButton[] getColorSelectionSquares() { return this.colorSelectionSquare; }
-  public MenuButton[] getCornerSelectionSquares() { return this.cornerSelectionSquare; }
   public GameRenderer getRenderer() { return this.renderer; }
   public OpenGLES20Activity getOriginActivity() { return this.originActivity; }
 
   public GameSetupBuffer getSetupBuffer() { return setupBuffer; }
-  public Player[] getPlayers() { return this.players; }
 
   // Protocol simplifier getters.
   public boolean isGuest() { return originActivity.isGuest(); }

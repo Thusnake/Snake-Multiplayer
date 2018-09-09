@@ -3,7 +3,9 @@ package thusnake.snakemultiplayer;
 import android.util.Pair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -16,7 +18,7 @@ import static thusnake.snakemultiplayer.Protocol.*;
 public class OnlineHostGame extends Game {
   private ArrayList<byte[]> moveCodes = new ArrayList<>();
   private int moveCount = 0;
-  private final List<ConnectedThread> awaitingAggregateReceive = new ArrayList<>();
+  private final Map<ConnectedThread, List<byte[]>> awaitingAggregateReceive = new HashMap<>();
   private final SimpleTimer awaitingAggregateReceiveTimer = new SimpleTimer(0.0, 0.25);
   private boolean running = false;
   private final Square readyFillBar;
@@ -41,8 +43,9 @@ public class OnlineHostGame extends Game {
     // Send the initialization call and wait asynchronously for a confirmation from all.
     for (ConnectedThread thread : originActivity.connectedThreads)
       if (thread != null) {
-        thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
-        awaitingAggregateReceive.add(thread);
+        List<byte[]> calls = createInitializationCalls(setupBuffer, thread);
+        thread.write(Protocol.encodeSeveralCalls(calls, GAME_START_CALL));
+        awaitingAggregateReceive.put(thread, calls);
       }
 
     // Change the top game over button to the ready button.
@@ -99,23 +102,9 @@ public class OnlineHostGame extends Game {
                               (byte) getApples().get(0).getX(), (byte) getApples().get(0).getY()});
   }
 
-  public List<byte[]> createInitializationCalls(ConnectedThread thread) {
-    List<byte[]> allInformation = new ArrayList<>();
-    // TODO This ain't an array anymore, clean it up.
-    allInformation.add(new byte[] {SNAKE1_COLOR_CHANGED, (byte) getPlayers().get(0).getSkinIndex()});
-    allInformation.add(new byte[] {SNAKE2_COLOR_CHANGED, (byte) getPlayers().get(1).getSkinIndex()});
-    allInformation.add(new byte[] {SNAKE3_COLOR_CHANGED, (byte) getPlayers().get(2).getSkinIndex()});
-    allInformation.add(new byte[] {SNAKE4_COLOR_CHANGED, (byte) getPlayers().get(3).getSkinIndex()});
-    allInformation.add(new byte[] {SNAKE1_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(0).getControlCorner())});
-    allInformation.add(new byte[] {SNAKE2_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(1).getControlCorner())});
-    allInformation.add(new byte[] {SNAKE3_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(2).getControlCorner())});
-    allInformation.add(new byte[] {SNAKE4_CORNER_CHANGED, Protocol.encodeCorner(getPlayers().get(3).getControlCorner())});
-    allInformation.add(getRenderer().getMenu().getDetailedSnakesList(thread));
-    allInformation.add(new byte[] {READY_NUMBER_AND_STATUS, 0, 0});
-    allInformation.add(new byte[] {HOR_SQUARES_CHANGED, (byte) horizontalSquares});
-    allInformation.add(new byte[] {VER_SQUARES_CHANGED, (byte) verticalSquares});
-    allInformation.add(new byte[] {SPEED_CHANGED, (byte) getSpeed()});
-    allInformation.add(new byte[] {STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
+  public List<byte[]> createInitializationCalls(GameSetupBuffer setupBuffer,
+                                                ConnectedThread thread) {
+    List<byte[]> allInformation = new ArrayList<>(setupBuffer.allInformationCallList(thread));
     allInformation.add(moveCodes.get(1));
 
     return allInformation;
@@ -128,8 +117,8 @@ public class OnlineHostGame extends Game {
     else if (awaitingAggregateReceive != null && !awaitingAggregateReceive.isEmpty())
       if (awaitingAggregateReceiveTimer.count(dt)) {
         awaitingAggregateReceiveTimer.reset();
-        for (ConnectedThread thread : awaitingAggregateReceive)
-          thread.write(Protocol.encodeSeveralCalls(createInitializationCalls(thread)));
+        for (Map.Entry<ConnectedThread, List<byte[]>> entry : awaitingAggregateReceive.entrySet())
+          entry.getKey().write(Protocol.encodeSeveralCalls(entry.getValue(), GAME_START_CALL));
       }
 
 
@@ -152,16 +141,15 @@ public class OnlineHostGame extends Game {
     super.moveAllSnakes();
     moveCount++;
 
-    List<Player> players = this.getPlayers();
     this.moveCodes.add(new byte[] {
         Protocol.GAME_MOVEMENT_OCCURRED,
         Protocol.encodeMoveID(moveCount).first,  // The rest of the bytes are not handled
         Protocol.encodeMoveID(moveCount).second, // and so everything goes wrong if the
         Protocol.getMovementCode(                // game becomes longer than 32768 moves.
-          (players.size() >= 1 && players.get(0).getDirection() != null) ? players.get(0).getDirection() : Player.Direction.UP,
-          (players.size() >= 2 && players.get(1).getDirection() != null) ? players.get(1).getDirection() : Player.Direction.UP,
-          (players.size() >= 3 && players.get(2).getDirection() != null) ? players.get(2).getDirection() : Player.Direction.UP,
-          (players.size() >= 4 && players.get(3).getDirection() != null) ? players.get(3).getDirection() : Player.Direction.UP
+          cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT).getDirection(),
+          cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT).getDirection(),
+          cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT).getDirection(),
+          cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT).getDirection()
         )
     });
 
@@ -200,7 +188,7 @@ public class OnlineHostGame extends Game {
         }
         break;
 
-      case AGGREGATE_CALL_RECEIVED:
+      case GAME_START_RECEIVED:
         awaitingAggregateReceive.remove(sourceThread);
         if (awaitingAggregateReceive.isEmpty())
           running = true;

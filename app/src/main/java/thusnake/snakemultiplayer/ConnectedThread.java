@@ -1,5 +1,6 @@
 package thusnake.snakemultiplayer;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import java.io.IOException;
@@ -11,9 +12,10 @@ import java.io.OutputStream;
  */
 public class ConnectedThread extends Thread {
   private final BluetoothSocket socket;
-  private final OpenGLES20Activity originActivity;
+  final OpenGLES20Activity originActivity;
   private final InputStream inStream;
   private final OutputStream outStream;
+  final BluetoothDevice device;
 
   private boolean isReady = false;
   private SimpleTimer disconnectRequestTimer = new SimpleTimer(0.0);
@@ -22,6 +24,7 @@ public class ConnectedThread extends Thread {
   public ConnectedThread(OpenGLES20Activity activity, BluetoothSocket socket) {
     this.socket = socket;
     this.originActivity = activity;
+    this.device = socket.getRemoteDevice();
     InputStream tmpIn = null;
     OutputStream tmpOut = null;
 
@@ -80,18 +83,20 @@ public class ConnectedThread extends Thread {
     this.isReady = ready;
 
     // Count the ready devices.
-    int readyDevices = 0;
+    int devices = 0, readyDevices = 0;
     for (ConnectedThread thread : originActivity.connectedThreads)
-      if (thread != null && thread.isReady())
-        readyDevices++;
+      if (thread != null) {
+        devices++;
+        if (thread.isReady) readyDevices++;
+      }
 
     if (originActivity.isReady()) readyDevices++;
 
     // Tell everyone how many devices are ready and if they are ready themselves.
     for (ConnectedThread thread : originActivity.connectedThreads)
       if (thread != null)
-        thread.write(new byte[] {Protocol.READY_NUMBER_AND_STATUS,
-                                 (byte) readyDevices, thread.isReady ? (byte) 1 : (byte) 0});
+        thread.write(new byte[] {Protocol.NUM_DEVICES_AND_READY_WITH_STATUS,
+            (byte) devices, (byte) readyDevices, thread.isReady ? (byte) 1 : (byte) 0});
   }
 
   public boolean isReady() { return isReady; }

@@ -6,8 +6,10 @@ import android.content.SharedPreferences;
 import com.android.texample.GLText;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -29,7 +31,7 @@ class Game extends BoardDrawer implements Activity {
   private SharedPreferences.Editor scoresEditor;
   private final String scoreKey;
   private final MenuItem gameModeAnnouncement;
-  private final List<Player> players;
+  final CornerMap cornerMap;
   private final List<Apple> apples = new LinkedList<>();
   private final Square[] boardLines = new Square[2];
   private final Square boardFade;
@@ -55,7 +57,7 @@ class Game extends BoardDrawer implements Activity {
     scoreKey = setupBuffer.gameMode.toString() + "-" + setupBuffer.difficulty;
 
     // Get the options from the setup buffer.
-    this.players = setupBuffer.getPlayers();
+    this.cornerMap = setupBuffer.getCornerMap();
     this.speed = setupBuffer.speed;
 
     this.moveTimer = new SimpleTimer(1.0 / speed);
@@ -66,7 +68,7 @@ class Game extends BoardDrawer implements Activity {
     this.winner = null;
 
     // Prepare the players
-    for (Player player : players)
+    for (Player player : getPlayers())
       player.prepareForGame(this);
 
     // Create the apple.
@@ -152,7 +154,9 @@ class Game extends BoardDrawer implements Activity {
     }
 
     // Draw all drawable snakes.
-    for (Player player : players) if (player != null && player.isDrawable()) player.updateColors();
+    for (Player player : getPlayers())
+      if (player != null && player.isDrawable())
+        player.updateColors();
 
     // Draw all apples.
     for (Apple apple : apples)
@@ -167,7 +171,7 @@ class Game extends BoardDrawer implements Activity {
     // Update the square colors at every frame for each snake that is flashing.
     /* TODO I believe that if a snake goes over a flashing dead snake, the dead snake's flash will
     take priority over the alive one. This is not intended. */
-    for(Player player : players) {
+    for(Player player : getPlayers()) {
       if(player != null && !player.isAlive() && player.isFlashing()) {
         this.drawPlayerSnake(player);
       }
@@ -176,7 +180,7 @@ class Game extends BoardDrawer implements Activity {
     this.getBoardSquares().draw();
 
     // Draw the display controllers.
-    for (Player player : players) {
+    for (Player player : getPlayers()) {
       if (player != null && player.getPlayerController() != null) {
         this.drawControllerLayout(player);
       }
@@ -197,7 +201,7 @@ class Game extends BoardDrawer implements Activity {
         gl.glPushMatrix();
         gl.glScalef(0.25f, 0.25f, 1f);
         glText.begin();
-        glText.drawC("Score: " + players.get(0).getScore(), this.getScreenWidth() * 2f,
+        glText.drawC("Score: " + getPlayers().get(0).getScore(), this.getScreenWidth() * 2f,
             this.getScreenHeight() / 2f * 4 + glText.getHeight() * (- 2f));
         glText.drawC("High Score: " + scores.getInt("high_score_" + scoreKey, 0),
             this.getScreenWidth() * 2,
@@ -228,7 +232,7 @@ class Game extends BoardDrawer implements Activity {
   }
 
   public void refresh() {
-    for (Player player : players)
+    for (Player player : getPlayers())
       player.getPlayerController().reloadTexture();
   }
 
@@ -245,8 +249,8 @@ class Game extends BoardDrawer implements Activity {
       if (!isSingleplayer()) {
         winner = this.assessWinner();
       } else {
-        if (players.get(0).getScore() > scores.getInt("high_score_" + scoreKey, 0)) {
-          scoresEditor.putInt("high_score_" + scoreKey, players.get(0).getScore());
+        if (getPlayers().get(0).getScore() > scores.getInt("high_score_" + scoreKey, 0)) {
+          scoresEditor.putInt("high_score_" + scoreKey, getPlayers().get(0).getScore());
           scoresEditor.commit();
         }
       }
@@ -272,7 +276,7 @@ class Game extends BoardDrawer implements Activity {
   }
 
   protected void moveAllSnakes() {
-    for (Player player : players) {
+    for (Player player : getPlayers()) {
       // Move and check if it has eaten the apple.
       if (player != null && player.isAlive() && player.move()) {
         for (Apple apple : apples)
@@ -280,7 +284,7 @@ class Game extends BoardDrawer implements Activity {
             this.getBoardSquares().updateColors(apple.x, apple.y, apple.getColors());
       }
     }
-    for (Player player : players)
+    for (Player player : getPlayers())
       if(player != null && player.isAlive()) player.checkDeath();
   }
 
@@ -299,18 +303,18 @@ class Game extends BoardDrawer implements Activity {
   public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
   public List<Apple> getApples() { return this.apples; }
-  public List<Player> getPlayers() { return this.players; }
+  public List<Player> getPlayers() { return cornerMap.getPlayers(); }
   public int getAlivePlayers() {
     int playersAlive = 0;
-    for (Player player : players) {
+    for (Player player : getPlayers()) {
       if (player != null && player.isAlive()) playersAlive++;
     }
     return playersAlive;
   }
 
-  public boolean isSingleplayer() { return players.size() == 1; }
+  public boolean isSingleplayer() { return cornerMap.getNumberOfPlayers() == 1; }
   public Player assessWinner() {
-    for (Player player : players)
+    for (Player player : getPlayers())
       if (player != null && player.isAlive()) 
         return player;
     
