@@ -106,6 +106,7 @@ public class Square implements TextureReloadable {
     Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(id);
 
     // generate one texture pointer
+    gl.glDeleteTextures(1, textures, 0);
     gl.glGenTextures(1, textures, 0);
     // ...and bind it to our array
     gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
