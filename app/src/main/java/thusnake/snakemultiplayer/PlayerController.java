@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 public abstract class PlayerController {
-  public enum Corner {UPPER_LEFT, UPPER_RIGHT, LOWER_LEFT, LOWER_RIGHT}
+  public enum Corner {LOWER_LEFT, UPPER_LEFT, UPPER_RIGHT, LOWER_RIGHT}
   final GameRenderer renderer;
   private MenuImage drawableLayout;
   private float x, y, width;
@@ -73,12 +73,15 @@ public abstract class PlayerController {
   public float getWidth() { return this.width; }
 
   public void setDirectionRemote() {
-    if (this.player.getControllerThread() != null)
-      player.getControllerThread().write(new byte[] {
-          Protocol.SNAKE_DIRECTION_CHANGE,
-          (byte) player.getNumber(),
-          Protocol.encodeDirection(player.getDirection())
-      });
+
+  }
+
+  public boolean changeDirection(Player.Direction direction) {
+    return player.changeDirection(direction);
+  }
+
+  public void vibrate(long milliseconds) {
+    renderer.getOriginActivity().vibrator.vibrate(milliseconds);
   }
 
   public abstract String toString();

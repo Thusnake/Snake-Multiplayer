@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -31,6 +32,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 public class OpenGLES20Activity extends Activity implements RewardedVideoAdListener {
   private GameSurfaceView gameView;
+  public Vibrator vibrator;
   public AcceptThread acceptThread;
   public ConnectThread connectThread;
   public ConnectedThread connectedThread;
@@ -114,6 +116,8 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
     this.videoAd = MobileAds.getRewardedVideoAdInstance(this);
     videoAd.setRewardedVideoAdListener(this);
     this.loadAd();
+
+     vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
   }
 
   @Override

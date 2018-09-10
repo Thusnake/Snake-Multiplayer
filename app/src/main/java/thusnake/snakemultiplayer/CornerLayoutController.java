@@ -103,6 +103,13 @@ public class CornerLayoutController extends PlayerController {
   }
 
   @Override
+  public boolean changeDirection(Player.Direction direction) {
+    boolean success = super.changeDirection(direction);
+    if (success) vibrate(40);
+    return success;
+  }
+
+  @Override
   public List<MenuDrawable> optionsList(GameRenderer renderer) {
     List<MenuDrawable> list = new LinkedList<>();
     list.add(
@@ -140,15 +147,12 @@ public class CornerLayoutController extends PlayerController {
         && y > originY - halfWidth && y < originY + halfWidth) {
       // Check which triangle the pointer is in and change the direction accordingly.
       if (Math.abs(y - originY) > Math.abs(x - originX)) {
-        if (y - originY < 0) success = player.changeDirection(Player.Direction.UP);
-        else                 success =  player.changeDirection(Player.Direction.DOWN);
+        if (y - originY < 0) success = changeDirection(Player.Direction.UP);
+        else                 success = changeDirection(Player.Direction.DOWN);
       } else {
-        if (x - originX < 0) success = player.changeDirection(Player.Direction.LEFT);
-        else                 success = player.changeDirection(Player.Direction.RIGHT);
+        if (x - originX < 0) success = changeDirection(Player.Direction.LEFT);
+        else                 success = changeDirection(Player.Direction.RIGHT);
       }
-
-      // If there is a remote thread, send the information to it.
-      if (success) this.setDirectionRemote();
 
       return success;
     }

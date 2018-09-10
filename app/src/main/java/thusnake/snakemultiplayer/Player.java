@@ -22,7 +22,7 @@ public class Player {
   private boolean alive = false, drawable = false, flashing;
   private GameRenderer renderer;
   private int number, score;
-  private String name;
+  private String name = "Snake";
   private ControlType controlType;
   public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
   private PlayerController playerController;
@@ -30,9 +30,7 @@ public class Player {
   private int bodyLength = 0;
   private SnakeSkin skin = SnakeSkin.white;
   private BoardDrawer game;
-  private Vibrator vibrator;
   private Mesh boardSquares;
-  private ConnectedThread onlineControllerThread;
   private final List<PlayerController> controllersCache = new LinkedList<>();
 
   // Constructor for a corner layout player.
@@ -52,8 +50,6 @@ public class Player {
   // Gets called upon game start.
   public void prepareForGame(BoardDrawer game) {
     this.game = game;
-    this.vibrator = (Vibrator) renderer.getContext()
-        .getSystemService(Context.VIBRATOR_SERVICE);
     this.boardSquares = game.getBoardSquares();
     if (this.getControlCorner() == PlayerController.Corner.UPPER_LEFT
         || this.getControlCorner() == PlayerController.Corner.UPPER_RIGHT) this.direction = DOWN;
@@ -117,18 +113,10 @@ public class Player {
     if (pressedDirection.equals(this.direction)) return false;
 
     // Check if the direction is invalid (opposite of the direction of the previous move).
-    Direction oppositeDirection;
-    switch (this.previousDirection) {
-      case UP: oppositeDirection = DOWN; break;
-      case DOWN: oppositeDirection = UP; break;
-      case LEFT: oppositeDirection = Direction.RIGHT; break;
-      case RIGHT: oppositeDirection = Direction.LEFT; break;
-      default: oppositeDirection = UP; break;
-    }
+    Direction oppositeDirection = getOppositeDirection(previousDirection);
     if (pressedDirection.equals(oppositeDirection)) return false;
 
     this.direction = pressedDirection;
-    this.vibrator.vibrate(40);
     return true;
   }
 
@@ -188,7 +176,7 @@ public class Player {
   }
 
   public void die() {
-    this.vibrator.vibrate(100);
+    renderer.getOriginActivity().vibrator.vibrate(100);
     this.alive = false;
     // Check if anybody else should die from you.
     for (Player player : game.getPlayers())
@@ -210,7 +198,6 @@ public class Player {
   public int getY() { return this.bodyParts[0].getY(); }
   public Direction getDirection() { return this.direction; }
   public Direction getPreviousDirection() { return this.previousDirection; }
-  public Vibrator getVibrator() { return this.vibrator; }
 
   public int getNumber() { return this.number; }
   public String getName() { return this.name; }
@@ -237,9 +224,6 @@ public class Player {
   public void setSkin(SnakeSkin skin) { this.skin = skin; }
   public SnakeSkin getSkin() { return skin; }
   public int getSkinIndex() { return SnakeSkin.allSkins.indexOf(skin); }
-
-  public void setControllerThread(ConnectedThread thread) { this.onlineControllerThread = thread; }
-  public ConnectedThread getControllerThread() { return this.onlineControllerThread; }
 
   // Setters
   public void setControlType(ControlType type) { this.controlType = type; }

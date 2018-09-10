@@ -97,7 +97,7 @@ final class GameSetupBuffer {
       Player player = cornerMap.getPlayer(corner);
       if (player == null) output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
       else if (player.getPlayerController() instanceof BluetoothController
-               && player.getControllerThread().equals(thread))
+          && ((BluetoothController) player.getPlayerController()).controllerThread.equals(thread))
         output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
       else
         output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;

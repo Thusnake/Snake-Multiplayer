@@ -57,7 +57,7 @@ public class GuestGame extends Game {
     for (Player player : getPlayers())
       if (player != null && !player.getControlType().equals(Player.ControlType.OFF)
                          && !player.getControlType().equals(Player.ControlType.BLUETOOTH))
-        player.setControllerThread(originActivity.connectedThread);
+        ;//player.setControllerThread(originActivity.connectedThread);
   }
 
   @Override

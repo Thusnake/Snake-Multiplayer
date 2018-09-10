@@ -7,8 +7,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class BluetoothController extends PlayerController {
-  public BluetoothController(GameRenderer renderer, Player player) {
+  final ConnectedThread controllerThread;
+
+  public BluetoothController(GameRenderer renderer, Player player, ConnectedThread thread) {
     super(renderer, player);
+    controllerThread = thread;
   }
 
   @Override

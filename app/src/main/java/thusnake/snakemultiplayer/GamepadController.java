@@ -3,7 +3,9 @@ package thusnake.snakemultiplayer;
 import android.content.Context;
 import android.view.MotionEvent;
 
-public class GamepadController extends CornerLayoutController {
+import java.util.List;
+
+public class GamepadController extends PlayerController {
   public GamepadController(GameRenderer renderer, Player player) {
     super(renderer, player);
   }
@@ -23,4 +25,9 @@ public class GamepadController extends CornerLayoutController {
 
   @Override
   public String identifier() { return "Gamepad"; }
+
+  @Override
+  public List<MenuDrawable> optionsList(GameRenderer renderer) {
+    return null;
+  }
 }

@@ -38,14 +38,14 @@ public class SwipeController extends PlayerController {
             // Find the direction.
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
               if (deltaX > 0)
-                success = player.changeDirection(Player.Direction.RIGHT);
+                success = changeDirection(Player.Direction.RIGHT);
               else
-                success = player.changeDirection(Player.Direction.LEFT);
+                success = changeDirection(Player.Direction.LEFT);
             } else {
               if (deltaY > 0)
-                success = player.changeDirection(Player.Direction.DOWN);
+                success = changeDirection(Player.Direction.DOWN);
               else
-                success = player.changeDirection(Player.Direction.UP);
+                success = changeDirection(Player.Direction.UP);
             }
 
           // Set the information to the remote thread if there is one.
@@ -57,6 +57,13 @@ public class SwipeController extends PlayerController {
         holding = false;
         break;
     }
+  }
+
+  @Override
+  public boolean changeDirection(Player.Direction direction) {
+    boolean success = super.changeDirection(direction);
+    if (success) vibrate(60);
+    return success;
   }
 
   @Override
