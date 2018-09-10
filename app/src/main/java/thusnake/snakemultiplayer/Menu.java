@@ -29,7 +29,6 @@ public class Menu implements Activity {
   private SimpleTimer screenTransformX, screenTransformY;
   private float screenWidth, screenHeight;
   private GameRenderer renderer;
-  private Player[] players = new Player[4];
   private final GL10 gl;
   private final GLText glText;
 
@@ -51,10 +50,11 @@ public class Menu implements Activity {
 
   private final MenuButton[] colorSelectionSquare;
   private final MenuItem addSnakeButton;
-  private int playersOptionsIndex, expandedItemIndex = -1;
+  private int playersOptionsIndex;
   private SimpleTimer backgroundSnakeTimer = new SimpleTimer(0.0, 0.5 + Math.random());
   private LinkedList<BackgroundSnake> backgroundSnakes = new LinkedList<>();
   private SimpleTimer scrollInertia = new SimpleTimer(0.0);
+  private SimpleTimer hostUpdatePacketTimer = new SimpleTimer(0.0, 0.5);
 
   private final OpenGLES20Activity originActivity;
   private MenuScreen currentScreen;
@@ -269,11 +269,6 @@ public class Menu implements Activity {
     this.menuItemsConnect[4].setAction((action,origin) -> renderer.getMenu().beginSearch());
     this.menuItemsConnect[6].setAction((action,origin) -> renderer.getMenu().beginHost());
 
-    this.addSnakeButton.setAction((action, origin) -> renderer.getMenu().addSnake());
-
-    this.menuItemsPlayersOptions[0]
-        .setAction((action, origin) -> renderer.getMenu().cyclePlayerControlTypes());
-
     // Create the graphics.
     this.colorSelectionSquare = new MenuButton[8];
     float squareSize = (screenWidth - 10 - 10*this.colorSelectionSquare.length)
@@ -351,6 +346,13 @@ public class Menu implements Activity {
         scroll((float) scrollInertia.getTime());
       scrollInertia.countEaseOut(dt, 2, screenHeight/16);
     }
+    if (originActivity.isHost() && hostUpdatePacketTimer.count(dt)) {
+      hostUpdatePacketTimer.reset();
+      for (ConnectedThread thread : originActivity.connectedThreads)
+        if (thread != null)
+          thread.write(Protocol.encodeSeveralCalls(setupBuffer.allInformationCallList(thread),
+                                                   Protocol.BASIC_AGGREGATE_CALL));
+    }
 
     // Draw the background items.
     this.backgroundSnakeTimer.count(dt);
@@ -392,6 +394,7 @@ public class Menu implements Activity {
 
 
   // Enables the first currently disabled snake to play and handles the players menu animations.
+  /*
   public Player addSnake() {
     int index;
     for (index = 0; index < players.length; index++)
@@ -411,9 +414,10 @@ public class Menu implements Activity {
           thread.write(getDetailedSnakesList(thread));
 
     return players[index];
-  }
+  }*/
 
   // Disables a given snake from play and handles the players menu animations.
+  /*
   public void removeSnake(int snakeIndex) {
     int index;
     for (index = snakeIndex; index < players.length - 1; index++)
@@ -430,47 +434,47 @@ public class Menu implements Activity {
       for (ConnectedThread thread : originActivity.connectedThreads)
         if (thread != null)
           thread.write(getDetailedSnakesList(thread));
-  }
+  }*/
 
   // Swaps the indices of two snakes in the players menu screen.
-  private void swapSnakes(int firstSnakeIndex, int secondSnakeIndex) {
-    Player playerHolder = players[secondSnakeIndex];
-    players[secondSnakeIndex] = players[firstSnakeIndex];
-    players[firstSnakeIndex] = playerHolder;
-  }
+//  private void swapSnakes(int firstSnakeIndex, int secondSnakeIndex) {
+//    Player playerHolder = players[secondSnakeIndex];
+//    players[secondSnakeIndex] = players[firstSnakeIndex];
+//    players[firstSnakeIndex] = playerHolder;
+//  }
 
-  public void cyclePlayerControlTypes() {
-    switch (this.players[this.playersOptionsIndex].getControlType()) {
-      case OFF:
-        break;
-      case CORNER:
-        boolean swipeTaken = false;
-        for (Player player : players)
-          if (player.getControlType() == Player.ControlType.SWIPE)
-            swipeTaken = true;
-
-        if (!swipeTaken)
-          this.players[this.playersOptionsIndex].setControlType(Player.ControlType.SWIPE);
-        else
-          this.players[this.playersOptionsIndex].setControlType(Player.ControlType.GAMEPAD);
-        break;
-      case SWIPE:
-        // TODO the next one would be keyboard and then gamepad, but they're not implemented
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.GAMEPAD);
-        break;
-      case KEYBOARD:
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
-        break;
-      case GAMEPAD:
-        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
-        break;
-      // The following ones you should not be able to easily switch off.
-      case BLUETOOTH:
-        break;
-      case WIFI:
-        break;
-    }
-  }
+//  public void cyclePlayerControlTypes() {
+//    switch (this.players[this.playersOptionsIndex].getControlType()) {
+//      case OFF:
+//        break;
+//      case CORNER:
+//        boolean swipeTaken = false;
+//        for (Player player : players)
+//          if (player.getControlType() == Player.ControlType.SWIPE)
+//            swipeTaken = true;
+//
+//        if (!swipeTaken)
+//          this.players[this.playersOptionsIndex].setControlType(Player.ControlType.SWIPE);
+//        else
+//          this.players[this.playersOptionsIndex].setControlType(Player.ControlType.GAMEPAD);
+//        break;
+//      case SWIPE:
+//        // TODO the next one would be keyboard and then gamepad, but they're not implemented
+//        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.GAMEPAD);
+//        break;
+//      case KEYBOARD:
+//        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
+//        break;
+//      case GAMEPAD:
+//        this.players[this.playersOptionsIndex].setControlType(Player.ControlType.CORNER);
+//        break;
+//      // The following ones you should not be able to easily switch off.
+//      case BLUETOOTH:
+//        break;
+//      case WIFI:
+//        break;
+//    }
+//  }
 
   // Sets the currently selected player's color to a color from a given color square index.
   private void onColorSquareTouch(int index) {
@@ -489,8 +493,8 @@ public class Menu implements Activity {
         default: return;
       }
 
-      originActivity.writeBytesAuto(
-          new byte[] {protocolId, (byte) players[playersOptionsIndex].getSkinIndex()});
+//      originActivity.writeBytesAuto(
+//          new byte[] {protocolId, (byte) players[playersOptionsIndex].getSkinIndex()});
     }
   }
 
@@ -516,11 +520,11 @@ public class Menu implements Activity {
     }
   }*/
 
-  public void setPlayerCorner(int playerIndex, PlayerController.Corner corner) {
-    // Find the other player that uses the selected corner and set it to the current player's.
-    for (int index = 0; index < this.players.length; index++)
-      if (index != playerIndex && this.players[index].getControlCorner() == corner);
-  }
+//  public void setPlayerCorner(int playerIndex, PlayerController.Corner corner) {
+//    // Find the other player that uses the selected corner and set it to the current player's.
+//    for (int index = 0; index < this.players.length; index++)
+//      if (index != playerIndex && this.players[index].getControlCorner() == corner);
+//  }
 
   // Sets the connection type to a given value and handles the connection menu animation.
   public void setConnectionType(ConnectionType type) {
@@ -682,11 +686,6 @@ public class Menu implements Activity {
         originActivity.connectedThreads[index].write(new byte[] {Protocol.DISCONNECT});
         originActivity.awaitingDisconnectThreads.add(originActivity.connectedThreads[index]);
       }
-
-    // Remove all non-local snakes.
-    for (Player player : players)
-      if (player != null && player.getControlType().equals(Player.ControlType.BLUETOOTH))
-        this.removeSnake(player.getNumber());
   }
 
   // Sets up the menu to work as if you're a guest.
@@ -708,35 +707,75 @@ public class Menu implements Activity {
       case Protocol.SPEED_CHANGED: setupBuffer.speed = inputBytes[1]; break;
       case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.stageBorders = inputBytes[1] == 1; break;
 
+      case Protocol.SNAKE_LL_SKIN:
+        Player playerLL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT);
+        if (playerLL != null)
+          playerLL.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        break;
+      case Protocol.SNAKE_UL_SKIN:
+        Player playerUL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT);
+        if (playerUL != null)
+          playerUL.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        break;
+      case Protocol.SNAKE_UR_SKIN:
+        Player playerUR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT);
+        if (playerUR != null)
+          playerUR.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        break;
+      case Protocol.SNAKE_LR_SKIN:
+        Player playerLR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT);
+        if (playerLR != null)
+          playerLR.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        break;
+
       // HOST ONLY
       case Protocol.REQUEST_ADD_SNAKE:
         if (originActivity.isHost()) {
-          Player addedSnake = this.addSnake();
-          addedSnake.setControlType(Player.ControlType.BLUETOOTH);
-          addedSnake.setControllerThread(sourceThread);
+          PlayerController.Corner requestedCorner = Protocol.decodeCorner(inputBytes[1]);
+          if (setupBuffer.cornerMap.getPlayer(requestedCorner) == null) {
+            Player addedSnake = new Player(renderer, 2);
+            addedSnake
+                .setControllerForced(new BluetoothController(renderer, addedSnake, sourceThread));
+            setupBuffer.cornerMap.addPlayer(addedSnake, requestedCorner);
+          }
         }
         break;
 
       // GUEST ONLY
       case Protocol.DETAILED_SNAKES_LIST:
         if (this.isGuest()) {
-          for (int index = 1; index < inputBytes.length; index++)
-            for (Player player : players)
-              if (player.getNumber() == index - 1)
-                switch(inputBytes[index]) {
-                  case Protocol.DSL_SNAKE_OFF:
-                    player.setControlType(Player.ControlType.OFF);
-                    break;
-                  case Protocol.DSL_SNAKE_LOCAL:
-                    if (player.getControlType().equals(Player.ControlType.OFF) ||
-                        player.getControlType().equals(Player.ControlType.BLUETOOTH))
-                      player.setControlType(Player.ControlType.CORNER);
-                    break;
-                  case Protocol.DSL_SNAKE_REMOTE:
-                    player.setControlType(Player.ControlType.BLUETOOTH);
-                    break;
-                  default: break;
+          int index = 0;
+          for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+            index++;
+            Player player = setupBuffer.cornerMap.getPlayer(corner);
+
+            switch (inputBytes[index]) {
+              case Protocol.DSL_SNAKE_OFF:
+                setupBuffer.cornerMap.emptyCorner(corner);
+                break;
+              case Protocol.DSL_SNAKE_LOCAL:
+                if (player == null) {
+                  Player playerToBeAdded = new Player(renderer, 2).defaultPreset();
+                  setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
+                } else {
+                  player.setController(new CornerLayoutController(renderer, player));
                 }
+                break;
+              case Protocol.DSL_SNAKE_REMOTE:
+                if (player == null) {
+                  Player playerToBeAdded = new Player(renderer, 2);
+                  playerToBeAdded.setControllerForced(new BluetoothController(renderer,
+                                                                    playerToBeAdded, sourceThread));
+                  setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
+                } else {
+                  player.setControllerForced(new BluetoothController(renderer, player,
+                                                                     sourceThread));
+                }
+                break;
+              default:
+                break;
+            }
+          }
         }
         break;
 
@@ -825,23 +864,23 @@ public class Menu implements Activity {
   // Protocol simplifier getters.
   public boolean isGuest() { return originActivity.isGuest(); }
 
-  public byte[] getDetailedSnakesList(ConnectedThread thread) {
-    byte[] output = new byte[5];
-    output[0] = Protocol.DETAILED_SNAKES_LIST;
-    int outputIndex = 1;
-
-    for (Player player : players) {
-      if (player == null || player.getControlType().equals(Player.ControlType.OFF))
-        output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
-      else if (player.getControlType().equals(Player.ControlType.BLUETOOTH)
-            && player.getControllerThread().equals(thread))
-        output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
-      else
-        output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;
-    }
-
-    return output;
-  }
+//  public byte[] getDetailedSnakesList(ConnectedThread thread) {
+//    byte[] output = new byte[5];
+//    output[0] = Protocol.DETAILED_SNAKES_LIST;
+//    int outputIndex = 1;
+//
+//    for (Player player : players) {
+//      if (player == null || player.getControlType().equals(Player.ControlType.OFF))
+//        output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
+//      else if (player.getControlType().equals(Player.ControlType.BLUETOOTH)
+//            && player.getControllerThread().equals(thread))
+//        output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
+//      else
+//        output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;
+//    }
+//
+//    return output;
+//  }
 }
 
 

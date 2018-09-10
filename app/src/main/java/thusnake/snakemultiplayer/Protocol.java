@@ -25,10 +25,10 @@ public class Protocol {
   // Universal codes
   public static final byte ALL_DIRECTIONS = 10; // Followed by 1 movement byte.
   public static final byte SNAKE_DIRECTION_CHANGE = 11; // Followed by 1 snake byte and 1 direction byte.
-  public static final byte SNAKE_LL_SKIN = 20; // Followed by 1 color byte.
-  public static final byte SNAKE_UL_SKIN = 21; // Followed by 1 color byte.
-  public static final byte SNAKE_UR_SKIN = 22; // Followed by 1 color byte.
-  public static final byte SNAKE_LR_SKIN = 23; // Followed by 1 color byte.
+  public static final byte SNAKE_LL_SKIN = 20; // Followed by 1 skin byte.
+  public static final byte SNAKE_UL_SKIN = 21; // Followed by 1 skin byte.
+  public static final byte SNAKE_UR_SKIN = 22; // Followed by 1 skin byte.
+  public static final byte SNAKE_LR_SKIN = 23; // Followed by 1 skin byte.
   public static final byte SNAKE_LL_NAME = 40; // Followed by 1 length byte and a string of chars.
   public static final byte SNAKE_UL_NAME = 41; // Followed by 1 length byte and a string of chars.
   public static final byte SNAKE_UR_NAME = 42; // Followed by 1 length byte and a string of chars.
