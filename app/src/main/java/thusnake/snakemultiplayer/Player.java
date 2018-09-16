@@ -117,6 +117,16 @@ public class Player {
     if (pressedDirection.equals(oppositeDirection)) return false;
 
     this.direction = pressedDirection;
+
+    // If you're a guest try to inform the host of the direction change as well.
+    if (renderer.getOriginActivity().isGuest()) {
+      renderer.getOriginActivity().connectedThread.write(new byte[] {
+          Protocol.SNAKE_DIRECTION_CHANGE,
+          Protocol.encodeCorner(getControlCorner()),
+          Protocol.encodeDirection(getDirection())
+      });
+    }
+
     return true;
   }
 

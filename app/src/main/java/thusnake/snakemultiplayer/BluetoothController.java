@@ -15,6 +15,9 @@ public class BluetoothController extends PlayerController {
   }
 
   @Override
+  public void draw() {}
+
+  @Override
   public void setTexture(Context context) {}
 
   @Override

@@ -24,7 +24,7 @@ public class Protocol {
 
   // Universal codes
   public static final byte ALL_DIRECTIONS = 10; // Followed by 1 movement byte.
-  public static final byte SNAKE_DIRECTION_CHANGE = 11; // Followed by 1 snake byte and 1 direction byte.
+  public static final byte SNAKE_DIRECTION_CHANGE = 11; // Followed by 1 corner byte and 1 direction byte.
   public static final byte SNAKE_LL_SKIN = 20; // Followed by 1 skin byte.
   public static final byte SNAKE_UL_SKIN = 21; // Followed by 1 skin byte.
   public static final byte SNAKE_UR_SKIN = 22; // Followed by 1 skin byte.
@@ -63,7 +63,8 @@ public class Protocol {
 
   public static final byte APPROVE_CONNECT = -10;
   public static final byte START_GAME = -20;
-  public static final byte END_GAME = -30; // Followed by 1 winner byte.
+  public static final byte GAME_MODE = -21; // Followed by 1 game mode index byte.
+  public static final byte END_GAME = -30; // Followed by 1 winner corner byte.
   public static final byte GAME_MOVEMENT_OCCURRED = -40; // Followed by the move's id and 1 movement byte.
   public static final byte GAME_MOVEMENT_MISSING = -41; // Followed by the move's id.
   public static final byte GAME_APPLE_EATEN_NEXT_POS = -42; // Followed by the action's id and 2 coordinate bytes.

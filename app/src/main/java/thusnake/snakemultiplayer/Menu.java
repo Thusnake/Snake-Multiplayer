@@ -627,12 +627,13 @@ public class Menu implements Activity {
           new FullscreenMessage(renderer, "Connecting to " + item.getText()) {
             @Override
             public void onCancel() {
+              super.onCancel();
               originActivity.connectThread.cancel();
               originActivity.connectThread = null;
             }
           }.withLoadingSnake(true));
 
-      originActivity.connectThread.run();
+      originActivity.connectThread.start();
 
       setScreen(new MultiplayerSnakeOverviewScreen(this));
     }
@@ -706,6 +707,10 @@ public class Menu implements Activity {
       case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares = inputBytes[1]; break;
       case Protocol.SPEED_CHANGED: setupBuffer.speed = inputBytes[1]; break;
       case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.stageBorders = inputBytes[1] == 1; break;
+
+      case Protocol.GAME_MODE:
+        setupBuffer.gameMode = GameSetupBuffer.GameMode.values()[inputBytes[1]];
+        break;
 
       case Protocol.SNAKE_LL_SKIN:
         Player playerLL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT);
@@ -803,14 +808,6 @@ public class Menu implements Activity {
     }
   }
 
-  // Fades all buttons of a group except one.
-  public void fadeAllButOne(MenuDrawable[] buttons, MenuDrawable exception) {
-    for (MenuDrawable button : buttons) {
-      if (button != exception) button.setOpacity(0.5f);
-      else button.setOpacity(1);
-    }
-  }
-
   // Takes a color index and returns the whole corresponding color as rgba.
   public static float[] getColorFromIndex(int index) {
     switch(index) {
@@ -852,10 +849,8 @@ public class Menu implements Activity {
   }
 
   // More getters.
-  public void setPlayerOptionsIndex(int index) { this.playersOptionsIndex = index; }
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
-  public MenuButton[] getColorSelectionSquares() { return this.colorSelectionSquare; }
   public GameRenderer getRenderer() { return this.renderer; }
   public OpenGLES20Activity getOriginActivity() { return this.originActivity; }
 

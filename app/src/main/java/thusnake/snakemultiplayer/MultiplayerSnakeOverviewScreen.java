@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class MultiplayerSnakeOverviewScreen extends MenuScreen {
-  private final MenuButton nextButton;
+  private final MenuButton nextButton, readyButton;
   private final MenuButton connectButton;
   private final List<SnakeOverviewButton> overviewButtons = new LinkedList<>();
   private final MenuImage trashIconLeft, trashIconRight;
@@ -44,6 +44,22 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         menu.setScreen(setupScreen);
       }
     }.withBackgroundImage(R.drawable.next_button);
+
+    readyButton = new MenuButton(renderer, nextButton.getX(), nextButton.getY(),
+        nextButton.getWidth(), nextButton.getHeight(), nextButton.alignPoint) {
+      @Override
+      public void performAction() {
+        super.performAction();
+        if (originActivity.isGuest())
+          originActivity.writeBytesAuto(new byte[] {Protocol.IS_READY});
+        else if (originActivity.isHost()) {
+          originActivity.setReady(true);
+          originActivity.acceptThread.cancel();
+          originActivity.acceptThread = null;
+          nextButton.performAction();
+        }
+      }
+    }.withBackgroundImage(R.drawable.ready_button);
 
     connectButton = new MenuButton(renderer,
         backButton.getX(MenuDrawable.EdgePoint.RIGHT_CENTER)
@@ -101,7 +117,7 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         if (originActivity.isGuest())
           hostName.setText(originActivity.connectedThread.device.getName());
         else if (originActivity.isHost())
-          hostName.setText("Hosting..");
+          hostName.setText(originActivity.acceptThread != null ? "Host Open" : "Host Locked");
 
         if (originActivity.isGuest() || originActivity.isHost())
           hostName.scaleToFit(0, getHeight() / 2.4f);
@@ -120,7 +136,9 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
           for (int index = 1; index < originActivity.getNumberOfRemoteDevices(); index++)
             deviceStatusIcons[index].setTexture(R.drawable.phone_icon_joined);
 
-          for (int index = 1; index < originActivity.getNumberOfReadyRemoteDevices(); index++)
+          int readyExternalDevices = originActivity.getNumberOfReadyRemoteDevices()
+                                        - (originActivity.isReady() ? 1 : 0);
+          for (int index = 1; index <= readyExternalDevices; index++)
             deviceStatusIcons[index].setTexture(R.drawable.phone_icon_ready);
         }
       }
@@ -164,10 +182,32 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         MenuDrawable.EdgePoint.TOP_LEFT, PlayerController.Corner.LOWER_RIGHT));
 
     drawables.add(nextButton);
+    drawables.add(readyButton);
     drawables.add(connectButton);
     drawables.addAll(overviewButtons);
     drawables.add(trashIconLeft);
     drawables.add(trashIconRight);
+
+    // Getting to this screen sets your ready status to false, as there is a ready button on it.
+    originActivity.setReady(false);
+
+    // Restart the accepting thread if you're a host.
+    if (originActivity.isHost() && originActivity.acceptThread == null) {
+      originActivity.acceptThread = new AcceptThread(originActivity);
+      originActivity.acceptThread.start();
+    }
+  }
+
+  @Override
+  public void moveAll(double dt) {
+    boolean isOnline = originActivity.isGuest() || originActivity.isHost();
+    nextButton.setDrawable(!isOnline);
+    readyButton.setDrawable(isOnline);
+    readyButton.setEnabled(!originActivity.isHost()
+                           || originActivity.getNumberOfReadyRemoteDevices()
+                               >= originActivity.getNumberOfRemoteDevices() - 1
+                                && originActivity.getNumberOfRemoteDevices() > 1);
+    super.moveAll(dt);
   }
 
   @Override
@@ -291,11 +331,15 @@ class SnakeOverviewButton extends MenuButton {
         }
       });
     } else {
-      GameSetupBuffer setupBuffer = parentScreen.menu.getSetupBuffer();
-      setupBuffer.cornerMap.addPlayer(new Player(renderer,
-                                                 setupBuffer.cornerMap.getNumberOfPlayers())
-                                                                                  .defaultPreset(),
-                                      corner);
+      if (parentScreen.originActivity.isGuest()) {
+        parentScreen.originActivity.writeBytesAuto(new byte[] {Protocol.REQUEST_ADD_SNAKE,
+                                                               Protocol.encodeCorner(corner)});
+      } else {
+        GameSetupBuffer setupBuffer = parentScreen.menu.getSetupBuffer();
+        setupBuffer.cornerMap.addPlayer(new Player(renderer,
+                                                   setupBuffer.cornerMap.getNumberOfPlayers())
+                                                                        .defaultPreset(), corner);
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class OnlineHostGame extends Game {
     moveCodes.add(null);
     prepare();
 
-    OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
+    OpenGLES20Activity originActivity = (OpenGLES20Activity) getRenderer().getContext();
 
     // Make everyone not ready for the next game.
     for (ConnectedThread thread : originActivity.connectedThreads)
@@ -62,7 +63,7 @@ public class OnlineHostGame extends Game {
       }
     });
 
-    readyFillBar = new Square(renderer, 0, getScreenHeight()*2/3,
+    readyFillBar = new Square(getRenderer(), 0, getScreenHeight()*2/3,
         getScreenWidth(), getScreenHeight()/3) {
       private int readyDevices = -1;
       private int connectedDevices = -1;
@@ -86,7 +87,7 @@ public class OnlineHostGame extends Game {
 
           if (readyDevices == connectedDevices && readyDevices > 1) {
             // Everyone is ready - begin game.
-            renderer.restartGame();
+            getRenderer().restartGame();
           }
         }
 
@@ -130,7 +131,8 @@ public class OnlineHostGame extends Game {
   @Override
   protected boolean checkGameOver() {
     if (super.checkGameOver()) {
-      this.sendBytes(new byte[] {Protocol.END_GAME, (byte) assessWinner().getNumber()});
+      Player winner = assessWinner();
+      this.sendBytes(new byte[] {Protocol.END_GAME, winner == null ? 0 : Protocol.encodeCorner(winner.getControlCorner())});
       return true;
     }
     return false;
@@ -141,16 +143,18 @@ public class OnlineHostGame extends Game {
     super.moveAllSnakes();
     moveCount++;
 
+    List<Player.Direction> directions = new LinkedList<>();
+    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+      if (cornerMap.getPlayer(corner) == null) directions.add(Player.Direction.UP);
+      else directions.add(cornerMap.getPlayer(corner).getDirection());
+    }
+
     this.moveCodes.add(new byte[] {
         Protocol.GAME_MOVEMENT_OCCURRED,
-        Protocol.encodeMoveID(moveCount).first,  // The rest of the bytes are not handled
-        Protocol.encodeMoveID(moveCount).second, // and so everything goes wrong if the
-        Protocol.getMovementCode(                // game becomes longer than 32768 moves.
-          cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT).getDirection(),
-          cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT).getDirection(),
-          cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT).getDirection(),
-          cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT).getDirection()
-        )
+        Protocol.encodeMoveID(moveCount).first,  // The rest of the bytes are not handled and so
+        Protocol.encodeMoveID(moveCount).second, // everything goes wrong if the game becomes longer
+        Protocol.getMovementCode(                // than 32768 moves.
+          directions.get(0), directions.get(1), directions.get(2), directions.get(3))
     });
 
     // Get the movement code we just added and send it.
@@ -195,7 +199,8 @@ public class OnlineHostGame extends Game {
         break;
 
       case Protocol.SNAKE_DIRECTION_CHANGE:
-        getPlayers().get(bytes[1]).changeDirection(Protocol.decodeDirection(bytes[2]));
+        cornerMap.getPlayer(decodeCorner(bytes[1]))
+            .changeDirection(Protocol.decodeDirection(bytes[2]));
         break;
 
       default:

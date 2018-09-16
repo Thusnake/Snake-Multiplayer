@@ -73,12 +73,13 @@ public class FullscreenMessage implements Activity {
     switch(event.getAction()) {
       case MotionEvent.ACTION_UP:
         if (cancelButton.isClicked(event.getX(), event.getY())) {
-          renderer.setInterruptingMessage(null);
           this.onCancel();
         }
     }
   }
 
   // To be overridden.
-  public void onCancel() {}
+  public void onCancel() {
+    renderer.setInterruptingMessage(null);
+  }
 }

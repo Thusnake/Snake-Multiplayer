@@ -172,7 +172,10 @@ public class GameRenderer implements GLSurfaceView.Renderer {
       game = new Game(this, screenWidth, screenHeight, players);
     */
 
-    this.game = game;
+    if (originActivity.isHost())
+      this.game = new OnlineHostGame(this, menu.getSetupBuffer());
+    else
+      this.game = game;
   }
 
   public void restartGame() {
@@ -306,6 +309,23 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           originActivity.numberOfRemoteDevices = bytes[1];
           originActivity.numberOfReadyRemoteDevices = bytes[2];
           originActivity.forceSetReady(bytes[3] == 1);
+
+          if (bytes[3] == 1 && game == null) {
+            setInterruptingMessage(new FullscreenMessage(this, "Waiting for "
+                + originActivity.connectedThread.device.getName() + " to start the game...") {
+              @Override
+              public void onCancel() {
+                originActivity.writeBytesAuto(new byte[] {Protocol.IS_NOT_READY});
+              }
+
+              @Override
+              public void run(double dt) {
+                super.run(dt);
+                if (!originActivity.isReady() || !originActivity.isGuest())
+                  setInterruptingMessage(null);
+              }
+            });
+          }
         }
         break;
       case Protocol.PING:

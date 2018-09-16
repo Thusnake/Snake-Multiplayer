@@ -214,13 +214,17 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
         {Protocol.NUMBER_OF_READY, (byte) getNumberOfReadyRemoteDevices()});
   }
 
+  /**
+   * Sets this device's remote lobby ready status.
+   * Calling it as a guest sends a request for status change instead.
+   */
   public void setReady(boolean ready) {
     // Send a request to the host if you're a guest.
     if (this.isGuest())
       connectedThread.write(new byte[] {(ready) ? Protocol.IS_READY : Protocol.IS_NOT_READY});
 
     // If you're a host yourself tell everyone how many are ready.
-    else {
+    else if (isHost()) {
       this.isReady = ready;
 
       int readyDevices = 0;
@@ -236,6 +240,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
     }
   }
 
+  /** Directly sets the isReady value of this device. */
   public void forceSetReady(boolean ready) {
     this.isReady = ready;
   }

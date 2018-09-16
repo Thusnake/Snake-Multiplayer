@@ -5,7 +5,7 @@ import java.util.List;
 
 final class GameSetupBuffer {
   protected enum GameMode {CLASSIC, SPEEDY, VS_AI, CUSTOM}
-  protected GameMode gameMode;
+  protected GameMode gameMode = GameMode.CLASSIC;
   protected int horizontalSquares, verticalSquares, speed;
   protected int difficulty;
   final protected CornerMap cornerMap = new CornerMap();
@@ -62,6 +62,7 @@ final class GameSetupBuffer {
     calls.add(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) verticalSquares});
     calls.add(new byte[] {Protocol.SPEED_CHANGED, (byte) speed});
     calls.add(new byte[] {Protocol.STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
+    calls.add(new byte[] {Protocol.GAME_MODE, (byte) gameMode.ordinal()});
 
     // Player calls.
     for (PlayerController.Corner corner : PlayerController.Corner.values()) {
