@@ -68,6 +68,7 @@ public class Apple {
 
   public void updateColors() {
     this.game.getBoardSquares().updateColors(this.x, this.y, this.colors);
+    game.getBoardSquares().updateTextures(x, y, 0.25f, 0.25f, 0.75f, 0.75f);
   }
 
   public int getX() { return x; }
@@ -75,10 +76,12 @@ public class Apple {
 
   public void setX(int x) {
     game.getBoardSquares().updateColors(this.x, this.y, 0.125f, 0.125f, 0.125f, 1f);
+    game.getBoardSquares().updateTextures(this.x, this.y, 0, 0, 1, 1);
     this.x = x;
   }
   public void setY(int y) {
     game.getBoardSquares().updateColors(this.x, this.y, 0.125f, 0.125f, 0.125f, 1f);
+    game.getBoardSquares().updateTextures(this.x, this.y, 0, 0, 1, 1);
     this.y = y;
   }
 

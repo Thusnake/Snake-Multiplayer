@@ -1,5 +1,8 @@
 package thusnake.snakemultiplayer;
 
+import android.graphics.Bitmap;
+import android.opengl.GLUtils;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -10,15 +13,20 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Created by Thusnake on 01-Jul-16.
  */
-public class Mesh extends MenuDrawable {
+public class Mesh extends MenuDrawable implements TextureReloadable {
   private FloatBuffer verticesBuffer = null;
   private ShortBuffer indicesBuffer = null;
   private int numOfIndices = -1;
   private float[] rgba = new float[]{1.0f,1.0f,1.0f,1.0f};
   private FloatBuffer colorBuffer = null;
+  private FloatBuffer textureBuffer = null;
   private float[] vertices = null;
   private short[] indices = null;
   private float[] colors = null;
+  private float[] textures = null;
+  private int[] texturePointers = new int[1];
+  private int textureId;
+  private boolean textureLoaded = true;
   private int numOfSquares = 0;
 
   private final float squareSize;
@@ -38,6 +46,7 @@ public class Mesh extends MenuDrawable {
     this.horizontalSquares = horizontalSquares;
     this.verticalSquares = verticalSquares;
     this.addAllSquares();
+    setTexture(R.drawable.singleplayer_icon);
   }
 
   private void addAllSquares() {
@@ -76,6 +85,14 @@ public class Mesh extends MenuDrawable {
     colorBuffer.position(0);
   }
 
+  public void setTextures(float[] textures) {
+    ByteBuffer tbb = ByteBuffer.allocateDirect(textures.length * 4);
+    tbb.order(ByteOrder.nativeOrder());
+    textureBuffer = tbb.asFloatBuffer();
+    textureBuffer.put(textures);
+    textureBuffer.position(0);
+  }
+
   private void addSquare(float x, float y, float width, float height){
     short indices[] = { 0, 1, 2, 0, 2, 3 };
     float vertices[] = {x, y+height, 0.0f,   // top left
@@ -86,10 +103,15 @@ public class Mesh extends MenuDrawable {
         0.125f,0.125f,0.125f,1.0f,
         0.125f,0.125f,0.125f,1.0f,
         0.125f,0.125f,0.125f,1.0f};
+    float[] textures = {0, 0,
+                        0, 0.0125f,
+                        0.0125f, 0.0125f,
+                        0.0125f, 0};
     if (numOfSquares == 0){
       this.indices = indices;
       this.vertices = vertices;
       this.colors = colors;
+      this.textures = textures;
     } else {
       this.vertices = concatf(this.vertices,vertices);
       for (int i=0; i<indices.length; i++){
@@ -97,6 +119,7 @@ public class Mesh extends MenuDrawable {
       }
       this.indices = concats(this.indices, indices);
       this.colors = concatf(this.colors, colors);
+      this.textures = concatf(this.textures, textures);
     }
     this.numOfSquares++;
   }
@@ -105,6 +128,7 @@ public class Mesh extends MenuDrawable {
     setVertices(this.vertices);
     setIndices(this.indices);
     setColors(this.colors);
+    setTextures(this.textures);
   }
 
   public void updateColors(int i, int j, float color[]){
@@ -164,8 +188,66 @@ public class Mesh extends MenuDrawable {
     };
   }
 
+  public void updateTextures(int x, int y, float leftX, float bottomY, float rightX, float topY) {
+    this.textures[(x + y * horizontalSquares)*8] = leftX;
+    this.textures[(x + y * horizontalSquares)*8 + 1] = topY;
+
+    this.textures[(x + y * horizontalSquares)*8 + 2] = leftX;
+    this.textures[(x + y * horizontalSquares)*8 + 3] = bottomY;
+
+    this.textures[(x + y * horizontalSquares)*8 + 4] = rightX;
+    this.textures[(x + y * horizontalSquares)*8 + 5] = bottomY;
+
+    this.textures[(x + y * horizontalSquares)*8 + 6] = rightX;
+    this.textures[(x + y * horizontalSquares)*8 + 7] = topY;
+
+    setTextures(this.textures);
+  }
+
+  public void setTexture(int id) {
+    textureLoaded = false;
+    textureId = id;
+  }
+
+  public void loadGLTexture(int id) {
+    // Get the texture from the renderer.
+    Bitmap bitmap = renderer.loadTextureBitmap(id);
+
+    // generate one texture pointer
+    gl.glDeleteTextures(1, texturePointers, 0);
+    gl.glGenTextures(1, texturePointers, 0);
+    // ...and bind it to our array
+    gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
+
+    // create nearest filtered texture
+    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+    // Use Android GLUtils to specify a two-dimensional texture image from our bitmap
+    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+
+    textureId = id;
+    textureLoaded = true;
+  }
+
+  public void reloadTexture() {
+    if (textureId != 0) {
+      Bitmap bitmap = renderer.loadTextureBitmap(textureId);
+
+      gl.glDeleteTextures(1, texturePointers, 0);
+      gl.glGenTextures(1, texturePointers, 0);
+      gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
+
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+      GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+    }
+  }
+
   public void draw(GL10 gl, float[] parentColors){
-    gl.glBindTexture(GL10.GL_TEXTURE_2D, 0); // Unbind textures.
+    if (!textureLoaded)
+      loadGLTexture(textureId);
 
     gl.glPushMatrix();
     gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
@@ -174,11 +256,13 @@ public class Mesh extends MenuDrawable {
     gl.glFrontFace(GL10.GL_CCW);
     gl.glEnable(GL10.GL_CULL_FACE);
     gl.glCullFace(GL10.GL_BACK);
-    gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+    gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]); // Bind texture.
+    gl.glEnableClientState(GL10.GL_COLOR_ARRAY);              // Enable client states.
     gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-    gl.glVertexPointer(3, GL10.GL_FLOAT, 0, verticesBuffer);
+    gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+    gl.glVertexPointer(3, GL10.GL_FLOAT, 0, verticesBuffer);  // Point the pointers.
     glColor4array(gl, combineColorArrays(rgba, parentColors));
-    if (colorBuffer != null){
+    if (colorBuffer != null){                                 // Calculate the colors.
       gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
       FloatBuffer currentColorBuffer = colorBuffer;
@@ -205,9 +289,11 @@ public class Mesh extends MenuDrawable {
 
       gl.glColorPointer(4,GL10.GL_FLOAT,0,currentColorBuffer);
     }
-    gl.glDrawElements(GL10.GL_TRIANGLES,numOfIndices,GL10.GL_UNSIGNED_SHORT,indicesBuffer);
-    gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+    gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, textureBuffer); // Point the rest of the pointers.
+    gl.glDrawElements(GL10.GL_TRIANGLES,numOfIndices,GL10.GL_UNSIGNED_SHORT,indicesBuffer); // Draw.
+    gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);            // Disable the client states.
     gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+    gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
     gl.glDisable(GL10.GL_CULL_FACE);
 
     gl.glPopMatrix();
