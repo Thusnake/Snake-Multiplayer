@@ -80,6 +80,6 @@ public class FullscreenMessage implements Activity {
 
   // To be overridden.
   public void onCancel() {
-    renderer.setInterruptingMessage(null);
+    renderer.cancelActivity(this);
   }
 }

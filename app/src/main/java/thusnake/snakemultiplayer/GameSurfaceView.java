@@ -52,9 +52,9 @@ public class GameSurfaceView extends GLSurfaceView {
         gameRenderer.setPointerUp();
         break;
     }
-    if (this.gameRenderer.getInterruptingMessage() != null) {
+    if (this.gameRenderer.getCurrentActivity() instanceof FullscreenMessage) {
       // Let the FullscreenMessage handle the input.
-      gameRenderer.getInterruptingMessage().onMotionEvent(e);
+      ((FullscreenMessage) gameRenderer.getCurrentActivity()).onMotionEvent(e);
     } else if (this.gameRenderer.isInGame()) {
       // Send all the alive players the motion event.
       for (Player player : gameRenderer.getGame().getPlayers())

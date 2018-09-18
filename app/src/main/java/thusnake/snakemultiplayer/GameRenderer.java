@@ -9,6 +9,8 @@ import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
+import java.util.Stack;
+
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -25,10 +27,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private SharedPreferences scores;
   private SharedPreferences.Editor scoresEditor;
 
-  private Menu menu;
-  private Game game;
-  private FullscreenMessage interruptingMessage;
-  private Activity currentActivity;
+  /** The activity stack. Can only have 1 Menu element and 1 Game element at a given time. */
+  private Stack<Activity> activityStack = new Stack<>();
 
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
@@ -101,7 +101,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
         if (originActivity.connectedThread.getLastActivityTimer().getTime() > 10) {
           originActivity.connectedThread.cancel();
           originActivity.connectedThread = null;
-          menu.endGuest();
+          getMenu().endGuest();
         }
         else if (originActivity.connectedThread.getLastActivityTimer().getTime() > 5)
           originActivity.connectedThread.write(new byte[]{Protocol.PING});
@@ -112,12 +112,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     gl.glMatrixMode(GL10.GL_MODELVIEW);
     gl.glLoadIdentity();
 
-    // Determine and run the current activity based on a priority order.
-    if (interruptingMessage != null) currentActivity = interruptingMessage;
-    else if (game != null)           currentActivity = game;
-    else                             currentActivity = menu;
-
-    currentActivity.run(dt);
+    getCurrentActivity().run(dt);
   }
 
   @Override
@@ -137,57 +132,65 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.glText.load("PressStart2P.ttf", this.fontSize, 2, 2);
 
     // Reload all active textures.
-    if (currentActivity != null) currentActivity.refresh();
+    for (Activity activity : activityStack) activity.refresh();
 
     this.scoresEditor = scores.edit();
 
     this.screenWidth = width;
     this.screenHeight = height;
 
-    if (menu == null) menu = new Menu(this, width, height);
+    if (getMenu() == null) activityStack.push(new Menu(this, width, height));
   }
 
   public OpenGLES20Activity getOriginActivity() { return originActivity; }
   public GL10 getGl() { return this.gl; }
   public GLText getGlText() { return glText; }
   public Context getContext() { return this.context; }
-  public boolean isInGame() { return this.game != null; }
-  public Menu getMenu() { return this.menu; }
-  public Game getGame() { return this.game; }
+  public boolean isInGame() { return getCurrentActivity() instanceof Game; }
+
+  public Menu getMenu() {
+    Menu lastMenu = null;
+    for (Activity activity : activityStack)
+      if (activity instanceof Menu)
+        lastMenu = (Menu) activity;
+    return lastMenu;
+  }
+
+  public Game getGame() {
+    Game lastGame = null;
+    for (Activity activity : activityStack)
+      if (activity instanceof Game)
+        lastGame = (Game) activity;
+    return lastGame;
+  }
+
   public float getScreenWidth() { return this.screenWidth; }
   public float getScreenHeight() { return this.screenHeight; }
   public float smallDistance() { return screenHeight / 72f; }
 
   public void startGame(Game game) {
-    /*
-    if (originActivity.isGuest())
-      game = new GuestGame(this, screenWidth, screenHeight, players);
-    else if (originActivity.isHost()) {
-      game = new OnlineHostGame(this, screenWidth, screenHeight, players);
-      if (originActivity.acceptThread != null) {
-        originActivity.acceptThread.cancel();
-        originActivity.acceptThread = null;
-      }
-    } else
-      game = new Game(this, screenWidth, screenHeight, players);
-    */
-
     if (originActivity.isHost())
-      this.game = new OnlineHostGame(this, menu.getSetupBuffer());
+      activityStack.push(new OnlineHostGame(this, getMenu().getSetupBuffer()));
     else
-      this.game = game;
+      activityStack.push(game);
   }
 
+  /** Finds the game in the activity stack and replaces it with a new one of the same class. */
   public void restartGame() {
+    if (getGame() == null) return;
+    int gameIndex = activityStack.indexOf(getGame());
+
     try {
-      this.game = game.getClass().getConstructor(GameRenderer.class, GameSetupBuffer.class).newInstance(this, menu.getSetupBuffer());
+      activityStack.setElementAt(getGame().getClass()
+                                          .getConstructor(GameRenderer.class, GameSetupBuffer.class)
+                                          .newInstance(this, getMenu().getSetupBuffer()),gameIndex);
     } catch (Exception exception) {
       throw new RuntimeException("Could not restart game: " + exception.getMessage());
     }
   }
 
   public void quitGame() {
-    game = null;
+    activityStack.remove(getGame());
   }
   public void triggerStats() {
     // TODO Opens game stats
@@ -231,10 +234,14 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
 
   public void setInterruptingMessage(FullscreenMessage interruptingMessage) {
-    this.interruptingMessage = interruptingMessage;
+    activityStack.push(interruptingMessage);
   }
 
-  public FullscreenMessage getInterruptingMessage() { return interruptingMessage; }
+  public void cancelActivity(Activity activity) {
+    activityStack.remove(activity);
+  }
+
+  public Activity getCurrentActivity() { return activityStack.peek(); }
 
   public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
     // Universal input byte handlers.
@@ -256,8 +263,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           // Disconnect afterwards.
           originActivity.connectedThread.cancel();
           originActivity.connectedThread = null;
-          game = null;
-          this.menu.endGuest();
+          quitGame();
+          getMenu().endGuest();
         }
         break;
       case Protocol.WILL_DISCONNECT:
@@ -310,7 +317,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
           originActivity.numberOfReadyRemoteDevices = bytes[2];
           originActivity.forceSetReady(bytes[3] == 1);
 
-          if (bytes[3] == 1 && game == null) {
+          if (bytes[3] == 1 && getGame() == null) {
             setInterruptingMessage(new FullscreenMessage(this, "Waiting for "
                 + originActivity.connectedThread.device.getName() + " to start the game...") {
               @Override
@@ -322,7 +329,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
               public void run(double dt) {
                 super.run(dt);
                 if (!originActivity.isReady() || !originActivity.isGuest())
-                  setInterruptingMessage(null);
+                  cancelActivity(this);
               }
             });
           }
@@ -334,7 +341,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     }
 
     // Pass to the menu and game.
-    menu.handleInputBytes(bytes, sourceThread);
-    if (game != null) game.handleInputBytes(bytes, sourceThread);
+    getMenu().handleInputBytes(bytes, sourceThread);
+    if (getGame() != null) getGame().handleInputBytes(bytes, sourceThread);
   }
 }

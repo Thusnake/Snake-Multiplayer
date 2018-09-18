@@ -13,8 +13,10 @@ public class ConnectThread extends Thread {
   private final BluetoothSocket mmSocket;
   private final BluetoothDevice mmDevice;
   private final OpenGLES20Activity originActivity;
+  private final FullscreenMessage loadingMessage;
 
-  public ConnectThread(OpenGLES20Activity activity, BluetoothDevice device) {
+  public ConnectThread(OpenGLES20Activity activity, BluetoothDevice device,
+                       FullscreenMessage loadingMessage) {
     // Use a temporary object that is later assigned to mmSocket,
     // because mmSocket is final
     BluetoothSocket tmp = null;
@@ -28,6 +30,9 @@ public class ConnectThread extends Thread {
       tmp = device.createRfcommSocketToServiceRecord(uuid);
     } catch (IOException e) { }
     mmSocket = tmp;
+
+    this.loadingMessage = loadingMessage;
+    originActivity.getRenderer().setInterruptingMessage(loadingMessage);
   }
 
   public void run() {
@@ -48,7 +53,7 @@ public class ConnectThread extends Thread {
       return;
     } finally {
       // Remove the interrupting menu message upon connecting.
-      originActivity.getRenderer().setInterruptingMessage(null);
+      originActivity.getRenderer().cancelActivity(loadingMessage);
     }
 
     // Do work to manage the connection (in a separate thread)

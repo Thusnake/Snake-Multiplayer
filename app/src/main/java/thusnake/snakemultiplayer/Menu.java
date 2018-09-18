@@ -620,10 +620,8 @@ public class Menu implements Activity {
     BluetoothDevice targetDevice;
     if (   ((targetDevice = foundDevices.getDevice(item)) != null)
         || ((targetDevice = pairedDevices.getDevice(item)) != null)) {
-      originActivity.connectThread = new ConnectThread(originActivity, targetDevice);
-
       // Set a fullscreen loading message.
-      renderer.setInterruptingMessage(
+      FullscreenMessage loadingMessage =
           new FullscreenMessage(renderer, "Connecting to " + item.getText()) {
             @Override
             public void onCancel() {
@@ -631,8 +629,9 @@ public class Menu implements Activity {
               originActivity.connectThread.cancel();
               originActivity.connectThread = null;
             }
-          }.withLoadingSnake(true));
+          }.withLoadingSnake(true);
 
+      originActivity.connectThread = new ConnectThread(originActivity, targetDevice,loadingMessage);
       originActivity.connectThread.start();
 
       setScreen(new MultiplayerSnakeOverviewScreen(this));
