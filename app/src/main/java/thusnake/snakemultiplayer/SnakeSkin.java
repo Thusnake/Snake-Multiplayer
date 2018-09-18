@@ -56,16 +56,16 @@ class SnakeSkin {
   }
 
   static SnakeSkin white = new SnakeSkin(hslToRgba(0, 0, 100), hslToRgba(0, 0, 50));
-  static SnakeSkin red = new SnakeSkin(hslToRgba(0, 100, 50), hslToRgba(0, 50, 50));
-  static SnakeSkin orange = new SnakeSkin(hslToRgba(40, 100, 50), hslToRgba(40, 50, 50));
-  static SnakeSkin yellow = new SnakeSkin(hslToRgba(60, 100, 50), hslToRgba(60, 50, 50));
-  static SnakeSkin green = new SnakeSkin(hslToRgba(120, 100, 50), hslToRgba(120, 50, 50));
-  static SnakeSkin teal = new SnakeSkin(hslToRgba(160, 100, 50), hslToRgba(160, 50, 50));
-  static SnakeSkin blue = new SnakeSkin(hslToRgba(240, 100, 50), hslToRgba(240, 50, 50));
-  static SnakeSkin purple = new SnakeSkin(hslToRgba(290, 100, 50), hslToRgba(290, 50, 50));
-  static SnakeSkin black = new SnakeSkin(hslToRgba(0, 0, 0), hslToRgba(0, 0, 30));
+  static SnakeSkin red = new SnakeSkin(hslToRgba(0, 100, 50), hslToRgba(0, 50, 33));
+  static SnakeSkin orange = new SnakeSkin(hslToRgba(40, 100, 50), hslToRgba(40, 50, 33));
+  static SnakeSkin yellow = new SnakeSkin(hslToRgba(60, 100, 50), hslToRgba(60, 50, 33));
+  static SnakeSkin green = new SnakeSkin(hslToRgba(120, 100, 50), hslToRgba(120, 50, 33));
+  static SnakeSkin teal = new SnakeSkin(hslToRgba(160, 100, 50), hslToRgba(160, 50, 33));
+  static SnakeSkin blue = new SnakeSkin(hslToRgba(240, 100, 50), hslToRgba(240, 50, 33));
+  static SnakeSkin purple = new SnakeSkin(hslToRgba(290, 100, 50), hslToRgba(290, 50, 33));
+  static SnakeSkin coral = new SnakeSkin(hslToRgba(330, 100, 50), hslToRgba(330, 50, 33));
 
 
   static List<SnakeSkin> allSkins = Arrays.asList(white, red, orange, yellow, green, teal, blue,
-                                                  purple, black);
+                                                  purple, coral);
 }
