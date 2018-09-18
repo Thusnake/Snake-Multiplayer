@@ -5,10 +5,10 @@ import android.view.MotionEvent;
 import javax.microedition.khronos.opengles.GL10;
 
 public class FullscreenMessage implements Activity {
-  private final GameRenderer renderer;
+  final GameRenderer renderer;
   private final GL10 gl;
-  private final MenuDrawable message;
-  private final MenuDrawable cancelButton;
+  final MenuDrawable message;
+  final MenuDrawable cancelButton;
 
   private final Mesh loadingSnake;
   private SimpleTimer loadingRotateTimer = new SimpleTimer(0.0, 0.25);

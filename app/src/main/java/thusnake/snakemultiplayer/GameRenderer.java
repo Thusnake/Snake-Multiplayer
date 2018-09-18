@@ -9,6 +9,7 @@ import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
+import java.lang.reflect.Field;
 import java.util.Stack;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -139,7 +140,52 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.screenWidth = width;
     this.screenHeight = height;
 
-    if (getMenu() == null) activityStack.push(new Menu(this, width, height));
+    // If it's the first onSurfaceChanged() call then we'll set up a Menu and a loading screen.
+    if (getMenu() == null) {
+      activityStack.push(new Menu(this, width, height));
+
+      activityStack.push(new FullscreenMessage(this, "Loading...") {
+        private Square loadingBar;
+        private final Thread loadingThread = new Thread() {
+          int loadedResources = 0;
+          @Override
+          public void run() {
+            Field[] fields = R.drawable.class.getFields();
+            for (Field field : fields) {
+              try {
+                loadTextureBitmap(field.getInt(null));
+              } catch (IllegalAccessException exception) {
+                System.out.println("Couldn't access resource " + field.getName());
+              } finally {
+                loadingBar.setCoordinates(renderer.getScreenWidth() / 4f,
+                    message.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 40,
+                    ++loadedResources * screenWidth / 2f / fields.length, 80);
+              }
+            }
+            quit();
+          }
+        };
+        private void quit() { renderer.cancelActivity(this); }
+
+        // I'm using this method to do the constructor calls as I have no access to the constructor
+        // itself.
+        @Override
+        public FullscreenMessage withLoadingSnake(boolean loading) {
+          loadingBar = new Square(renderer, renderer.getScreenWidth() / 4f,
+                                  message.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 40, 0,
+                                  80);
+          loadingThread.start();
+          cancelButton.setDrawable(false);
+          return this;
+        }
+
+        @Override
+        public void run(double dt) {
+          super.run(dt);
+          loadingBar.draw(gl);
+        }
+      }.withLoadingSnake(true));
+    }
   }
 
   public OpenGLES20Activity getOriginActivity() { return originActivity; }
