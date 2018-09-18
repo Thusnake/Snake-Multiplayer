@@ -54,6 +54,12 @@ public final class MenuMainScreen extends MenuScreen {
                                         MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() { originActivity.showAd(); }
+
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        setEnabled(originActivity.videoAdIsLoaded());
+      }
     }.withBackgroundImage(R.drawable.ad_icon);
 
     drawables.add(singleplayerButton);
