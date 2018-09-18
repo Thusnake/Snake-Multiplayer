@@ -1,8 +1,5 @@
 package thusnake.snakemultiplayer;
 
-import android.graphics.Bitmap;
-import android.opengl.GLUtils;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -211,37 +208,14 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
 
   public void loadGLTexture(int id) {
     // Get the texture from the renderer.
-    Bitmap bitmap = renderer.loadTextureBitmap(id);
-
-    // generate one texture pointer
-    gl.glDeleteTextures(1, texturePointers, 0);
-    gl.glGenTextures(1, texturePointers, 0);
-    // ...and bind it to our array
-    gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
-
-    // create nearest filtered texture
-    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-    // Use Android GLUtils to specify a two-dimensional texture image from our bitmap
-    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
-
+    texturePointers[0] = renderer.loadTextureBitmapToPointer(id);
     textureId = id;
     textureLoaded = true;
   }
 
   public void reloadTexture() {
     if (textureId != 0) {
-      Bitmap bitmap = renderer.loadTextureBitmap(textureId);
-
-      gl.glDeleteTextures(1, texturePointers, 0);
-      gl.glGenTextures(1, texturePointers, 0);
-      gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
-
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-      GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+      texturePointers[0] = renderer.loadTextureBitmapToPointer(textureId);
     }
   }
 

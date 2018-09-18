@@ -5,11 +5,14 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
 import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -34,7 +37,8 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   private long previousTime = System.nanoTime();
   private boolean pointerIsDown = false;
   private double pointerDownTime = 0;
-  private SparseArray<Bitmap> textureCacheMap = new SparseArray<>();
+  private SparseArray<Bitmap> resourceIDMap = new SparseArray<>();
+  private Map<Integer, Bitmap> glTexturePointerMap = new LinkedHashMap<>();
 
   public GameRenderer(Context context) {
     super();
@@ -133,7 +137,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     this.glText.load("PressStart2P.ttf", this.fontSize, 2, 2);
 
     // Reload all active textures.
-    for (Activity activity : activityStack) activity.refresh();
+    reloadAllTextures();
 
     this.scoresEditor = scores.edit();
 
@@ -253,30 +257,77 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
   public double getPointerDownTime() { return this.pointerDownTime; }
 
-  public void cacheTexture(Bitmap textureBitmap, int id) {
-    textureCacheMap.append(id, textureBitmap);
+  /**
+   * Attempts to find a resource's bitmap in the cache from its ID. If it can't find it, the bitmap
+   * is instead decoded and saved in the cache, along with a generated OpenGL texture pointer.
+   * @param id The Android resource ID of the texture image.
+   * @return The OpenGL generated texture pointer for that resource id's bitmap.
+   */
+  public int loadTextureBitmapToPointer(int id) {
+    // If its bitmap has not been loaded (should not be possible) then load its bitmap into the
+    // cache.
+    if (getTextureFromCache(id) == null)
+      loadTextureBitmap(id);
+
+    Bitmap bitmap = getTextureFromCache(id);
+    if (bitmap == null) return 0;
+
+    // If the pointer map doesn't have a pointer for that bitmap then we'll create one.
+    if (!glTexturePointerMap.containsValue(bitmap)) {
+      int[] texturePointers = new int[1];
+
+      gl.glGenTextures(1, texturePointers, 0);
+      gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+      // Use Android GLUtils to specify a two-dimensional texture image from our bitmap.
+      GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+
+      // Cache the texture and pointer for next time.
+      glTexturePointerMap.put(texturePointers[0], bitmap);
+    }
+
+    for (Integer integer : glTexturePointerMap.keySet()) {
+      if (glTexturePointerMap.get(integer) == resourceIDMap.get(id))
+        return integer;
+    }
+    return 0;
   }
 
   /**
-   * Attempts to a texture's bitmap in the cache from its ID. If it can't find it, the bitmap is
-   * instead decoded and saved in the cache.
-   * @param id The Android resource ID of the texture image.
-   * @return The loaded or decoded Bitmap.
+   * Simply loads a texture by its resource ID and puts it in the resourceID map.
+   * @return The bitmap associated with the given ID.
    */
   public Bitmap loadTextureBitmap(int id) {
     Bitmap bitmap;
     if ((bitmap = getTextureFromCache(id)) == null) {
       bitmap = BitmapFactory.decodeResource(originActivity.getResources(), id);
-
-      // Cache the texture for next time.
-      cacheTexture(bitmap, id);
+      resourceIDMap.put(id, bitmap);
     }
-
     return bitmap;
   }
 
+  /**
+   * Checks the cache for a bitmap corresponding to a given resource ID.
+   * @return The found bitmap. Returns null if no bitmap matches the ID.
+   */
   public Bitmap getTextureFromCache(int id) {
-    return textureCacheMap.get(id);
+    return resourceIDMap.get(id);
+  }
+
+  /**
+   * Reloads all the textures that have been bound via texImage2D().
+   * To be called after textures have been lost (e.g. app is out of focus).
+   */
+  public void reloadAllTextures() {
+    for (int glPointer : glTexturePointerMap.keySet()) {
+      Bitmap bitmap = glTexturePointerMap.get(glPointer);
+      gl.glBindTexture(GL10.GL_TEXTURE_2D, glPointer);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+      GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+    }
   }
 
   public void setInterruptingMessage(FullscreenMessage interruptingMessage) {

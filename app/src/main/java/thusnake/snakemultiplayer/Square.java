@@ -97,36 +97,22 @@ public class Square implements TextureReloadable {
   }
 
   public void loadGLTexture(int id) {
-    // Get the texture from the renderer.
-    Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(id);
-
-    // generate one texture pointer
-    gl.glDeleteTextures(1, textures, 0);
-    gl.glGenTextures(1, textures, 0);
-    // ...and bind it to our array
-    gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
-
-    // create nearest filtered texture
-    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-    // Use Android GLUtils to specify a two-dimensional texture image from our bitmap
-    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
-
+    textures[0] = originActivity.getRenderer().loadTextureBitmapToPointer(id);
     textureId = id;
     textureLoaded = true;
   }
 
   public void reloadTexture() {
     if (textureId != 0) {
-      Bitmap bitmap = originActivity.getRenderer().loadTextureBitmap(textureId);
+      //originActivity.getRenderer().loadTextureBitmap(textureId);
+      Bitmap bitmap = originActivity.getRenderer().getTextureFromCache(textureId);
 
-      gl.glDeleteTextures(1, textures, 0);
-      gl.glGenTextures(1, textures, 0);
+      //gl.glDeleteTextures(1, textures, 0);
+      //gl.glGenTextures(1, textures, 0);
       gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
 
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+      //gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+      //gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
       GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
     }
