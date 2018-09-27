@@ -30,7 +30,7 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
             OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.SPEEDY);
         setupScreen.addGameModeItem(R.drawable.gamemode_placeholder, "vs ai",
             OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.VS_AI);
-        setupScreen.addGameModeItem(R.drawable.gamemode_placeholder, "custom",
+        setupScreen.addGameModeItem(R.drawable.gamemode_custom, "custom",
             OptionsBuilder.defaultOptions(renderer), GameSetupBuffer.GameMode.CUSTOM);
         setupScreen.gameModeCarousel.confirmChoices();
 

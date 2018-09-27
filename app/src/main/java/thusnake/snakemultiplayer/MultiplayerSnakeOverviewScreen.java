@@ -40,7 +40,7 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
 
         setupScreen.addGameModeItem(R.drawable.gamemode_classic, "Classic", null,
                                     GameSetupBuffer.GameMode.CLASSIC);
-        setupScreen.addGameModeItem(R.drawable.gamemode_placeholder, "Custom",
+        setupScreen.addGameModeItem(R.drawable.gamemode_custom, "Custom",
                                     OptionsBuilder.defaultOptions(renderer),
                                     GameSetupBuffer.GameMode.CUSTOM);
         setupScreen.gameModeCarousel.noBoundaries();
