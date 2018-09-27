@@ -126,17 +126,19 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
     gameView.onResume();
     videoAd.resume(this);
 
-    View decorView = getWindow().getDecorView();
     // Hide both the navigation bar and the status bar.
-    if (Build.VERSION.SDK_INT >= 19) {
-      int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-          | View.SYSTEM_UI_FLAG_FULLSCREEN
-          | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-          | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-          | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-          | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-      decorView.setSystemUiVisibility(uiOptions);
-    }
+    hideUI();
+
+  }
+
+  public void hideUI() {
+    int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        | View.SYSTEM_UI_FLAG_FULLSCREEN
+        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+    getWindow().getDecorView().setSystemUiVisibility(uiOptions);
   }
 
   @Override

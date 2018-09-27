@@ -1,11 +1,16 @@
 package thusnake.snakemultiplayer;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Vibrator;
+import android.text.InputType;
 import android.view.MotionEvent;
+import android.view.WindowManager;
+import android.widget.EditText;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 public class MultiplayerSnakeOverviewScreen extends MenuScreen {
   private final MenuButton nextButton, readyButton;
@@ -318,18 +323,61 @@ class SnakeOverviewButton extends MenuButton {
     }
   }
 
+  private class MultiplayerSnakeCustomizationScreen extends SnakeCustomizationScreen {
+    private final MenuItem nameItem;
+    private MultiplayerSnakeCustomizationScreen(Menu menu, Player player) {
+      super(menu, player);
+      nameItem = new MenuItem(renderer, player.getName(),
+                              renderer.getScreenWidth() - renderer.smallDistance(),
+                              backButton.getY(EdgePoint.CENTER),
+                              EdgePoint.RIGHT_CENTER) {
+        @Override
+        public void move(double dt) {
+          super.move(dt);
+          setText(player.getName());
+        }
+
+        @Override
+        public void performAction() {
+          super.performAction();
+          // Create a dialog box for the player to set their name.
+          AlertDialog.Builder alertDialogBuilder =  new AlertDialog.Builder(originActivity);
+          EditText input = new EditText(originActivity);
+          input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+          alertDialogBuilder.setView(input);
+          alertDialogBuilder.setPositiveButton("Confirm",
+                                               (dialogInterface, i)
+                                                    -> player.setName(input.getText().toString()));
+          alertDialogBuilder.setOnDismissListener(dialogInterface -> originActivity.hideUI());
+          alertDialogBuilder.setOnCancelListener(dialogInterface -> originActivity.hideUI());
+          AlertDialog dialog = alertDialogBuilder.create();
+          // Make the dialog non-focusable so that we can set up a fix for leaving immersive mode.
+          Objects.requireNonNull(dialog.getWindow())
+              .setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+          dialog.show();
+          // We'll set the dialog's visibility to match our app's after we've shown it.
+          dialog.getWindow().getDecorView().setSystemUiVisibility(
+              originActivity.getWindow().getDecorView().getSystemUiVisibility());
+          // And once we're done with that we'll make the dialog focusable again.
+          dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+        }
+      };
+      drawables.add(nameItem);
+    }
+
+    @Override
+    public void goBack() { parentScreen.menu.setScreen(parentScreen); }
+  }
+
   @Override
   public void performAction() {
     super.performAction();
 
     Player player = getPlayer();
     if (!isHeld && player != null) {
-      parentScreen.menu.setScreen(new SnakeCustomizationScreen(parentScreen.menu, player) {
-        @Override
-        public void goBack() {
-          parentScreen.menu.setScreen(parentScreen);
-        }
-      });
+      parentScreen.menu
+          .setScreen(new MultiplayerSnakeCustomizationScreen(parentScreen.menu, player));
     } else {
       if (parentScreen.originActivity.isGuest()) {
         parentScreen.originActivity.writeBytesAuto(new byte[] {Protocol.REQUEST_ADD_SNAKE,
