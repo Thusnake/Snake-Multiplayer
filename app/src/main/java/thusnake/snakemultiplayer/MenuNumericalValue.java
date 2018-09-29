@@ -7,7 +7,8 @@ import com.android.texample.GLText;
 public class MenuNumericalValue extends MenuFlexContainer {
   private GLText glText;
   private final MenuItem item;
-  private double value;
+  private int value;
+  private double valueMinuteOffset = 0;
   private int maxValue, minValue;
   private final MenuButton plusButton, minusButton;
   private boolean expanded = false;
@@ -90,10 +91,11 @@ public class MenuNumericalValue extends MenuFlexContainer {
     if (!expansionTimer.isDone()) expansionTimer.countEaseOut(dt, 8, dt);
 
     // Update value when holding down the plus or minus buttons.
-    if (plusButton.getHoldDuration() > 1)
-      offsetValue(Math.pow(2, plusButton.getHoldDuration() + 2) * dt);
-    else if (minusButton.getHoldDuration() > 1)
-      offsetValue(-Math.pow(2, minusButton.getHoldDuration() + 2) * dt);
+    if (plusButton.getHoldDuration() > 0.3)
+      offsetValue(Math.min(Math.pow(2, plusButton.getHoldDuration() + 2) * dt, 0.5));
+    else if (minusButton.getHoldDuration() > 0.3)
+      offsetValue(Math.max(-Math.pow(2, minusButton.getHoldDuration() + 2) * dt, -0.5
+      ));
   }
 
   @Override
@@ -106,10 +108,12 @@ public class MenuNumericalValue extends MenuFlexContainer {
 
     // Round the value on plus/minus button release.
     if (event.getActionMasked() == MotionEvent.ACTION_UP)
-      value = Math.round(value);
+      valueMinuteOffset = 0;
   }
 
   public void setValue(int value) {
+    double prevValue = this.value;
+
     if (minValue != maxValue) {
       if (value < minValue) value = minValue;
       if (value > maxValue) value = maxValue;
@@ -117,13 +121,17 @@ public class MenuNumericalValue extends MenuFlexContainer {
 
     this.value = value;
     item.setText(Integer.toString(value));
-    onValueChange(value);
+    if (prevValue != value) onValueChange(value);
   }
 
   private void offsetValue(double offset) {
-    value += offset;
-    item.setText(Integer.toString((int) Math.round(value)));
-    if (Math.round(value - offset) != Math.round(value)) onValueChange((int) Math.round(value));
+    valueMinuteOffset += offset;
+    if (valueMinuteOffset >= 1 || valueMinuteOffset <= 1) {
+      int wholeNumberTransfer = valueMinuteOffset >= 1 ? (int) Math.floor(valueMinuteOffset)
+                                                       : (int) Math.ceil(valueMinuteOffset);
+      valueMinuteOffset -= wholeNumberTransfer;
+      setValue(value + wholeNumberTransfer);
+    }
   }
 
   public void onValueChange(int newValue) {}
