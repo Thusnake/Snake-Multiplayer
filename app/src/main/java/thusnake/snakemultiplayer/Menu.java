@@ -757,6 +757,7 @@ public class Menu implements Activity {
             Player addedSnake = new Player(renderer);
             addedSnake
                 .setControllerForced(new BluetoothController(renderer, addedSnake, sourceThread));
+            addedSnake.setName(sourceThread.device.getName());
             setupBuffer.cornerMap.addPlayer(addedSnake, requestedCorner);
           }
         }
