@@ -296,7 +296,7 @@ class SnakeOverviewButton extends MenuButton {
                            getX(EdgePoint.TOP_RIGHT) - renderer.smallDistance(),
                            getY(EdgePoint.TOP_RIGHT) - renderer.smallDistance(),
                            EdgePoint.TOP_RIGHT, (height - 2 - renderer.smallDistance()*2)/3f, 1, 3);
-    nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX() - renderer.smallDistance() * 2,
+    nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX() - renderer.smallDistance(),
                         getHeight() / 3f);
     plusIcon = new MenuItem(renderer, "+", getX(EdgePoint.CENTER), getY(EdgePoint.CENTER),
                             EdgePoint.CENTER);
@@ -318,7 +318,8 @@ class SnakeOverviewButton extends MenuButton {
     skinPreview.setDrawable(player != null);
     if (player != null) {
       nameItem.setText(player.getName());
-      nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX(), 0);
+      nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX() - renderer.smallDistance(),
+                          getHeight() / 3f);
       skinPreview.updateColors(0, player.getSkin().headColors());
       skinPreview.updateColors(1, player.getSkin().tailColors());
       skinPreview.updateColors(2, player.getSkin().tailColors());
@@ -400,9 +401,7 @@ class SnakeOverviewButton extends MenuButton {
                                                                Protocol.encodeCorner(corner)});
       } else {
         GameSetupBuffer setupBuffer = parentScreen.menu.getSetupBuffer();
-        setupBuffer.cornerMap.addPlayer(new Player(renderer,
-                                                   setupBuffer.cornerMap.getNumberOfPlayers())
-                                                                        .defaultPreset(), corner);
+        setupBuffer.cornerMap.addPlayer(new Player(renderer).defaultPreset(setupBuffer), corner);
       }
     }
   }

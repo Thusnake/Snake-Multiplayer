@@ -16,7 +16,7 @@ public final class MenuMainScreen extends MenuScreen {
                                         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
-        menu.getSetupBuffer().cornerMap.addPlayer(new Player(renderer, 0).defaultPreset(), Corner.LOWER_LEFT);
+        menu.getSetupBuffer().cornerMap.addPlayer(new Player(renderer).defaultPreset(menu.getSetupBuffer()), Corner.LOWER_LEFT);
         menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
       }
     }.withBackgroundImage(R.drawable.singleplayer_icon);
@@ -29,7 +29,7 @@ public final class MenuMainScreen extends MenuScreen {
                                        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
-        menu.getSetupBuffer().cornerMap.addPlayer(new Player(renderer, 0).defaultPreset(), Corner.LOWER_LEFT);
+        menu.getSetupBuffer().cornerMap.addPlayer(new Player(renderer).defaultPreset(menu.getSetupBuffer()), Corner.LOWER_LEFT);
         menu.setScreen(new MultiplayerSnakeOverviewScreen(menu));
       }
     }.withBackgroundImage(R.drawable.multiplayer_icon);

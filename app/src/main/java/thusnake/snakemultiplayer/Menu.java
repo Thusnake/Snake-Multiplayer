@@ -701,6 +701,10 @@ public class Menu implements Activity {
   }
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
+    Player playerLL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT);
+    Player playerUL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT);
+    Player playerUR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT);
+    Player playerLR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT);
     switch(inputBytes[0]) {
       case Protocol.HOR_SQUARES_CHANGED: setupBuffer.horizontalSquares = inputBytes[1]; break;
       case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares = inputBytes[1]; break;
@@ -712,24 +716,37 @@ public class Menu implements Activity {
         break;
 
       case Protocol.SNAKE_LL_SKIN:
-        Player playerLL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT);
         if (playerLL != null)
           playerLL.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
       case Protocol.SNAKE_UL_SKIN:
-        Player playerUL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT);
         if (playerUL != null)
           playerUL.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
       case Protocol.SNAKE_UR_SKIN:
-        Player playerUR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT);
         if (playerUR != null)
           playerUR.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
       case Protocol.SNAKE_LR_SKIN:
-        Player playerLR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT);
         if (playerLR != null)
           playerLR.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        break;
+
+      case Protocol.SNAKE_LL_NAME:
+        if (playerLL != null)
+          playerLL.setName(new String(inputBytes, 1, inputBytes.length - 1));
+        break;
+      case Protocol.SNAKE_UL_NAME:
+        if (playerUL != null)
+          playerUL.setName(new String(inputBytes, 1, inputBytes.length - 1));
+        break;
+      case Protocol.SNAKE_UR_NAME:
+        if (playerUR != null)
+          playerUR.setName(new String(inputBytes, 1, inputBytes.length - 1));
+        break;
+      case Protocol.SNAKE_LR_NAME:
+        if (playerLR != null)
+          playerLR.setName(new String(inputBytes, 1, inputBytes.length - 1));
         break;
 
       // HOST ONLY
@@ -737,7 +754,7 @@ public class Menu implements Activity {
         if (originActivity.isHost()) {
           PlayerController.Corner requestedCorner = Protocol.decodeCorner(inputBytes[1]);
           if (setupBuffer.cornerMap.getPlayer(requestedCorner) == null) {
-            Player addedSnake = new Player(renderer, 2);
+            Player addedSnake = new Player(renderer);
             addedSnake
                 .setControllerForced(new BluetoothController(renderer, addedSnake, sourceThread));
             setupBuffer.cornerMap.addPlayer(addedSnake, requestedCorner);
@@ -759,7 +776,7 @@ public class Menu implements Activity {
                 break;
               case Protocol.DSL_SNAKE_LOCAL:
                 if (player == null) {
-                  Player playerToBeAdded = new Player(renderer, 2).defaultPreset();
+                  Player playerToBeAdded = new Player(renderer).defaultPreset(setupBuffer);
                   setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
                 } else {
                   player.setController(new CornerLayoutController(renderer, player));
@@ -767,7 +784,7 @@ public class Menu implements Activity {
                 break;
               case Protocol.DSL_SNAKE_REMOTE:
                 if (player == null) {
-                  Player playerToBeAdded = new Player(renderer, 2);
+                  Player playerToBeAdded = new Player(renderer);
                   playerToBeAdded.setControllerForced(new BluetoothController(renderer,
                                                                     playerToBeAdded, sourceThread));
                   setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);

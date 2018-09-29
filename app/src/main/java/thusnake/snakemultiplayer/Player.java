@@ -21,7 +21,7 @@ public class Player {
   private Direction direction, previousDirection;
   private boolean alive = false, drawable = false, flashing;
   private GameRenderer renderer;
-  private int number, score;
+  private int score;
   private String name = "Snake";
   private ControlType controlType;
   public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
@@ -34,15 +34,25 @@ public class Player {
   private final List<PlayerController> controllersCache = new LinkedList<>();
 
   // Constructor for a corner layout player.
-  public Player(GameRenderer renderer, int number) {
+  public Player(GameRenderer renderer) {
     this.renderer = renderer;
     this.controlType = ControlType.OFF;
-    this.number = number;
     this.setSkin(SnakeSkin.white);
   }
 
-  public Player defaultPreset() {
-    setName("Player " + (number + 1));
+  public Player defaultPreset(GameSetupBuffer setupBuffer) {
+    int playerIndex = 1;
+    boolean indexChanged = true;
+    while (indexChanged) {
+      indexChanged = false;
+      for (PlayerController.Corner corner : PlayerController.Corner.values())
+        if (setupBuffer.getCornerMap().getPlayer(corner) != null &&
+            setupBuffer.getCornerMap().getPlayer(corner).getName().equals("Player "+ playerIndex)) {
+          playerIndex++;
+          indexChanged = true;
+        }
+    }
+    setName("Player " + playerIndex);
     setController(new CornerLayoutController(renderer, this));
     return this;
   }
@@ -209,7 +219,6 @@ public class Player {
   public Direction getDirection() { return this.direction; }
   public Direction getPreviousDirection() { return this.previousDirection; }
 
-  public int getNumber() { return this.number; }
   public String getName() { return this.name; }
   public BoardDrawer getGame() { return this.game; }
   public Mesh getBoardSquares() { return this.boardSquares; }
