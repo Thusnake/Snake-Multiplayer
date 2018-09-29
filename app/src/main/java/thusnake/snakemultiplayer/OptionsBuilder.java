@@ -141,7 +141,7 @@ final class OptionsBuilder {
             renderer.getMenu().getSetupBuffer().difficulty = 4; break;
         }
       }
-    };
+    }.setLabel("Difficulty:");
     addDescriptionItem(value, "");
 
     return value;

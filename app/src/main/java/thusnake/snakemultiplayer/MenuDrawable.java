@@ -157,8 +157,8 @@ public abstract class MenuDrawable {
    * @param verticalLimit The maximum height. A value of 0 implies no limit.
    */
   public void scaleToFit(float horizontalLimit, float verticalLimit) {
-    double horizontalScale = horizontalLimit / getWidth();
-    double verticalScale = verticalLimit / getHeight();
+    double horizontalScale = horizontalLimit / width;
+    double verticalScale = verticalLimit / height;
 
     if (horizontalScale != 0 && verticalScale != 0)
       scale.setTime(Math.min(horizontalScale, verticalScale));

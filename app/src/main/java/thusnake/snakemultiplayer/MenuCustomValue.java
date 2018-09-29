@@ -5,7 +5,7 @@ import java.util.List;
 public class MenuCustomValue extends MenuFlexContainer {
   private List<String> possibleValues;
   private String value;
-  private final MenuItem textItem, leftButton, rightButton;
+  private final MenuItem textItem, leftButton, rightButton, label;
   private boolean cyclic;
 
   public MenuCustomValue(GameRenderer renderer, List<String> possibleValues, float x, float y,
@@ -65,6 +65,12 @@ public class MenuCustomValue extends MenuFlexContainer {
       }
     };
 
+    label = new MenuItem(renderer, "label", textItem.getX(EdgePoint.TOP_LEFT),
+        textItem.getY(EdgePoint.TOP_LEFT) + renderer.smallDistance(), EdgePoint.BOTTOM_LEFT);
+    label.scale.setTime(0.25);
+    label.setColors(0.5f, 0.5f, 0.5f, 1f);
+    label.setDrawable(false);
+
     // After we're done creating the left and right arrows we can set the text item's value to the
     // proper default one.
     textItem.setText(possibleValues.get(0));
@@ -75,11 +81,22 @@ public class MenuCustomValue extends MenuFlexContainer {
     addItem(textItem);
     addItem(leftButton);
     addItem(rightButton);
+    addItem(label);
 
     move(0);
   }
 
   public MenuCustomValue cyclic() { cyclic = true; return this;}
+
+  /**
+   * Puts a small label on top.
+   * @param labelText The text which the label should display.
+   */
+  public MenuCustomValue setLabel(String labelText) {
+    label.setText(labelText);
+    label.setDrawable(!labelText.equals(""));
+    return this;
+  }
 
   private void cycleValue(int steps) {
     int currentIndex = possibleValues.indexOf(value);

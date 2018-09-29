@@ -43,7 +43,7 @@ public abstract class MenuButton extends MenuDynamicContainer implements Texture
     if (!getYTimer().isDone()) getYTimer().countEaseOut(dt, 8, getYTimer().getDuration() / 4.0);
 
     if (!scale.isDone()) {
-      if (isHeld) scale.countEaseOut(dt, 2, 120 * dt);
+      if (isHeld) scale.countEaseOut(dt, 2, 240 * dt);
       else        scale.countEaseOut(dt, 8, 5 * dt);
     }
 

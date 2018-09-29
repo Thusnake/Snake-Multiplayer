@@ -64,13 +64,13 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
           default: break;
         }
       }
-    };
+    }.setLabel("Control type:");
 
     MenuButton cornerSettingsButton, controllerSettingsButton;
+    float buttonsSize = renderer.getGlText().getHeight() * 1.2f;
     cornerSettingsButton
-        = new MenuButton(renderer, 10, controlType.getY(MenuDrawable.EdgePoint.CENTER),
-                         controlType.getHeight(), controlType.getHeight(),
-                         MenuDrawable.EdgePoint.LEFT_CENTER) {
+        = new MenuButton(renderer, 10, controlType.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER),
+                         buttonsSize, buttonsSize, MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void move(double dt) {
         super.move(dt);
@@ -171,9 +171,8 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
 
     controllerSettingsButton
         = new MenuButton(renderer, renderer.getScreenWidth() - 10,
-                         controlType.getY(MenuDrawable.EdgePoint.CENTER),
-                         controlType.getHeight(), controlType.getHeight(),
-                         MenuDrawable.EdgePoint.RIGHT_CENTER) {
+                         controlType.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER),
+                         buttonsSize, buttonsSize, MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
         menu.setScreen(new SettingsScreen(menu,
