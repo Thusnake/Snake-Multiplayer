@@ -70,14 +70,21 @@ final class GameSetupBuffer {
       if (player == null) continue;
 
       // Player skin index.
-      byte skinCallByte = Protocol.SNAKE_LL_SKIN;
+      byte skinCallByte = Protocol.SNAKE_LL_SKIN, nameCallByte = Protocol.SNAKE_LL_NAME;
       switch(corner) {
-        case LOWER_LEFT: skinCallByte = Protocol.SNAKE_LL_SKIN; break;
-        case UPPER_LEFT: skinCallByte = Protocol.SNAKE_UL_SKIN; break;
-        case UPPER_RIGHT: skinCallByte = Protocol.SNAKE_UR_SKIN; break;
-        case LOWER_RIGHT: skinCallByte = Protocol.SNAKE_LR_SKIN; break;
+        case LOWER_LEFT: skinCallByte = Protocol.SNAKE_LL_SKIN; nameCallByte = Protocol.SNAKE_LL_NAME; break;
+        case UPPER_LEFT: skinCallByte = Protocol.SNAKE_UL_SKIN; nameCallByte = Protocol.SNAKE_UL_NAME; break;
+        case UPPER_RIGHT: skinCallByte = Protocol.SNAKE_UR_SKIN; nameCallByte = Protocol.SNAKE_UR_NAME; break;
+        case LOWER_RIGHT: skinCallByte = Protocol.SNAKE_LR_SKIN; nameCallByte = Protocol.SNAKE_LR_NAME; break;
       }
+
       calls.add(new byte[] {skinCallByte, (byte) player.getSkinIndex()});
+
+      byte[] nameCall = new byte[player.getName().length() + 1];
+      nameCall[0] = nameCallByte;
+      for (int index = 0; index < player.getName().length(); index++)
+        nameCall[index + 1] = player.getName().getBytes()[index];
+      calls.add(nameCall);
     }
 
     calls.add(makeDetailedSnakesList(thread));
