@@ -40,8 +40,8 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
     MenuCustomValue controlType
         = new MenuCustomValue(renderer, possibleControlTypes,
                               renderer.getScreenWidth() / 2f,
-                              snakeSelectionCarousel.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER)/2f,
-                              MenuDrawable.EdgePoint.CENTER) {
+                              renderer.smallDistance(),
+                              MenuDrawable.EdgePoint.BOTTOM_CENTER) {
       @Override
       public void move(double dt) {
         super.move(dt);
