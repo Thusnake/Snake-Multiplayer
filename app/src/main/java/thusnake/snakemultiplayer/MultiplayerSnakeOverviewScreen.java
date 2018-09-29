@@ -5,8 +5,10 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.text.InputType;
 import android.view.MotionEvent;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -344,7 +346,21 @@ class SnakeOverviewButton extends MenuButton {
           AlertDialog.Builder alertDialogBuilder =  new AlertDialog.Builder(originActivity);
           EditText input = new EditText(originActivity);
           input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-          alertDialogBuilder.setView(input);
+
+          // Create a container for the input in order to have some padding.
+          FrameLayout container = new FrameLayout(originActivity);
+          FrameLayout.LayoutParams params = new FrameLayout.LayoutParams
+              (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+          params.setMargins((int) renderer.smallDistance()*5,
+                            (int) renderer.smallDistance()*3,
+                            (int) renderer.smallDistance()*5,
+                            (int) renderer.smallDistance());
+          input.setLayoutParams(params);
+          container.addView(input);
+
+          // Add it all to the dialog box.
+          alertDialogBuilder.setTitle("Name:");
+          alertDialogBuilder.setView(container);
           alertDialogBuilder.setPositiveButton("Confirm",
                                                (dialogInterface, i)
                                                     -> player.setName(input.getText().toString()));
