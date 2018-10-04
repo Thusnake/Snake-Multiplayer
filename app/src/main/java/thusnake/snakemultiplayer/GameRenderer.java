@@ -2,6 +2,7 @@ package thusnake.snakemultiplayer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
@@ -10,6 +11,8 @@ import android.util.SparseArray;
 
 import com.android.texample.GLText;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -279,7 +282,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
       gl.glGenTextures(1, texturePointers, 0);
       gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
       gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
       // Use Android GLUtils to specify a two-dimensional texture image from our bitmap.
       GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
@@ -302,8 +305,23 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public Bitmap loadTextureBitmap(int id) {
     Bitmap bitmap;
     if ((bitmap = getTextureFromCache(id)) == null) {
-      bitmap = BitmapFactory.decodeResource(originActivity.getResources(), id);
-      resourceIDMap.put(id, bitmap);
+      try {
+        InputStream is = null;
+        try {
+          is = originActivity.getResources().openRawResource(id);
+          bitmap = BitmapFactory.decodeStream(is);
+        } catch (Resources.NotFoundException exception) { /* Ignore it. */ }
+        finally {
+          try {
+            if (is != null) is.close();
+          } catch(IOException e) {
+            // Ignore.
+          }
+        }
+        resourceIDMap.put(id, bitmap);
+      } catch (OutOfMemoryError error) {
+        System.out.println("Couldn't load resource with id " + id + " : " + error.getMessage());
+      }
     }
     return bitmap;
   }
@@ -325,7 +343,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
       Bitmap bitmap = glTexturePointerMap.get(glPointer);
       gl.glBindTexture(GL10.GL_TEXTURE_2D, glPointer);
       gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
       GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
     }
   }

@@ -1,9 +1,6 @@
 package thusnake.snakemultiplayer;
 
-import android.content.Context;
-import android.os.Vibrator;
 import android.view.MotionEvent;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -94,6 +91,7 @@ public class Player {
     if (!this.getBodyPart(-1).isOutOfBounds()) {
       boardSquares.updateColors(this.getBodyPart(-1).getX(), this.getBodyPart(-1).getY(),
           game.getBoardSquareColors());
+      boardSquares.updateTextures(getBodyPart(-1).getX(), getBodyPart(-1).getY(), 31, 0, 31, 0);
     }
 
     // Then move all the body parts, starting from the furthest.
@@ -143,6 +141,52 @@ public class Player {
   public void updateColors() {
     for (int partIndex = 0; partIndex < this.bodyLength; partIndex++)
       this.bodyParts[partIndex].updateColors();
+
+    // Update the texture as well.
+    // First the body.
+    for (int index = 1; index < bodyLength - 1; index++) {
+      if (!bodyParts[index].isOutOfBounds()) {
+        boolean turning = !(bodyParts[index - 1].getX() == bodyParts[index + 1].getX()
+            || bodyParts[index - 1].getY() == bodyParts[index + 1].getY());
+        Direction direction;
+
+        // Find the directional texture to be used.
+        if (turning) {
+          LinkedList<Direction> directions = new LinkedList<>();
+          directions.add(bodyParts[index].adjacentDirection(bodyParts[index - 1]));
+          directions.add(bodyParts[index].adjacentDirection(bodyParts[index + 1]));
+          if (directions.contains(UP) && directions.contains(RIGHT)) direction = DOWN;
+          else if (directions.contains(LEFT) && directions.contains(UP)) direction = RIGHT;
+          else if (directions.contains(LEFT) && directions.contains(DOWN)) direction = UP;
+          else if (directions.contains(DOWN) && directions.contains(RIGHT)) direction = LEFT;
+          else throw new RuntimeException("Snake calculated to be turning when in fact it isn't.");
+        } else direction = bodyParts[index].adjacentDirection(bodyParts[index - 1]);
+
+        boardSquares.updateTextures(bodyParts[index].getX(), bodyParts[index].getY(),
+                                    skin.texture(turning ? SnakeSkin.TextureType.TURN :
+                                                           SnakeSkin.TextureType.BODY, direction));
+      }
+    }
+
+    // Then the tail.
+    int nextIndex = 2;
+    Direction tailDirection;
+    if (bodyLength > 1 && !bodyParts[bodyLength - 1].isOutOfBounds()) {
+      do {
+        tailDirection = bodyParts[bodyLength - 1]
+            .adjacentDirection(bodyParts[bodyLength - nextIndex]);
+        nextIndex++;
+      } while (tailDirection == null);
+
+      boardSquares.updateTextures(bodyParts[bodyLength - 1].getX(), bodyParts[bodyLength - 1].getY(),
+          skin.texture(SnakeSkin.TextureType.TAIL, tailDirection)
+      );
+    }
+
+    // And finally the head.
+    if (bodyParts[0] != null && !bodyParts[0].isOutOfBounds())
+      boardSquares.updateTextures(getX(), getY(), skin.texture(SnakeSkin.TextureType.HEAD,
+          previousDirection));
   }
 
   public void draw(double dt) {

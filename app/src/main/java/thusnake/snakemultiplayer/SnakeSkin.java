@@ -12,13 +12,93 @@ import java.util.List;
 class SnakeSkin {
   private float[] headColors = new float[4];
   private float[] tailColors = new float[4];
+  enum TextureType {HEAD, BODY, TURN, TAIL}
+
+  class BodyPartTileCoordinates {
+    final int downX, downY, rightX, rightY, upX, upY, leftX, leftY, tileSize;
+
+    BodyPartTileCoordinates(int downwardTileX, int downwardTileY, int tileSize) {
+      downX = downwardTileX;
+      downY = downwardTileY;
+      rightX = downwardTileX + tileSize;
+      rightY = downwardTileY;
+      upX = downwardTileX + tileSize * 2;
+      upY = downwardTileY;
+      leftX = downwardTileX + tileSize * 3;
+      leftY = downwardTileY;
+      this.tileSize = tileSize;
+    }
+
+    int[] getCoordinates(@NonNull Player.Direction direction) {
+      int x, y;
+      switch(direction) {
+        case UP: x = upX; y = upY; break;
+        case DOWN: x = downX; y = downY; break;
+        case LEFT: x = leftX; y = leftY; break;
+        case RIGHT: x = rightX; y = rightY; break;
+        default: throw new
+            RuntimeException("Passed null direction to BodyPartTileCoordinates.getCoordinates()");
+      }
+      return new int[] {x, y, x + tileSize - 1, y + tileSize - 1};
+    }
+  }
+
+  class NonDirectionalBodyPartTileCoordinates extends BodyPartTileCoordinates {
+    NonDirectionalBodyPartTileCoordinates(int tileX, int tileY, int tileSize) {
+      super(tileX, tileY, tileSize);
+    }
+
+    /**
+     * Direction passed is not important, as it always calls the super method with DOWN as an
+     * argument. It's not the best solution, but it works and I'm lazy.
+     */
+    @Override
+    int[] getCoordinates(@NonNull Player.Direction direction) {
+      return super.getCoordinates(Player.Direction.DOWN);
+    }
+  }
+
+  final BodyPartTileCoordinates headTiles, bodyTiles, turnTiles, tailTiles;
+
   SnakeSkin(float[] headColors, float[] tailColors) {
     System.arraycopy(headColors, 0, this.headColors, 0, 4);
     System.arraycopy(tailColors, 0, this.tailColors, 0, 4);
+    headTiles = new NonDirectionalBodyPartTileCoordinates(0, 5, 4);
+    bodyTiles = headTiles;
+    turnTiles = headTiles;
+    tailTiles = headTiles;
+  }
+
+  SnakeSkin(float[] colors, int bottomLeftTileX, int bottomLeftTileY, int tileSize) {
+    System.arraycopy(colors, 0, headColors, 0, 4);
+    System.arraycopy(colors, 0, tailColors, 0, 4);
+    headTiles = new BodyPartTileCoordinates(bottomLeftTileX, bottomLeftTileY, tileSize);
+    bodyTiles = new BodyPartTileCoordinates(bottomLeftTileX, bottomLeftTileY + 1, tileSize);
+    turnTiles = new BodyPartTileCoordinates(bottomLeftTileX, bottomLeftTileY + 2, tileSize);
+    tailTiles = new BodyPartTileCoordinates(bottomLeftTileX, bottomLeftTileY + 3, tileSize);
   }
   
   float[] headColors() { return headColors; }
   float[] tailColors() { return tailColors; }
+
+  /**
+   * Returns coordinates in the tilemap of a specific texture.
+   * @param textureType The type of texture required (head, body, tail or turn).
+   * @param direction The direction this texture is going.
+   * @return An array of integers for these values respectively :
+   * bottomLeftX, bottomLeftY, topRightX, topRightY.
+   */
+  int[] texture(TextureType textureType, Player.Direction direction) {
+    BodyPartTileCoordinates tileset;
+    switch(textureType) {
+      case HEAD: tileset = headTiles; break;
+      case BODY: tileset = bodyTiles; break;
+      case TURN: tileset = turnTiles; break;
+      case TAIL: tileset = tailTiles; break;
+      default: throw new RuntimeException("Passed null textureType to SnakeSkin.texture()");
+    }
+    return tileset.getCoordinates(direction);
+  }
 
   Mesh previewMesh(GameRenderer renderer, float x, float y, MenuDrawable.EdgePoint alignPoint,
                    float totalHeight, int squares) {
@@ -27,6 +107,10 @@ class SnakeSkin {
     previewMesh.updateColors(0, headColors());
     for (int index = 1; index < squares; index++)
       previewMesh.updateColors(index, tailColors());
+
+    previewMesh.updateTextures(0, 0, texture(TextureType.HEAD, Player.Direction.DOWN));
+    for (int index = 1; index < squares; index++)
+      previewMesh.updateTextures(0, index, texture(TextureType.BODY, Player.Direction.DOWN));
 
     return previewMesh;
   }
@@ -64,8 +148,9 @@ class SnakeSkin {
   static SnakeSkin blue = new SnakeSkin(hslToRgba(240, 100, 50), hslToRgba(240, 50, 33));
   static SnakeSkin purple = new SnakeSkin(hslToRgba(290, 100, 50), hslToRgba(290, 50, 33));
   static SnakeSkin coral = new SnakeSkin(hslToRgba(330, 100, 50), hslToRgba(330, 50, 33));
+  static SnakeSkin oldSchool = new SnakeSkin(new float[] {1f, 1f, 1f, 1f}, 0, 9, 1);
 
 
   static List<SnakeSkin> allSkins = Arrays.asList(white, red, orange, yellow, green, teal, blue,
-                                                  purple, coral);
+                                                  purple, coral, oldSchool);
 }

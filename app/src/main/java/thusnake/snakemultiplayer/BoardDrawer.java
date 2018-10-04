@@ -35,7 +35,7 @@ public abstract class BoardDrawer {
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
     this.squareWidth
-        = (float) ((screenHeight - 20.0 - this.verticalSquares - 1.0) / verticalSquares);
+        = (float) ((screenHeight - 20.0) / verticalSquares);
     // Apply offset to some Squares.
     this.boardOutline = new Square(renderer, boardOffsetX - 1.0, boardOffsetY - 1.0,
         screenWidth - boardOffsetX*2 + 2.0, screenHeight - boardOffsetY*2 + 2.0);

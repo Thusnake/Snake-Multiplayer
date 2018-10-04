@@ -68,7 +68,7 @@ public class Apple {
 
   public void updateColors() {
     this.game.getBoardSquares().updateColors(this.x, this.y, this.colors);
-    game.getBoardSquares().updateTextures(x, y, 0.25f, 0.25f, 0.75f, 0.75f);
+    game.getBoardSquares().updateTextures(x, y, 0, 0, 4, 4);
   }
 
   public int getX() { return x; }

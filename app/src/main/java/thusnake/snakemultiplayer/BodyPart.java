@@ -100,5 +100,22 @@ public class BodyPart {
         || this.y < 0 || this.y >= game.getVerticalSquares();
   }
 
+  /**
+   * Returns the relative direction of an adjacent body part.
+   * @param otherPart The other part.
+   * @return The direction that other part is relative to this part. Null if the other part is not
+   * actually adjacent or is equivalent.
+   */
+  public Player.Direction adjacentDirection(BodyPart otherPart) {
+    if (otherPart.getX() == getX() && otherPart.getY() == getY())
+      return null;
+    else if (otherPart.getX() == getX())
+      return otherPart.getY() > getY() ? Player.Direction.UP : Player.Direction.DOWN;
+    else if (otherPart.getY() == getY())
+      return otherPart.getX() > getX() ? Player.Direction.RIGHT : Player.Direction.LEFT;
+    else
+      return null;
+  }
+
   public float[] getColors() { return this.colors; }
 }

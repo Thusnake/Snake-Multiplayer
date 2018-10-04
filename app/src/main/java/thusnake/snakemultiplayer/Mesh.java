@@ -29,6 +29,8 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
   private final float squareSize;
   private final int horizontalSquares;
   private final int verticalSquares;
+
+  private final float textureMapWidth, textureMapHeight;
   
   public Mesh (GameRenderer renderer, float x, float y, EdgePoint alignPoint, float squareSize,
                BoardDrawer game) {
@@ -43,14 +45,18 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
     this.horizontalSquares = horizontalSquares;
     this.verticalSquares = verticalSquares;
     this.addAllSquares();
-    setTexture(R.drawable.singleplayer_icon);
+
+    // This texture is hard-coded as it is the texture map of all board textures.
+    setTexture(R.drawable.snaketexturemap);
+    textureMapWidth = 512;
+    textureMapHeight = 512;
   }
 
   private void addAllSquares() {
     for (int y = 0; y < this.verticalSquares; y++) {
       for (int x = 0; x < this.horizontalSquares; x++) {
-        this.addSquare(-getEdgePointOffset(originPoint).first + squareSize * x + x + 1,
-                       -getEdgePointOffset(originPoint).second + y + 1 + squareSize * y,
+        this.addSquare(-getEdgePointOffset(originPoint).first + squareSize * x,
+                       -getEdgePointOffset(originPoint).second + squareSize * y,
                        squareSize, squareSize);
       }
     }
@@ -186,6 +192,9 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
   }
 
   public void updateTextures(int x, int y, float leftX, float bottomY, float rightX, float topY) {
+    topY = 1 - topY;
+    bottomY = 1 - bottomY;
+
     this.textures[(x + y * horizontalSquares)*8] = leftX;
     this.textures[(x + y * horizontalSquares)*8 + 1] = topY;
 
@@ -199,6 +208,18 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
     this.textures[(x + y * horizontalSquares)*8 + 7] = topY;
 
     setTextures(this.textures);
+  }
+
+  public void updateTextures(int x, int y, int bottomLeftTileX, int bottomLeftTileY,
+                             int topRightTileX, int topRightTileY) {
+    updateTextures(x, y, (bottomLeftTileX * 16) / textureMapWidth,
+                         (bottomLeftTileY * 16) / textureMapHeight,
+                         (topRightTileX * 16 + 16) / textureMapWidth,
+                         (topRightTileY * 16 + 16) / textureMapHeight);
+  }
+
+  public void updateTextures(int x, int y, int[] coordinates) {
+    updateTextures(x, y, coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
   }
 
   public void setTexture(int id) {

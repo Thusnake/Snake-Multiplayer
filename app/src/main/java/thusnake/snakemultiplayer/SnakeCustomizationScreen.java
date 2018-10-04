@@ -27,6 +27,7 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
     snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.blue, "Blue"));
     snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.purple, "Purple"));
     snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.coral, "Black"));
+    snakeSelectionCarousel.addChoice(skinAsCarouselItem(SnakeSkin.oldSchool, "Old School"));
     snakeSelectionCarousel.setDefaultChoice(player.getSkinIndex());
     snakeSelectionCarousel.noBoundaries();
     snakeSelectionCarousel.notChosenOpacity = 0.5f;
