@@ -323,6 +323,12 @@ class SnakeOverviewButton extends MenuButton {
       skinPreview.updateColors(0, player.getSkin().headColors());
       skinPreview.updateColors(1, player.getSkin().tailColors());
       skinPreview.updateColors(2, player.getSkin().tailColors());
+      skinPreview.updateTextures(0, 0, player.getSkin().texture(SnakeSkin.TextureType.HEAD,
+                                                                Player.Direction.DOWN));
+      skinPreview.updateTextures(0, 1, player.getSkin().texture(SnakeSkin.TextureType.BODY,
+                                                                Player.Direction.DOWN));
+      skinPreview.updateTextures(0, 2, player.getSkin().texture(SnakeSkin.TextureType.TAIL,
+                                                                Player.Direction.DOWN));
     }
   }
 

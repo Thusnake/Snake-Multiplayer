@@ -924,9 +924,14 @@ class BackgroundSnake {
     this.x = -((size + 1) * length);
 
     snakeMesh = new Mesh(menu.getRenderer(), x, initialY, EdgePoint.BOTTOM_LEFT, size, length, 1);
-    for (int index = 0; index < length - 1; index++)
+    for (int index = 0; index < length - 1; index++) {
       snakeMesh.updateColors(index, 0.25f, 0.25f, 0.25f, 0.5f);
+      snakeMesh.updateTextures(index, 0, SnakeSkin.white.texture(SnakeSkin.TextureType.HEAD,
+                                                                 Player.Direction.DOWN));
+    }
     snakeMesh.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
+    snakeMesh.updateTextures(length - 1, 0, SnakeSkin.white.texture(SnakeSkin.TextureType.HEAD,
+                                                                    Player.Direction.DOWN));
   }
 
   // Moves the snake whenever it is time to be moved.

@@ -109,8 +109,9 @@ class SnakeSkin {
       previewMesh.updateColors(index, tailColors());
 
     previewMesh.updateTextures(0, 0, texture(TextureType.HEAD, Player.Direction.DOWN));
-    for (int index = 1; index < squares; index++)
+    for (int index = 1; index < squares - 1; index++)
       previewMesh.updateTextures(0, index, texture(TextureType.BODY, Player.Direction.DOWN));
+    previewMesh.updateTextures(0, squares - 1, texture(TextureType.TAIL, Player.Direction.DOWN));
 
     return previewMesh;
   }
