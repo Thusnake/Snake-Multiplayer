@@ -229,16 +229,16 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
 
   /** Finds the game in the activity stack and replaces it with a new one of the same class. */
-  public void restartGame() {
-    if (getGame() == null) return;
-    int gameIndex = activityStack.indexOf(getGame());
+  public void restartGame(Game game) {
+    if (game == null || !activityStack.contains(game)) return;
+    int gameIndex = activityStack.indexOf(game);
 
     try {
-      activityStack.setElementAt(getGame().getClass()
-                                          .getConstructor(GameRenderer.class, GameSetupBuffer.class)
-                                          .newInstance(this, getMenu().getSetupBuffer()),gameIndex);
+      activityStack.setElementAt(game.getClass()
+                                     .getConstructor(GameRenderer.class, GameSetupBuffer.class)
+                                     .newInstance(this, getMenu().getSetupBuffer()), gameIndex);
     } catch (Exception exception) {
-      throw new RuntimeException("Could not restart game: " + exception.getMessage());
+      System.out.println("Couldn't restart game: " + exception.getMessage());
     }
   }
 

@@ -23,6 +23,7 @@ public class OnlineHostGame extends Game {
   private final SimpleTimer awaitingAggregateReceiveTimer = new SimpleTimer(0.0, 0.25);
   private boolean running = false;
   private final Square readyFillBar;
+  private final Game selfReference = this;
 
   // Constructor.
   public OnlineHostGame(GameRenderer renderer, GameSetupBuffer setupBuffer){
@@ -87,7 +88,7 @@ public class OnlineHostGame extends Game {
 
           if (readyDevices == connectedDevices && readyDevices > 1) {
             // Everyone is ready - begin game.
-            getRenderer().restartGame();
+            getRenderer().restartGame(selfReference);
           }
         }
 

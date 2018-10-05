@@ -99,7 +99,7 @@ class Game extends BoardDrawer implements Activity {
         return y < 1/3f * renderer.getScreenHeight();
       }
     };
-    this.gameOverTopItem.setAction((action, origin) -> action.restartGame());
+    this.gameOverTopItem.setAction((action, origin) -> action.restartGame(this));
 
     this.gameOverMiddleItem = new MenuItem(renderer, "Everyone loses",
         renderer.getScreenWidth() / 2,
