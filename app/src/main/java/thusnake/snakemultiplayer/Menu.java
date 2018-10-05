@@ -940,7 +940,7 @@ class BackgroundSnake {
       this.movementTimer -= dt;
       while (this.movementTimer < 0) {
         this.movementTimer += speed;
-        this.x += this.size + 1;
+        this.x += this.size;
       }
 
       if (x > menu.getRenderer().getScreenWidth() * 5)
