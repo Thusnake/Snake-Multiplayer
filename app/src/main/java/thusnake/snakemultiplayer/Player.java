@@ -138,7 +138,7 @@ public class Player {
     return true;
   }
 
-  public void updateColors() {
+  public void drawToMesh() {
     for (int partIndex = 0; partIndex < this.bodyLength; partIndex++)
       this.bodyParts[partIndex].updateColors();
 

@@ -6,14 +6,14 @@ public class TronGame extends Game {
   }
 
   @Override
-  public void createApples() {
-    getApples().clear();
+  public void createEntities() {
+    getEntities().clear();
   }
 
   @Override
-  protected void moveAllSnakes() {
+  protected void performMove() {
     for (Player player : getPlayers())
       player.expandBody();
-    super.moveAllSnakes();
+    super.performMove();
   }
 }

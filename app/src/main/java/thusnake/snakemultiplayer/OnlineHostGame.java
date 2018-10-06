@@ -99,9 +99,9 @@ public class OnlineHostGame extends Game {
   public void prepare() {
     moveCount++;
     Pair<Byte, Byte> moveId = Protocol.encodeMoveID(moveCount);
-    moveCodes.add(new byte[] {GAME_APPLE_POS_CHANGED,
-                              moveId.first, moveId.second,
-                              (byte) getApples().get(0).getX(), (byte) getApples().get(0).getY()});
+    moveCodes.add(new byte[] {GAME_ENTITY_POS_CHANGE,
+                              moveId.first, moveId.second, 0,
+                              (byte) getEntities().get(0).x, (byte) getEntities().get(0).y});
   }
 
   public List<byte[]> createInitializationCalls(GameSetupBuffer setupBuffer,
@@ -140,8 +140,8 @@ public class OnlineHostGame extends Game {
   }
 
   @Override
-  protected void moveAllSnakes() {
-    super.moveAllSnakes();
+  protected void performMove() {
+    super.performMove();
     moveCount++;
 
     List<Player.Direction> directions = new LinkedList<>();
@@ -171,7 +171,7 @@ public class OnlineHostGame extends Game {
         Protocol.GAME_APPLE_EATEN_NEXT_POS,
         Protocol.encodeMoveID(moveCount).first,
         Protocol.encodeMoveID(moveCount).second,
-        (byte) apple.getX(), (byte) apple.getY()
+        (byte) getEntities().indexOf(apple), (byte) apple.getX(), (byte) apple.getY()
     });
 
     this.sendBytes(moveCodes.get(moveCodes.size() - 1));

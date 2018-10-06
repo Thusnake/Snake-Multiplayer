@@ -6,10 +6,8 @@ import android.content.SharedPreferences;
 import com.android.texample.GLText;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -32,7 +30,7 @@ class Game extends BoardDrawer implements Activity {
   private final String scoreKey;
   private final MenuItem gameModeAnnouncement;
   final CornerMap cornerMap;
-  private final List<Apple> apples = new LinkedList<>();
+  private final List<Entity> entities = new LinkedList<>();
   private final Square[] boardLines = new Square[2];
   private final Square boardFade;
   private final GameRenderer renderer;
@@ -72,7 +70,7 @@ class Game extends BoardDrawer implements Activity {
       player.prepareForGame(this);
 
     // Create the apple.
-    this.createApples();
+    this.createEntities();
     
     // Create the rest of the square objects.
     this.boardLines[0] = new Square(renderer, 0, getScreenHeight()/3f, getScreenWidth(), 4);
@@ -129,6 +127,11 @@ class Game extends BoardDrawer implements Activity {
     this.gameOverItems.add(gameOverTopItem);
     this.gameOverItems.add(gameOverMiddleItem);
     this.gameOverItems.add(gameOverBottomItem);
+
+    for (Player player : getPlayers())
+      player.drawToMesh();
+    for (Entity entity : getEntities())
+      entity.drawToMesh();
   }
 
   // Runs a single frame of the snake game.
@@ -150,17 +153,8 @@ class Game extends BoardDrawer implements Activity {
     // Handle movement based on moveTimer.
     while(!gameOver && moveTimer.getTime() <= 0.0) {
       moveTimer.countUp(1.0 / speed);
-      moveAllSnakes();
+      onStep();
     }
-
-    // Draw all drawable snakes.
-    for (Player player : getPlayers())
-      if (player != null && player.isDrawable())
-        player.updateColors();
-
-    // Draw all apples.
-    for (Apple apple : apples)
-      apple.updateColors();
     
     // Apply the transformation and draw the board.
     gl.glLoadIdentity();
@@ -236,8 +230,14 @@ class Game extends BoardDrawer implements Activity {
       player.getPlayerController().reloadTexture();
   }
 
-  public void createApples() {
-    apples.add(new Apple(this));
+  /** Called every time a move has to be executed, which is determined by the speed of the game. */
+  public void onStep() {
+    performMove();
+  }
+
+  public void createEntities() {
+    Coordinates<Integer> emptySpace = getRandomEmptySpace();
+    entities.add(new Apple(this, emptySpace.x, emptySpace.y));
   }
 
   protected boolean checkGameOver() {
@@ -275,17 +275,29 @@ class Game extends BoardDrawer implements Activity {
     return false;
   }
 
-  protected void moveAllSnakes() {
-    for (Player player : getPlayers()) {
-      // Move and check if it has eaten the apple.
-      if (player != null && player.isAlive() && player.move()) {
-        for (Apple apple : apples)
-          if (apple.check(player))
-            this.getBoardSquares().updateColors(apple.x, apple.y, apple.getColors());
-      }
-    }
+  /**
+   * Updates the positions of all snakes and entities and then redraws them onto the Mesh.
+   * Usually called on every game step.
+   */
+  protected void performMove() {
+    // Move all players.
     for (Player player : getPlayers())
-      if(player != null && player.isAlive()) player.checkDeath();
+      if (player != null && player.isAlive())
+        player.move();
+
+    // Check for deaths.
+    for (Player player : getPlayers())
+      if(player != null && player.isAlive())
+        player.checkDeath();
+
+    // Update all entities.
+    for (Entity entity : entities)
+      entity.onMove();
+
+    // Draw all drawable snakes.
+    for (Player player : getPlayers())
+      if (player != null && player.isDrawable())
+        player.drawToMesh();
   }
 
   protected void sendBytes(byte[] bytes) {
@@ -302,7 +314,7 @@ class Game extends BoardDrawer implements Activity {
   public GameRenderer getRenderer() { return this.renderer; }
   public double getSpeed() { return this.speed; }
   public boolean isOver() { return this.gameOver; }
-  public List<Apple> getApples() { return this.apples; }
+  public List<Entity> getEntities() { return this.entities; }
   public List<Player> getPlayers() { return cornerMap.getPlayers(); }
   public int getAlivePlayers() {
     int playersAlive = 0;
@@ -327,4 +339,18 @@ class Game extends BoardDrawer implements Activity {
   public MenuItem getGameOverTopItem() { return this.gameOverTopItem; }
   public MenuItem getGameOverMiddleItem() { return this.gameOverMiddleItem; }
   public MenuItem getGameOverBottomItem() { return this.gameOverBottomItem; }
+
+  public Coordinates<Integer> getRandomEmptySpace() {
+    List<Coordinates<Integer>> emptySpaces = new LinkedList<>();
+    for (int y = 0; y < getVerticalSquares(); y++)
+      for (int x = 0; x < getHorizontalSquares(); x++)
+        emptySpaces.add(new Coordinates<>(x, y));
+
+    for (Player player : getPlayers())
+      if (player != null && player.isAlive())
+        for (BodyPart bodyPart : player.getBodyParts())
+          emptySpaces.remove(new Coordinates<>(bodyPart.getX(), bodyPart.getY()));
+
+    return emptySpaces.get((int) Math.floor(Math.random() * emptySpaces.size()));
+  }
 }

@@ -72,10 +72,9 @@ public class GuestGame extends Game {
       readyFillBar.draw(this.getRenderer().getGl());
   }
 
-  // This doesn't move all the snakes at all, but we're using the fact that it's invoked on
-  // a timer to request snake moves.
   @Override
-  public void moveAllSnakes() {
+  public void onStep() {
+    // We're using the fact that it's invoked on a timer to request snake moves.
     if (missedMovesList != null && missedMovesList.size() > 0) {
       for (Integer index : missedMovesList.missingMovesIndices()) {
         Pair<Byte, Byte> idBytes = Protocol.encodeMoveID(index);
@@ -109,27 +108,16 @@ public class GuestGame extends Game {
           index++;
         }
 
-        // Move all the snakes.
-        for (Player player : this.getPlayers())
-          if (player != null && player.isAlive() && player.move())
-            for (Apple apple : getApples())
-              if (apple.check(player))
-                this.getBoardSquares().updateColors(apple.x, apple.y, apple.getColors());
-
-        // Check for deaths.
-        for (Player player : getPlayers())
-          if (player != null && player.isAlive())
-            player.checkDeath();
-
+        // Update all entities and snakes as per usual.
+        performMove();
         break;
 
       case Protocol.GAME_APPLE_EATEN_NEXT_POS:
-        getApples().get(0).setNextPosition(moveBytes[3], moveBytes[4]);
+        ((Apple) getEntities().get(moveBytes[3])).setNextPosition(moveBytes[4], moveBytes[5]);
         break;
 
-      case Protocol.GAME_APPLE_POS_CHANGED:
-        getApples().get(0).setX(moveBytes[3]);
-        getApples().get(0).setY(moveBytes[4]);
+      case Protocol.GAME_ENTITY_POS_CHANGE:
+        getEntities().get(moveBytes[3]).setPosition(moveBytes[4], moveBytes[5]);
         break;
 
       default: break;
@@ -144,7 +132,7 @@ public class GuestGame extends Game {
     switch (inputBytes[0]) {
       case Protocol.GAME_MOVEMENT_OCCURRED:
       case Protocol.GAME_APPLE_EATEN_NEXT_POS:
-      case Protocol.GAME_APPLE_POS_CHANGED:
+      case Protocol.GAME_ENTITY_POS_CHANGE:
         int moveId = Protocol.decodeMoveID(inputBytes[1], inputBytes[2]);
         if (missedMovesList == null) {
           if (moveId - moveCount == 1) {
