@@ -4,10 +4,12 @@ import android.view.MotionEvent;
 
 import com.android.texample.GLText;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class MenuNumericalValue extends MenuFlexContainer {
   private GLText glText;
   private final MenuItem item;
-  private int value;
+  private AtomicInteger value;
   private double valueMinuteOffset = 0;
   private int maxValue, minValue;
   private final MenuButton plusButton, minusButton;
@@ -17,7 +19,7 @@ public class MenuNumericalValue extends MenuFlexContainer {
   public MenuNumericalValue(GameRenderer renderer, int value, float x, float y,
                             EdgePoint alignPoint) {
     super(renderer, alignPoint);
-    this.value = value;
+    this.value = new AtomicInteger(value);
     this.glText = renderer.getGlText();
 
     item = new MenuItem(renderer, Integer.toString(value), x, y, alignPoint) {
@@ -84,9 +86,17 @@ public class MenuNumericalValue extends MenuFlexContainer {
     addItem(minusButton);
   }
 
+  public MenuNumericalValue(GameRenderer renderer, AtomicInteger value, float x, float y,
+                            EdgePoint alignPoint) {
+    this(renderer, value.get(), x, y, alignPoint);
+    this.value = value;
+  }
+
   @Override
   public void move(double dt) {
     super.move(dt);
+
+    item.setText(value.toString());
 
     if (!expansionTimer.isDone()) expansionTimer.countEaseOut(dt, 8, dt);
 
@@ -112,14 +122,14 @@ public class MenuNumericalValue extends MenuFlexContainer {
   }
 
   public void setValue(int value) {
-    double prevValue = this.value;
+    double prevValue = this.value.get();
 
     if (minValue != maxValue) {
       if (value < minValue) value = minValue;
       if (value > maxValue) value = maxValue;
     }
 
-    this.value = value;
+    this.value.set(value);
     item.setText(Integer.toString(value));
     if (prevValue != value) onValueChange(value);
   }
@@ -130,7 +140,7 @@ public class MenuNumericalValue extends MenuFlexContainer {
       int wholeNumberTransfer = valueMinuteOffset >= 1 ? (int) Math.floor(valueMinuteOffset)
                                                        : (int) Math.ceil(valueMinuteOffset);
       valueMinuteOffset -= wholeNumberTransfer;
-      setValue(value + wholeNumberTransfer);
+      setValue(value.get() + wholeNumberTransfer);
     }
   }
 

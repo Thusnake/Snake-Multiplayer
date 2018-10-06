@@ -2,13 +2,15 @@ package thusnake.snakemultiplayer;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 final class GameSetupBuffer {
   protected enum GameMode {CLASSIC, SPEEDY, VS_AI, CUSTOM}
   protected GameMode gameMode = GameMode.CLASSIC;
-  protected int horizontalSquares, verticalSquares, speed;
+  protected final AtomicInteger horizontalSquares = new AtomicInteger(20),
+      verticalSquares = new AtomicInteger(20), speed = new AtomicInteger(8);
   protected int difficulty;
-  final protected CornerMap cornerMap = new CornerMap();
+  protected final CornerMap cornerMap = new CornerMap();
   protected boolean stageBorders;
 
   CornerMap getCornerMap() { return cornerMap; }
@@ -17,23 +19,23 @@ final class GameSetupBuffer {
     switch(gameMode) {
 
       case CLASSIC:
-        horizontalSquares = 10 + difficulty * 5;
-        verticalSquares = 10 + difficulty * 5;
-        speed = 6 + difficulty * 3;
+        horizontalSquares.set(10 + difficulty * 5);
+        verticalSquares.set(10 + difficulty * 5);
+        speed.set(6 + difficulty * 3);
         stageBorders = true;
         break;
 
       case SPEEDY:
-        horizontalSquares = 10 + difficulty * 5;
-        verticalSquares = 10 + difficulty * 5;
-        speed = 10 + difficulty * 5;
+        horizontalSquares.set(10 + difficulty * 5);
+        verticalSquares.set(10 + difficulty * 5);
+        speed.set(10 + difficulty * 5);
         stageBorders = false;
         break;
 
       case VS_AI:
-        horizontalSquares = 20;
-        verticalSquares = 20;
-        speed = 10;
+        horizontalSquares.set(20);
+        verticalSquares.set(20);
+        speed.set(10);
         stageBorders = true;
         break;
 
@@ -58,9 +60,9 @@ final class GameSetupBuffer {
   public List<byte[]> allInformationCallList(ConnectedThread thread) {
     List<byte[]> calls = new LinkedList<>();
     // Game calls.
-    calls.add(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) horizontalSquares});
-    calls.add(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) verticalSquares});
-    calls.add(new byte[] {Protocol.SPEED_CHANGED, (byte) speed});
+    calls.add(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) horizontalSquares.get()});
+    calls.add(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) verticalSquares.get()});
+    calls.add(new byte[] {Protocol.SPEED_CHANGED, (byte) speed.get()});
     calls.add(new byte[] {Protocol.STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
     calls.add(new byte[] {Protocol.GAME_MODE, (byte) gameMode.ordinal()});
 

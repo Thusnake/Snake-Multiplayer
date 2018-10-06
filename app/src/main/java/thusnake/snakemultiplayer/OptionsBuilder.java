@@ -26,19 +26,7 @@ final class OptionsBuilder {
     MenuNumericalValue value = new MenuNumericalValue(renderer,
                                               renderer.getMenu().getSetupBuffer().horizontalSquares,
                                               renderer.getScreenWidth() - 10,
-                                              0, MenuDrawable.EdgePoint.TOP_RIGHT) {
-      @Override
-      public void move(double dt) {
-        super.move(dt);
-        setValue(renderer.getMenu().getSetupBuffer().horizontalSquares);
-      }
-
-      @Override
-      public void onValueChange(int newValue) {
-        super.onValueChange(newValue);
-        renderer.getMenu().getSetupBuffer().horizontalSquares = newValue;
-      }
-    };
+                                              0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 100);
     addDescriptionItem(value, "Hor Squares");
     return value;
@@ -48,19 +36,7 @@ final class OptionsBuilder {
     MenuNumericalValue value = new MenuNumericalValue(renderer,
                                                 renderer.getMenu().getSetupBuffer().verticalSquares,
                                                 renderer.getScreenWidth() - 10,
-                                                0, MenuDrawable.EdgePoint.TOP_RIGHT) {
-      @Override
-      public void move(double dt) {
-        super.move(dt);
-        setValue(renderer.getMenu().getSetupBuffer().verticalSquares);
-      }
-
-      @Override
-      public void onValueChange(int newValue) {
-        super.onValueChange(newValue);
-        renderer.getMenu().getSetupBuffer().verticalSquares = newValue;
-      }
-    };
+                                                0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 100);
     addDescriptionItem(value, "Ver Squares");
     return value;
@@ -70,19 +46,7 @@ final class OptionsBuilder {
     MenuNumericalValue value = new MenuNumericalValue(renderer,
                                                       renderer.getMenu().getSetupBuffer().speed,
                                                       renderer.getScreenWidth() - 10,
-                                                      0, MenuDrawable.EdgePoint.TOP_RIGHT) {
-      @Override
-      public void move(double dt) {
-        super.move(dt);
-        setValue(renderer.getMenu().getSetupBuffer().speed);
-      }
-
-      @Override
-      public void onValueChange(int newValue) {
-        super.onValueChange(newValue);
-        renderer.getMenu().getSetupBuffer().speed = newValue;
-      }
-    };
+                                                      0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 64);
     addDescriptionItem(value, "Speed");
     return value;

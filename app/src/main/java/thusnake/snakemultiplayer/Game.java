@@ -56,7 +56,7 @@ class Game extends BoardDrawer implements Activity {
 
     // Get the options from the setup buffer.
     this.cornerMap = setupBuffer.getCornerMap();
-    this.speed = setupBuffer.speed;
+    this.speed = setupBuffer.speed.get();
 
     this.moveTimer = new SimpleTimer(1.0 / speed);
     this.beginTimer.reset();

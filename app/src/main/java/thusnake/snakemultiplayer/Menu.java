@@ -78,9 +78,6 @@ public class Menu implements Activity {
     this.screenHeight = screenHeight;
 
     // TODO get these values from the options strings.
-    setupBuffer.horizontalSquares = 20;
-    setupBuffer.verticalSquares = 20;
-    setupBuffer.speed = 12;
     setupBuffer.stageBorders = true;
 
     // Create menuItem instances for each button.
@@ -706,9 +703,9 @@ public class Menu implements Activity {
     Player playerUR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT);
     Player playerLR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT);
     switch(inputBytes[0]) {
-      case Protocol.HOR_SQUARES_CHANGED: setupBuffer.horizontalSquares = inputBytes[1]; break;
-      case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares = inputBytes[1]; break;
-      case Protocol.SPEED_CHANGED: setupBuffer.speed = inputBytes[1]; break;
+      case Protocol.HOR_SQUARES_CHANGED: setupBuffer.horizontalSquares.set(inputBytes[1]); break;
+      case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares.set(inputBytes[1]); break;
+      case Protocol.SPEED_CHANGED: setupBuffer.speed.set(inputBytes[1]); break;
       case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.stageBorders = inputBytes[1] == 1; break;
 
       case Protocol.GAME_MODE:

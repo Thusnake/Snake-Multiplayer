@@ -24,8 +24,8 @@ public abstract class BoardDrawer {
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
 
-    this.horizontalSquares = renderer.getMenu().getSetupBuffer().horizontalSquares;
-    this.verticalSquares = renderer.getMenu().getSetupBuffer().verticalSquares;
+    this.horizontalSquares = renderer.getMenu().getSetupBuffer().horizontalSquares.get();
+    this.verticalSquares = renderer.getMenu().getSetupBuffer().verticalSquares.get();
     this.stageBorders = renderer.getMenu().getSetupBuffer().stageBorders;
 
     // TODO Calculate board offset.
