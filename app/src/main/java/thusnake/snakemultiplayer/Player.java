@@ -1,6 +1,9 @@
 package thusnake.snakemultiplayer;
 
+import android.support.annotation.NonNull;
 import android.view.MotionEvent;
+
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,18 +16,15 @@ import static thusnake.snakemultiplayer.Player.Direction.UP;
  * Created by Nick on 12/12/2017.
  */
 
-public class Player {
+public class Player implements Iterable<BodyPart> {
   public enum Direction {UP, DOWN, LEFT, RIGHT}
   private Direction direction, previousDirection;
   private boolean alive = false, drawable = false, flashing;
   private GameRenderer renderer;
   private int score;
   private String name = "Snake";
-  private ControlType controlType;
-  public enum ControlType {OFF, CORNER, SWIPE, KEYBOARD, GAMEPAD, BLUETOOTH, WIFI}
   private PlayerController playerController;
-  private BodyPart[] bodyParts = new BodyPart[0];
-  private int bodyLength = 0;
+  private BodyPart head, tail;
   private SnakeSkin skin = SnakeSkin.white;
   private BoardDrawer game;
   private Mesh boardSquares;
@@ -33,7 +33,6 @@ public class Player {
   // Constructor for a corner layout player.
   public Player(GameRenderer renderer) {
     this.renderer = renderer;
-    this.controlType = ControlType.OFF;
     this.setSkin(SnakeSkin.white);
   }
 
@@ -67,50 +66,47 @@ public class Player {
     this.flashing = false;
     this.score = 0;
 
-    this.bodyParts = new BodyPart[0];
-    this.bodyLength = 0;
     switch (this.getControlCorner()) {
       case LOWER_LEFT:
-        this.expandBody(0, 0); break;
+        head = new BodyPart(this, 0, 0); break;
       case LOWER_RIGHT:
-        this.expandBody(game.getHorizontalSquares() - 1, 0); break;
+        head = new BodyPart(this, game.getHorizontalSquares() - 1, 0); break;
       case UPPER_LEFT:
-        this.expandBody(0, game.getVerticalSquares() - 1); break;
+        head = new BodyPart(this, 0, game.getVerticalSquares() - 1); break;
       case UPPER_RIGHT:
-        this.expandBody(game.getHorizontalSquares() - 1, game.getVerticalSquares() - 1); break;
+        head = new BodyPart(this, game.getHorizontalSquares()-1, game.getVerticalSquares()-1);break;
     }
-    for (int index = 1; index < 4; index++) {
-      this.expandBody(Player.getOppositeDirection(this.direction));
-    }
+
+    tail = head;
+
+    for (int index = 1; index < 4; index++)
+      tail = new BodyPart(this, tail, getOppositeDirection(direction));
 
     playerController.prepareForGame();
   }
 
   public boolean move() {
     // First remove the color from the furthest body part.
-    if (!this.getBodyPart(-1).isOutOfBounds()) {
-      boardSquares.updateColors(this.getBodyPart(-1).getX(), this.getBodyPart(-1).getY(),
-          game.getBoardSquareColors());
-      boardSquares.updateTextures(getBodyPart(-1).getX(), getBodyPart(-1).getY(), 31, 0, 31, 0);
+    if (!tail.isOutOfBounds()) {
+      boardSquares.updateColors(tail.getX(), tail.getY(), game.getBoardSquareColors());
+      boardSquares.updateTextures(tail.getX(), tail.getY(), 31, 0, 31, 0);
     }
 
-    // Then move all the body parts, starting from the furthest.
-    for (int partIndex = this.bodyLength - 1; partIndex >= 0; partIndex--) {
-      this.bodyParts[partIndex].move();
-    }
+    // Then move all the body parts. The head's move() will make the rest of the body move as well.
+    head.move();
 
     // Warp if the stage borders are disabled.
-    if (bodyParts[0].isOutOfBounds() && !game.stageBorders)
-      if (this.bodyParts[0].getX() < 0)
-        this.bodyParts[0].warp(this.game.getHorizontalSquares() - 1, this.bodyParts[0].getY());
-      else if (this.bodyParts[0].getX() > this.game.getHorizontalSquares() - 1)
-        this.bodyParts[0].warp(0, this.bodyParts[0].getY());
-      else if (this.bodyParts[0].getY() < 0)
-        this.bodyParts[0].warp(this.bodyParts[0].getX(), this.game.getVerticalSquares() - 1);
-      else if (this.bodyParts[0].getY() > this.game.getVerticalSquares() - 1)
-        this.bodyParts[0].warp(this.bodyParts[0].getX(), 0);
+    if (head.isOutOfBounds() && !game.stageBorders)
+      if (head.getX() < 0)
+        head.warp(game.getHorizontalSquares() - 1, head.getY());
+      else if (head.getX() > game.getHorizontalSquares() - 1)
+        head.warp(0, head.getY());
+      else if (head.getY() < 0)
+        head.warp(head.getX(), game.getVerticalSquares() - 1);
+      else if (head.getY() > game.getVerticalSquares() - 1)
+        head.warp(head.getX(), 0);
 
-    this.previousDirection = this.direction;
+    previousDirection = direction;
     return true;
   }
 
@@ -139,52 +135,50 @@ public class Player {
   }
 
   public void drawToMesh() {
-    for (int partIndex = 0; partIndex < this.bodyLength; partIndex++)
-      this.bodyParts[partIndex].updateColors();
+    for (BodyPart bodyPart : this)
+      bodyPart.updateColors();
 
     // Update the texture as well.
     // First the body.
-    for (int index = 1; index < bodyLength - 1; index++) {
-      if (!bodyParts[index].isOutOfBounds()) {
-        boolean turning = !(bodyParts[index - 1].getX() == bodyParts[index + 1].getX()
-            || bodyParts[index - 1].getY() == bodyParts[index + 1].getY());
+    for (BodyPart bodyPart : this) {
+      if (!bodyPart.isOutOfBounds() && bodyPart != head && bodyPart != tail) {
+        boolean turning = !(bodyPart.getForwardPart().getX() == bodyPart.getBackwardPart().getX()
+            || bodyPart.getForwardPart().getY() == bodyPart.getBackwardPart().getY());
         Direction direction;
 
         // Find the directional texture to be used.
         if (turning) {
           LinkedList<Direction> directions = new LinkedList<>();
-          directions.add(bodyParts[index].adjacentDirection(bodyParts[index - 1]));
-          directions.add(bodyParts[index].adjacentDirection(bodyParts[index + 1]));
+          directions.add(bodyPart.adjacentDirection(bodyPart.getForwardPart()));
+          directions.add(bodyPart.adjacentDirection(bodyPart.getBackwardPart()));
           if (directions.contains(UP) && directions.contains(RIGHT)) direction = DOWN;
           else if (directions.contains(LEFT) && directions.contains(UP)) direction = RIGHT;
           else if (directions.contains(LEFT) && directions.contains(DOWN)) direction = UP;
           else if (directions.contains(DOWN) && directions.contains(RIGHT)) direction = LEFT;
           else throw new RuntimeException("Snake calculated to be turning when in fact it isn't.");
-        } else direction = bodyParts[index].adjacentDirection(bodyParts[index - 1]);
+        } else direction = bodyPart.adjacentDirection(bodyPart.getForwardPart());
 
-        boardSquares.updateTextures(bodyParts[index].getX(), bodyParts[index].getY(),
+        boardSquares.updateTextures(bodyPart.getX(), bodyPart.getY(),
                                     skin.texture(turning ? SnakeSkin.TextureType.TURN :
                                                            SnakeSkin.TextureType.BODY, direction));
       }
     }
 
     // Then the tail.
-    int nextIndex = 2;
+    BodyPart nextPart = tail.getForwardPart();
     Direction tailDirection;
-    if (bodyLength > 1 && !bodyParts[bodyLength - 1].isOutOfBounds()) {
+    if (getBodyLength() > 1 && !tail.isOutOfBounds()) {
       do {
-        tailDirection = bodyParts[bodyLength - 1]
-            .adjacentDirection(bodyParts[bodyLength - nextIndex]);
-        nextIndex++;
+        tailDirection = tail.adjacentDirection(nextPart);
+        nextPart = nextPart.getForwardPart();
       } while (tailDirection == null);
 
-      boardSquares.updateTextures(bodyParts[bodyLength - 1].getX(), bodyParts[bodyLength - 1].getY(),
-          skin.texture(SnakeSkin.TextureType.TAIL, tailDirection)
-      );
+      boardSquares.updateTextures(tail.getX(), tail.getY(),
+                                  skin.texture(SnakeSkin.TextureType.TAIL, tailDirection));
     }
 
     // And finally the head.
-    if (bodyParts[0] != null && !bodyParts[0].isOutOfBounds())
+    if (head != null && !head.isOutOfBounds())
       boardSquares.updateTextures(getX(), getY(), skin.texture(SnakeSkin.TextureType.HEAD,
           previousDirection));
   }
@@ -194,48 +188,20 @@ public class Player {
   }
 
   public void expandBody() {
-    // Expand the bodyParts array and increase bodyLength.
-    BodyPart[] holder = this.bodyParts;
-    this.bodyParts = new BodyPart[this.bodyLength + 1];
-    System.arraycopy(holder, 0, this.bodyParts, 0, holder.length);
-
-    this.bodyParts[this.bodyLength] = new BodyPart(this);
-    this.bodyLength++;
-  }
-
-  public void expandBody(int x, int y) {
-    // Expand the bodyParts array and increase bodyLength.
-    BodyPart[] holder = this.bodyParts;
-    this.bodyParts = new BodyPart[this.bodyLength + 1];
-    System.arraycopy(holder, 0, this.bodyParts, 0, holder.length);
-
-    this.bodyParts[this.bodyLength] = new BodyPart(this, x, y);
-    this.bodyLength++;
-  }
-
-  public void expandBody(Direction direction) {
-    // Expand the bodyParts array and increase bodyLength.
-    BodyPart[] holder = this.bodyParts;
-    this.bodyParts = new BodyPart[this.bodyLength + 1];
-    System.arraycopy(holder, 0, this.bodyParts, 0, holder.length);
-
-    this.bodyParts[this.bodyLength] = new BodyPart(this, direction);
-    this.bodyLength++;
+    tail = new BodyPart(this, tail);
   }
 
   public void checkDeath() {
     // Check if you've hit a wall. Warp if stageBorders is off, die otherwise.
-    if (this.bodyParts[0].isOutOfBounds() && this.game.stageBorders)
+    if (head.isOutOfBounds() && this.game.stageBorders)
       this.die();
 
     // Check if you've hit anybody's body.
     for (Player player : game.getPlayers()) {
       if (player.isAlive())
-        for (BodyPart bodyPart : player.getBodyParts())
-          if (bodyPart != this.bodyParts[0]
-              && this.bodyParts[0].getX() == bodyPart.getX()
-              && this.bodyParts[0].getY() == bodyPart.getY())
-            this.die();
+        for (BodyPart bodyPart : player)
+          if (bodyPart != head && head.getX() == bodyPart.getX() && head.getY() == bodyPart.getY())
+            die();
     }
   }
 
@@ -245,7 +211,7 @@ public class Player {
     // Check if anybody else should die from you.
     for (Player player : game.getPlayers())
       if (player != this && player.isAlive())
-        for (BodyPart bodyPart : this.bodyParts)
+        for (BodyPart bodyPart : this)
           if (player.getX() == bodyPart.getX() && player.getY() == bodyPart.getY())
             player.die();
   }
@@ -257,39 +223,48 @@ public class Player {
   public boolean isAlive() { return this.alive; }
   public boolean isDrawable() { return this.drawable; }
   public boolean isFlashing() { return this.flashing; }
-  public boolean isOutOfBounds() { return this.bodyParts[0].isOutOfBounds(); }
-  public int getX() { return this.bodyParts[0].getX(); }
-  public int getY() { return this.bodyParts[0].getY(); }
+  public boolean isOutOfBounds() { return head.isOutOfBounds(); }
+  public int getX() { return head.getX(); }
+  public int getY() { return head.getY(); }
   public Direction getDirection() { return this.direction; }
   public Direction getPreviousDirection() { return this.previousDirection; }
 
   public String getName() { return this.name; }
   public BoardDrawer getGame() { return this.game; }
-  public Mesh getBoardSquares() { return this.boardSquares; }
 
   public int getScore() { return this.score; }
-  public ControlType getControlType() { return this.controlType; }
   public PlayerController getPlayerController() { return this.playerController; }
   public PlayerController.Corner getControlCorner() {
     return renderer.getMenu().getSetupBuffer().getCornerMap().getPlayerCorner(this);
   }
 
-  public BodyPart getBodyPart(int bodyPartIndex) {
-    if (bodyPartIndex >= 0)
-      return this.bodyParts[bodyPartIndex];
-    else
-      return this.bodyParts[this.bodyLength + bodyPartIndex];
+  @NonNull
+  @Override
+  public Iterator<BodyPart> iterator() {
+    return new Iterator<BodyPart>() {
+      BodyPart lastPart = null;
+
+      @Override
+      public boolean hasNext() {
+        return lastPart == null ? head != null : lastPart.getBackwardPart() != null;
+      }
+
+      @Override
+      public BodyPart next() {
+        return lastPart = (lastPart == null ? head : lastPart.getBackwardPart());
+      }
+    };
   }
 
-  public BodyPart[] getBodyParts() { return this.bodyParts; }
-  public int getBodyLength() { return this.bodyLength; }
+  public int getBodyLength() {
+    int length = 0;
+    for (BodyPart bodyPart : this) length++;
+    return length;
+  }
 
   public void setSkin(SnakeSkin skin) { this.skin = skin; }
   public SnakeSkin getSkin() { return skin; }
   public int getSkinIndex() { return SnakeSkin.allSkins.indexOf(skin); }
-
-  // Setters
-  public void setControlType(ControlType type) { this.controlType = type; }
 
   /**
    * Sets the controller of this player to a controller of a given type.
@@ -320,14 +295,14 @@ public class Player {
 
   public void setName(String name) { this.name = name; }
 
-  // Static methods
+  // Static methods.
   private static Direction getOppositeDirection(Direction direction) {
     switch (direction) {
       case UP: return DOWN;
       case DOWN: return UP;
       case LEFT: return RIGHT;
       case RIGHT: return LEFT;
-      default: return null;
+      default: throw new RuntimeException("Passed null to Player.getOppositeDirection()");
     }
   }
 }

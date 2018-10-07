@@ -69,7 +69,7 @@ public abstract class BoardDrawer {
   }
 
   public void drawPlayerSnake(Player player) {
-    for (BodyPart bodyPart : player.getBodyParts()) {
+    for (BodyPart bodyPart : player) {
       if (!bodyPart.isOutOfBounds() && player.isDrawable())
         this.getBoardSquares()
             .updateColors(bodyPart.getX(), bodyPart.getY(), bodyPart.getColors());

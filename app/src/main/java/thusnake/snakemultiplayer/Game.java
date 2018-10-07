@@ -346,7 +346,7 @@ class Game extends BoardDrawer implements Activity {
 
     for (Player player : getPlayers())
       if (player != null && player.isAlive())
-        for (BodyPart bodyPart : player.getBodyParts())
+        for (BodyPart bodyPart : player)
           emptySpaces.remove(new Coordinates<>(bodyPart.getX(), bodyPart.getY()));
 
     for (Entity entity : getEntities())
