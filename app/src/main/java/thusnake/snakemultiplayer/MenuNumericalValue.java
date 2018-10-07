@@ -157,6 +157,8 @@ public class MenuNumericalValue extends MenuFlexContainer {
     this.maxValue = maxValue;
   }
 
+  public int getValue() { return value.get(); }
+
   public void expand() {
     if (!expanded) {
       expanded = true;

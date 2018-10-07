@@ -11,6 +11,7 @@ final class OptionsBuilder {
     list.add(verticalSquares(renderer));
     list.add(speed(renderer));
     list.add(stageBorders(renderer));
+    list.add(numberOfApples(renderer));
     return list;
   }
 
@@ -25,7 +26,7 @@ final class OptionsBuilder {
   static MenuNumericalValue horizontalSquares(GameRenderer renderer) {
     MenuNumericalValue value = new MenuNumericalValue(renderer,
                                               renderer.getMenu().getSetupBuffer().horizontalSquares,
-                                              renderer.getScreenWidth() - 10,
+                                              renderer.getScreenWidth() - renderer.smallDistance(),
                                               0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 100);
     addDescriptionItem(value, "Hor Squares");
@@ -34,9 +35,9 @@ final class OptionsBuilder {
 
   static MenuNumericalValue verticalSquares(GameRenderer renderer) {
     MenuNumericalValue value = new MenuNumericalValue(renderer,
-                                                renderer.getMenu().getSetupBuffer().verticalSquares,
-                                                renderer.getScreenWidth() - 10,
-                                                0, MenuDrawable.EdgePoint.TOP_RIGHT);
+                                              renderer.getMenu().getSetupBuffer().verticalSquares,
+                                              renderer.getScreenWidth() - renderer.smallDistance(),
+                                              0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 100);
     addDescriptionItem(value, "Ver Squares");
     return value;
@@ -44,9 +45,9 @@ final class OptionsBuilder {
 
   static MenuNumericalValue speed(GameRenderer renderer) {
     MenuNumericalValue value = new MenuNumericalValue(renderer,
-                                                      renderer.getMenu().getSetupBuffer().speed,
-                                                      renderer.getScreenWidth() - 10,
-                                                      0, MenuDrawable.EdgePoint.TOP_RIGHT);
+                                              renderer.getMenu().getSetupBuffer().speed,
+                                              renderer.getScreenWidth() - renderer.smallDistance(),
+                                              0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 64);
     addDescriptionItem(value, "Speed");
     return value;
@@ -54,9 +55,9 @@ final class OptionsBuilder {
 
   static MenuBooleanValue stageBorders(GameRenderer renderer) {
     MenuBooleanValue value = new MenuBooleanValue(renderer,
-                                                  renderer.getMenu().getSetupBuffer().stageBorders,
-                                                  renderer.getScreenWidth() - 10,
-                                                  0, MenuDrawable.EdgePoint.TOP_RIGHT) {
+                                              renderer.getMenu().getSetupBuffer().stageBorders,
+                                              renderer.getScreenWidth() - renderer.smallDistance(),
+                                              0, MenuDrawable.EdgePoint.TOP_RIGHT) {
       @Override
       public void move(double dt) {
         super.move(dt);
@@ -108,6 +109,24 @@ final class OptionsBuilder {
     }.setLabel("Difficulty:");
     addDescriptionItem(value, "");
 
+    return value;
+  }
+
+  static MenuNumericalValue numberOfApples(GameRenderer renderer) {
+    MenuNumericalValue value
+        = new MenuNumericalValue(renderer, renderer.getMenu().getSetupBuffer().numberOfApples,
+                                 renderer.getScreenWidth() - renderer.smallDistance(), 0,
+                                 MenuDrawable.EdgePoint.TOP_RIGHT) {
+      @Override
+      public void move(double dt) {
+        super.move(dt);
+        GameSetupBuffer setupBuffer = renderer.getMenu().getSetupBuffer();
+        setValueBoundaries(0,
+            setupBuffer.horizontalSquares.get() * setupBuffer.verticalSquares.get() - 1);
+        setValue(getValue());
+      }
+    };
+    addDescriptionItem(value, "Apples");
     return value;
   }
 

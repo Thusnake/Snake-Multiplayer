@@ -8,7 +8,8 @@ final class GameSetupBuffer {
   protected enum GameMode {CLASSIC, SPEEDY, VS_AI, CUSTOM}
   protected GameMode gameMode = GameMode.CLASSIC;
   protected final AtomicInteger horizontalSquares = new AtomicInteger(20),
-      verticalSquares = new AtomicInteger(20), speed = new AtomicInteger(8);
+      verticalSquares = new AtomicInteger(20), speed = new AtomicInteger(8),
+      numberOfApples = new AtomicInteger(1);
   protected int difficulty;
   protected final CornerMap cornerMap = new CornerMap();
   protected boolean stageBorders;

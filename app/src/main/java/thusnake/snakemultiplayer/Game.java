@@ -69,8 +69,11 @@ class Game extends BoardDrawer implements Activity {
     for (Player player : getPlayers())
       player.prepareForGame(this);
 
-    // Create the apple.
-    this.createEntities();
+    // Create the entities.
+    for (int index = 0; index < setupBuffer.numberOfApples.get(); index++) {
+      Coordinates<Integer> emptySpace = getRandomEmptySpace();
+      entities.add(new Apple(this, emptySpace.x, emptySpace.y));
+    }
     
     // Create the rest of the square objects.
     this.boardLines[0] = new Square(renderer, 0, getScreenHeight()/3f, getScreenWidth(), 4);
@@ -235,11 +238,6 @@ class Game extends BoardDrawer implements Activity {
     performMove();
   }
 
-  public void createEntities() {
-    Coordinates<Integer> emptySpace = getRandomEmptySpace();
-    entities.add(new Apple(this, emptySpace.x, emptySpace.y));
-  }
-
   protected boolean checkGameOver() {
     if ((!isSingleplayer() && this.getAlivePlayers() <= 1)
         || (isSingleplayer() && this.getAlivePlayers() == 0)
@@ -350,6 +348,9 @@ class Game extends BoardDrawer implements Activity {
       if (player != null && player.isAlive())
         for (BodyPart bodyPart : player.getBodyParts())
           emptySpaces.remove(new Coordinates<>(bodyPart.getX(), bodyPart.getY()));
+
+    for (Entity entity : getEntities())
+      emptySpaces.remove(new Coordinates<>(entity.x, entity.y));
 
     return emptySpaces.get((int) Math.floor(Math.random() * emptySpaces.size()));
   }

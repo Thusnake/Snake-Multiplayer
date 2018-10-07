@@ -6,11 +6,6 @@ public class TronGame extends Game {
   }
 
   @Override
-  public void createEntities() {
-    getEntities().clear();
-  }
-
-  @Override
   protected void performMove() {
     for (Player player : getPlayers())
       player.expandBody();
