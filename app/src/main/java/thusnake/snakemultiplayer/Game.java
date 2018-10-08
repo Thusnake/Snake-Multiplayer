@@ -82,7 +82,8 @@ class Game extends BoardDrawer implements Activity {
     gameModeAnnouncement = new MenuItem(renderer,
                           GameSetupBuffer.gameModeToString(setupBuffer.gameMode)
                               + " - " + GameSetupBuffer.difficultyToString(setupBuffer.difficulty),
-                          -10, renderer.getScreenHeight() - 10, MenuDrawable.EdgePoint.TOP_RIGHT);
+                          -10, renderer.getScreenHeight() - 10, MenuDrawable.EdgePoint.TOP_RIGHT)
+                                      .addTextShadow();
     gameModeAnnouncement
         .setAnimation(new MenuAnimation(gameModeAnnouncement)
           .addKeyframe(new MoveKeyframe(0.5, 10 + gameModeAnnouncement.getWidth(),
@@ -99,7 +100,7 @@ class Game extends BoardDrawer implements Activity {
       public boolean isClicked(float x, float y) {
         return y < 1/3f * renderer.getScreenHeight();
       }
-    };
+    }.addTextShadow();
     this.gameOverTopItem.setAction((action, origin) -> action.restartGame(this));
 
     this.gameOverMiddleItem = new MenuItem(renderer, "Everyone loses",
@@ -110,7 +111,7 @@ class Game extends BoardDrawer implements Activity {
       public boolean isClicked(float x, float y) {
         return y > 1/3f * renderer.getScreenHeight() && y < 2/3f * renderer.getScreenHeight();
       }
-    };
+    }.addTextShadow();
     this.gameOverMiddleItem.setAction((action, origin) -> action.triggerStats());
 
     this.gameOverBottomItem = new MenuItem(renderer, "Menu",
@@ -121,7 +122,7 @@ class Game extends BoardDrawer implements Activity {
       public boolean isClicked(float x, float y) {
         return y > 2/3f * renderer.getScreenHeight();
       }
-    };
+    }.addTextShadow();
     this.gameOverBottomItem.setAction((action, origin) -> action.quitGame());
 
     this.gameOverTopItem.setEaseOutVariables(5, 0.2);

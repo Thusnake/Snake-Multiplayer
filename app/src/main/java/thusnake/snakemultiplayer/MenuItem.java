@@ -13,6 +13,7 @@ public class MenuItem extends MenuDrawable {
   private GLText glText;
   private String description;
   private float descriptionOpacity = 1;
+  private boolean textShadow = false;
 
   // Constructor.
   public MenuItem(GameRenderer renderer, String text, float x, float y, EdgePoint alignPoint,
@@ -32,6 +33,12 @@ public class MenuItem extends MenuDrawable {
     this(renderer, text, x, y, alignPoint, alignPoint);
   }
 
+  /** Adds a shadow effect to this text item, making it more visible on a bright background. */
+  public MenuItem addTextShadow() {
+    textShadow = true;
+    return this;
+  }
+
   @Override
   public void draw(float[] parentColors) {
     if (isDrawable()) {
@@ -40,6 +47,13 @@ public class MenuItem extends MenuDrawable {
       gl.glTranslatef(getX(originPoint), getY(originPoint), 0);
       gl.glScalef((float) scale.getTime(), (float) scale.getTime(), 1);
       gl.glTranslatef(-getX(originPoint), -getY(originPoint), 0);
+
+      if (textShadow) {
+        glText.begin(0.25f, 0.25f, 0.25f, 1f);
+        glText.draw(text, getLeftX() + renderer.smallDistance() / 2,
+            getBottomY() - renderer.smallDistance() / 2);
+        glText.end();
+      }
 
       glText.begin();
       glColor4array(gl, combineColorArrays(getColors(), parentColors));
