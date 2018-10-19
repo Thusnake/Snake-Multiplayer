@@ -37,9 +37,9 @@ class CornerMap {
    * @param player The player to be removed.
    */
   void removePlayer(Player player) {
-    if (map.containsValue(player))
+    if (player != null && map.containsValue(player))
       for (PlayerController.Corner corner : map.keySet())
-        if (map.get(corner).equals(player))
+        if (player.equals(map.get(corner)))
           map.put(corner, null);
   }
 

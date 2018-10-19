@@ -1,5 +1,6 @@
 package thusnake.snakemultiplayer;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 
@@ -30,13 +31,13 @@ public class Player implements Iterable<BodyPart> {
   private Mesh boardSquares;
   private final List<PlayerController> controllersCache = new LinkedList<>();
 
-  // Constructor for a corner layout player.
   public Player(GameRenderer renderer) {
     this.renderer = renderer;
     this.setSkin(SnakeSkin.white);
   }
 
   public Player defaultPreset(GameSetupBuffer setupBuffer) {
+    // Find a suitable unique name of the format "Player N".
     int playerIndex = 1;
     boolean indexChanged = true;
     while (indexChanged) {
@@ -49,8 +50,33 @@ public class Player implements Iterable<BodyPart> {
         }
     }
     setName("Player " + playerIndex);
+
+    // Set the default controller.
     setController(new CornerLayoutController(renderer, this));
+
     return this;
+  }
+
+  /**
+   * Loads the last settings saved for this player's controller and assigns that controller.
+   * To be called before loading any controllers as it caches a bunch of them.
+   * @param setupBuffer The buffer to use for loading.
+   */
+  public void loadSavedController(GameSetupBuffer setupBuffer) {
+    // Cache the default controllers.
+    setController(new SwipeController(renderer, this).loadSettings(renderer.getOriginActivity(), setupBuffer));
+    setController(new GamepadController(renderer, this).loadSettings(renderer.getOriginActivity(), setupBuffer));
+    setController(new CornerLayoutController(renderer, this).loadSettings(renderer.getOriginActivity(), setupBuffer));
+
+    // Select the one that has been saved to the shared preferences last.
+    for (PlayerController controller : controllersCache)
+      if (controller.identifier().equals(renderer.getOriginActivity()
+          .getSharedPreferences("settings", Context.MODE_PRIVATE)
+          .getString(setupBuffer.savingPrefix+"-"+getControlCorner().toString()+"-controllerid",
+                     null))) {
+        controller.loadSettings(renderer.getOriginActivity(), setupBuffer);
+        setController(controller);
+      }
   }
 
   // Gets called upon game start.
@@ -236,6 +262,9 @@ public class Player implements Iterable<BodyPart> {
   public PlayerController getPlayerController() { return this.playerController; }
   public PlayerController.Corner getControlCorner() {
     return renderer.getMenu().getSetupBuffer().getCornerMap().getPlayerCorner(this);
+  }
+  public PlayerController.Corner getControlCorner(GameSetupBuffer setupBuffer) {
+    return setupBuffer.getCornerMap().getPlayerCorner(this);
   }
 
   @NonNull

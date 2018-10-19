@@ -27,6 +27,7 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
+        menu.getSetupBuffer().saveSettings(originActivity);
         renderer.startGame(menu.getSetupBuffer().createGame(renderer));
       }
     }.withBackgroundImage(R.drawable.ready_button);

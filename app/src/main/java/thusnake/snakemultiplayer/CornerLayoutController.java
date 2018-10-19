@@ -1,6 +1,7 @@
 package thusnake.snakemultiplayer;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.MotionEvent;
 
 import java.util.LinkedList;
@@ -130,6 +131,20 @@ public class CornerLayoutController extends PlayerController {
             }, "Mirror"));
 
     return list;
+  }
+
+  @Override
+  public void saveSettings(SharedPreferences.Editor settings, GameSetupBuffer setupBuffer) {
+    String playerPrefix = setupBuffer.getPlayerSavingPrefix(player);
+    settings.putBoolean(playerPrefix + "-cornerlayout-mirror", horizontalMirror);
+  }
+
+  @Override
+  public PlayerController loadSettings(Context context, GameSetupBuffer setupBuffer) {
+    SharedPreferences settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+    String playerPrefix = setupBuffer.getPlayerSavingPrefix(player);
+    horizontalMirror = settings.getBoolean(playerPrefix + "-cornerlayout-mirror", horizontalMirror);
+    return this;
   }
 
   @Override

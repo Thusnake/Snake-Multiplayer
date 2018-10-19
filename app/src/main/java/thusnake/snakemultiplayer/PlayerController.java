@@ -1,6 +1,7 @@
 package thusnake.snakemultiplayer;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.MotionEvent;
 
 import java.util.List;
@@ -87,4 +88,14 @@ public abstract class PlayerController {
   public abstract String toString();
 
   public abstract String identifier();
+
+  /**
+   * Saves the settings for this particular controller.
+   * To be called after SharedPreferences.Editor.edit() and before a commit().
+   * @param settings The editor received from the SharedPreferences.Editor.edit() call.
+   * @param setupBuffer The setup buffer from which the save is being called.
+   */
+  public abstract void saveSettings(SharedPreferences.Editor settings, GameSetupBuffer setupBuffer);
+
+  public abstract PlayerController loadSettings(Context context, GameSetupBuffer setupBuffer);
 }

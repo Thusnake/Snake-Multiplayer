@@ -1,6 +1,7 @@
 package thusnake.snakemultiplayer;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.MotionEvent;
 
 import java.util.LinkedList;
@@ -99,5 +100,19 @@ public class SwipeController extends PlayerController {
             }, "Sensitivity"));
 
     return list;
+  }
+
+  @Override
+  public void saveSettings(SharedPreferences.Editor settings, GameSetupBuffer setupBuffer) {
+    String playerPrefix = setupBuffer.getPlayerSavingPrefix(player);
+    settings.putInt(playerPrefix + "-swipe-sensitivity", sensitivity);
+  }
+
+  @Override
+  public PlayerController loadSettings(Context context, GameSetupBuffer setupBuffer) {
+    SharedPreferences settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+    String playerPrefix = setupBuffer.getPlayerSavingPrefix(player);
+    sensitivity = settings.getInt(playerPrefix + "-swipe-sensitivity", sensitivity);
+    return this;
   }
 }

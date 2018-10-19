@@ -46,7 +46,7 @@ public class Menu implements Activity {
   private final List<MenuDrawable> bluetoothHostMenu = new ArrayList<>();
   private final List<MenuDrawable> bluetoothGuestMenu = new ArrayList<>();
   private final List<MenuDrawable> guestDisabledDrawables = new ArrayList<>();
-  private final MenuDrawable bluetoothStatusIcon, readyDevicesCounter, disconnectButton;
+  private final MenuDrawable bluetoothStatusIcon, disconnectButton;
 
   private final MenuButton[] colorSelectionSquare;
   private final MenuItem addSnakeButton;
@@ -61,7 +61,7 @@ public class Menu implements Activity {
   private MenuScreenAnimation transitionAnimation;
 
   // Menu variables
-  private GameSetupBuffer setupBuffer = new GameSetupBuffer();
+  GameSetupBuffer setupBuffer = null;
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -76,9 +76,6 @@ public class Menu implements Activity {
 
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
-
-    // TODO get these values from the options strings.
-    setupBuffer.stageBorders = true;
 
     // Create menuItem instances for each button.
     // Main screen buttons.
@@ -114,34 +111,6 @@ public class Menu implements Activity {
       public void move(double dt) {
         super.move(dt);
         this.setEnabled(originActivity.videoAdIsLoaded());
-      }
-    };
-
-    this.readyDevicesCounter = new MenuItem(renderer, "", screenWidth - 10,
-        menuItemsMain[0].getBottomY(), EdgePoint.BOTTOM_RIGHT) {
-      private int readyDevices = -1;
-      private int connectedDevices = -1;
-
-      @Override
-      public void move(double dt) {
-        super.move(dt);
-        if (originActivity.isGuest() || originActivity.isHost()) {
-          if (originActivity.getNumberOfReadyRemoteDevices() != readyDevices
-              || originActivity.getNumberOfRemoteDevices() != connectedDevices) {
-            this.setText(originActivity.getNumberOfReadyRemoteDevices() + " / "
-                + originActivity.getNumberOfRemoteDevices());
-
-            readyDevices = originActivity.getNumberOfReadyRemoteDevices();
-            connectedDevices = originActivity.getNumberOfRemoteDevices();
-
-            if (originActivity.isHost() && readyDevices == connectedDevices && readyDevices > 1) {
-              // Everyone is ready - begin game.
-              renderer.startGame(new Game(renderer, setupBuffer));
-            }
-          }
-        } else {
-          if (!this.getText().equals("")) this.setText("");
-        }
       }
     };
 
@@ -304,7 +273,6 @@ public class Menu implements Activity {
     // Add items to the drawables list for each screen.
     drawablesMain = new ArrayList<>();
     drawablesMain.addAll(Arrays.asList(menuItemsMain));
-    drawablesMain.add(readyDevicesCounter);
 
     drawablesConnect = new CopyOnWriteArrayList<>();
     drawablesConnect.addAll(Arrays.asList(menuItemsConnect));
@@ -366,6 +334,7 @@ public class Menu implements Activity {
       }
     }
 
+    // Transition animation.
     if (transitionAnimation == null) {
       currentScreen.moveAll(dt);
       currentScreen.drawAll();

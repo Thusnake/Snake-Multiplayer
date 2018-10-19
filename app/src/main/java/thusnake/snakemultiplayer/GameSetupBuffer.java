@@ -1,10 +1,15 @@
 package thusnake.snakemultiplayer;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class GameSetupBuffer {
+  protected String savingPrefix = "";
+
   protected enum GameMode {CLASSIC, SPEEDY, VS_AI, CUSTOM}
   protected GameMode gameMode = GameMode.CLASSIC;
   protected final AtomicInteger horizontalSquares = new AtomicInteger(20),
@@ -58,6 +63,86 @@ final class GameSetupBuffer {
     }
   }
 
+  /**
+   * Turns settings saving and loading on.
+   * @param prefix The prefix to use when saving settings. Make sure it doesn't interfere with
+   *                any other prefixes.
+   */
+  public void enableSaving(String prefix) { savingPrefix = prefix; }
+
+  public boolean savingIsEnabled() { return !savingPrefix.equals(""); }
+
+  /** Gets you the player specific saving prefix string from a given saving prefix and player. */
+  public String getPlayerSavingPrefix(Player player) {
+    return savingPrefix + "-" + player.getControlCorner(this).toString();
+  }
+
+  /** Performs the saving of this buffer's settings to the shared preferences. */
+  public void saveSettings(Context context) {
+    if (savingPrefix.equals("")) return;
+
+    // General settings.
+    SharedPreferences.Editor settings
+        = context.getSharedPreferences("settings", Context.MODE_PRIVATE).edit();
+    settings.putInt(savingPrefix + "-gamemode-last", gameMode.ordinal());
+    settings.putInt(savingPrefix + "-difficulty-last", difficulty);
+
+    // CornerMap settings.
+    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+      settings.putBoolean(savingPrefix + "-" + corner.toString() + "-player-enabled",
+          cornerMap.getPlayer(corner) != null);
+    }
+
+    // Player settings.
+    for (Player player : cornerMap.getPlayers()) {
+      String playerPrefix = getPlayerSavingPrefix(player);
+      settings.putString(playerPrefix + "-name", player.getName());
+      settings.putInt(playerPrefix + "-skin", player.getSkinIndex());
+      settings.putString(playerPrefix + "-controllerid", player.getPlayerController().identifier());
+      player.getPlayerController().saveSettings(settings, this);
+    }
+
+    settings.apply();
+  }
+
+  /** Performs the loading of last saved settings for this buffer from the shared preferences. */
+  public void loadSettings(Context context) {
+    if (savingPrefix.equals("")) return;
+    SharedPreferences settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+
+    // General settings.
+    int gameModeIndex = settings.getInt(savingPrefix + "gamemode-last", -1);
+    for (int index = 0; index < GameMode.values().length; index++)
+      if (index == gameModeIndex)
+        gameMode = GameMode.values()[index];
+
+    difficulty = settings.getInt(savingPrefix + "-difficulty-last", difficulty);
+
+    // CornerMap settings.
+    for (PlayerController.Corner corner : PlayerController.Corner.values())
+      if (settings.getBoolean(savingPrefix + "-" + corner.toString() + "-player-enabled", false)
+          && cornerMap.getPlayer(corner) == null)
+        cornerMap.addPlayer(new Player(((OpenGLES20Activity) context).getRenderer()), corner);
+      else if (!settings.getBoolean(savingPrefix+"-"+corner.toString() + "-player,enabled", false)
+               && cornerMap.getPlayer(corner) != null)
+        cornerMap.removePlayer(cornerMap.getPlayer(corner));
+
+    // Player settings.
+    for (Player player : cornerMap.getPlayers()) {
+      String playerPrefix = getPlayerSavingPrefix(player);
+      player.setName(settings.getString(playerPrefix + "-name", player.getName()));
+      player.setSkin(SnakeSkin.allSkins.get(settings.getInt(playerPrefix + "-skin",
+                                                            player.getSkinIndex())));
+      player.loadSavedController(this);
+    }
+  }
+
+  /**
+   * Compiles a list of protocol calls to be aggregated for synchronization with remote devices.
+   * @param thread The thread holding a socket to the receiver (different guests will receive
+   *                different instructions for syncing).
+   * @return The resulting list of calls.
+   */
   public List<byte[]> allInformationCallList(ConnectedThread thread) {
     List<byte[]> calls = new LinkedList<>();
     // Game calls.

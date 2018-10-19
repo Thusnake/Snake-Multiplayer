@@ -4,9 +4,16 @@ import thusnake.snakemultiplayer.PlayerController.Corner;
 
 public final class MenuMainScreen extends MenuScreen {
   private final MenuButton singleplayerButton, multiplayerButton, videoAdButton, optionsButton;
+  private final GameSetupBuffer singleplayerSetupBuffer, multiplayerSetupBuffer;
 
   public MenuMainScreen(Menu menu) {
     super(menu);
+
+    singleplayerSetupBuffer = new GameSetupBuffer();
+    menu.setupBuffer = singleplayerSetupBuffer;
+    singleplayerSetupBuffer.enableSaving("singleplayer");
+
+    multiplayerSetupBuffer = new GameSetupBuffer();
 
     singleplayerButton = new MenuButton(renderer,
                                         renderer.getScreenWidth() / 2f - renderer.getScreenWidth() / 40f,
@@ -16,7 +23,16 @@ public final class MenuMainScreen extends MenuScreen {
                                         MenuDrawable.EdgePoint.BOTTOM_RIGHT) {
       @Override
       public void performAction() {
-        menu.getSetupBuffer().cornerMap.addPlayer(new Player(renderer).defaultPreset(menu.getSetupBuffer()), Corner.LOWER_LEFT);
+        menu.setupBuffer = singleplayerSetupBuffer;
+        menu.setupBuffer.loadSettings(originActivity);
+
+        // In case there is still no save we need to create at least one player.
+        if (menu.setupBuffer.cornerMap.getPlayers().size() < 1) {
+          menu.setupBuffer.cornerMap
+              .addPlayer(new Player(renderer).defaultPreset(menu.setupBuffer),
+                         Corner.LOWER_LEFT);
+        }
+
         menu.setScreen(new SinglePlayerSnakeCustomizationScreen(menu));
       }
     }.withBackgroundImage(R.drawable.singleplayer_icon);
@@ -29,7 +45,7 @@ public final class MenuMainScreen extends MenuScreen {
                                        MenuDrawable.EdgePoint.BOTTOM_LEFT) {
       @Override
       public void performAction() {
-        menu.getSetupBuffer().cornerMap.addPlayer(new Player(renderer).defaultPreset(menu.getSetupBuffer()), Corner.LOWER_LEFT);
+        menu.setupBuffer = multiplayerSetupBuffer;
         menu.setScreen(new MultiplayerSnakeOverviewScreen(menu));
       }
     }.withBackgroundImage(R.drawable.multiplayer_icon);
