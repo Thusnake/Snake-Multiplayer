@@ -84,12 +84,21 @@ public class MenuNumericalValue extends MenuFlexContainer {
     addItem(item);
     addItem(plusButton);
     addItem(minusButton);
+
+    move(0);
   }
 
   public MenuNumericalValue(GameRenderer renderer, AtomicInteger value, float x, float y,
                             EdgePoint alignPoint) {
     this(renderer, value.get(), x, y, alignPoint);
     this.value = value;
+  }
+
+  public MenuNumericalValue removeInput() {
+    removeItem(plusButton);
+    removeItem(minusButton);
+    move(0);
+    return this;
   }
 
   @Override
