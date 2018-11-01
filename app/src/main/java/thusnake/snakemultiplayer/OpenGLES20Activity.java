@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.view.View;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by ASRock on 24-Feb-16.
@@ -55,6 +55,7 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
   // Advertisements
   private RewardedVideoAd videoAd;
   private boolean videoAdLoaded;
+  AtomicInteger ladders;
 
   // Create a BroadcastReceiver for ACTION_FOUND
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -117,7 +118,9 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
     videoAd.setRewardedVideoAdListener(this);
     this.loadAd();
 
-     vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+    ladders = new AtomicInteger(getSharedPreferences("progress", MODE_PRIVATE).getInt("ladders",0));
+
+    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
   }
 
   @Override

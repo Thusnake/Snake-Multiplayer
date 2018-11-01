@@ -4,6 +4,8 @@ import thusnake.snakemultiplayer.PlayerController.Corner;
 
 public final class MenuMainScreen extends MenuScreen {
   private final MenuButton singleplayerButton, multiplayerButton, videoAdButton, optionsButton;
+  private final MenuNumericalValue ladderNumberIndicator;
+  private final MenuImage ladderIcon;
   private final GameSetupBuffer singleplayerSetupBuffer, multiplayerSetupBuffer;
 
   public MenuMainScreen(Menu menu) {
@@ -78,10 +80,25 @@ public final class MenuMainScreen extends MenuScreen {
       }
     }.withBackgroundImage(R.drawable.ad_icon);
 
+    ladderNumberIndicator = new MenuNumericalValue(renderer, originActivity.ladders,
+        videoAdButton.getX(MenuDrawable.EdgePoint.RIGHT_CENTER) + renderer.smallDistance() * 5,
+        videoAdButton.getY(MenuDrawable.EdgePoint.CENTER), MenuDrawable.EdgePoint.LEFT_CENTER)
+        .removeInput();
+    ladderNumberIndicator.scale.setTime(0.9);
+
+    ladderIcon = new MenuImage(renderer,
+        ladderNumberIndicator.getX(MenuDrawable.EdgePoint.RIGHT_CENTER),
+        ladderNumberIndicator.getY(MenuDrawable.EdgePoint.CENTER), 42/71f*videoAdButton.getHeight(),
+        videoAdButton.getHeight(), MenuDrawable.EdgePoint.LEFT_CENTER);
+    ladderIcon.setTexture(R.drawable.ladder_icon);
+    ladderIcon.setColors(new float[] {0.635f, 1f, 0.67f, 1f});
+
     drawables.add(singleplayerButton);
     drawables.add(multiplayerButton);
     drawables.add(optionsButton);
     drawables.add(videoAdButton);
+    drawables.add(ladderNumberIndicator);
+    drawables.add(ladderIcon);
 
     drawables.remove(backButton);
   }
