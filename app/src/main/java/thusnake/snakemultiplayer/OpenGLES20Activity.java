@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -294,8 +295,16 @@ public class OpenGLES20Activity extends Activity implements RewardedVideoAdListe
 
   @Override
   public void onRewarded(RewardItem reward) {
+    // Display the interrupting message.
     getRenderer().setInterruptingMessage(new FullscreenMessage(getRenderer(),
-        "Thanks for the support! Take this " + reward.getAmount() + " " + reward.getType()));
+        "Thanks for the support! Take this " + reward.getAmount() + " " + reward.getType() + "!"));
+
+    // If the reward is a ladder (which it should be)
+    if (reward.getType().equals("ladder")) {
+      SharedPreferences.Editor editor = getSharedPreferences("progress", MODE_PRIVATE).edit();
+      editor.putInt("ladders", ladders.addAndGet(reward.getAmount()));
+      editor.apply();
+    }
   }
 
   @Override
