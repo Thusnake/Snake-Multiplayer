@@ -7,19 +7,28 @@ public class Apple extends Entity {
   private Coordinates<Integer> nextPosition;
 
   public Apple(Game game, int x, int y) {
-    super(game, x, y, new float[] {1f, 1f, 1f, 1f}, new int[] {0, 0, 4, 4});
+    super(game, new float[] {1f, 1f, 1f, 1f}, R.drawable.apple);
+    setPosition(x, y);
+  }
+
+  public Apple(Game game, Coordinates<Integer> coordinates) {
+    this(game, coordinates.x, coordinates.y);
+  }
+
+  public Apple(Game game) {
+    this(game, game.getRandomEmptySpace());
   }
 
   @Override
-  public void onHit(Player player) {
-    feed(player);
+  public void onHit(Snake snake) {
+    feed(snake);
     findNewPosition();
     game.onAppleEaten(this);
   }
 
-  public void feed(Player player) {
-    player.expandBody();
-    player.increaseScore(1);
+  public void feed(Snake snake) {
+    snake.expandBody();
+    snake.increaseScore(1);
   }
 
   public void findNewPosition() {

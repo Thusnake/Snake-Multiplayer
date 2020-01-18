@@ -1,11 +1,18 @@
 package thusnake.snakemultiplayer;
 
+import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
+
+import thusnake.snakemultiplayer.textures.GameTextureMap;
+import thusnake.snakemultiplayer.textures.TextureMapCoordinates;
 
 /**
  * Created by Thusnake on 01-Jul-16.
@@ -22,7 +29,6 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
   private float[] colors = null;
   private float[] textures = null;
   private int[] texturePointers = new int[1];
-  private int textureId;
   private boolean textureLoaded = true;
   private int numOfSquares = 0;
 
@@ -30,26 +36,26 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
   private final int horizontalSquares;
   private final int verticalSquares;
 
-  private final float textureMapWidth, textureMapHeight;
-  
+  public final GameTextureMap textureMap;
+  private final Bitmap textureMapBitmap;
+
   public Mesh (GameRenderer renderer, float x, float y, EdgePoint alignPoint, float squareSize,
-               BoardDrawer game) {
+               BoardDrawer game, GameTextureMap textureMap) {
     this(renderer, x, y, alignPoint, squareSize,
-        game.getHorizontalSquares(), game.getVerticalSquares());
+        game.getHorizontalSquares(), game.getVerticalSquares(), textureMap);
   }
 
   public Mesh (GameRenderer renderer, float x, float y, EdgePoint alignPoint, float squareSize,
-               int horizontalSquares, int verticalSquares) {
+               int horizontalSquares, int verticalSquares, GameTextureMap textureMap) {
     super(renderer, x, y, alignPoint);
     this.squareSize = squareSize;
     this.horizontalSquares = horizontalSquares;
     this.verticalSquares = verticalSquares;
     this.addAllSquares();
 
-    // This texture is hard-coded as it is the texture map of all board textures.
-    setTexture(R.drawable.snaketexturemap);
-    textureMapWidth = 512;
-    textureMapHeight = 512;
+    this.textureMap = textureMap;
+    this.textureMapBitmap = textureMap.getBitmap();
+    textureLoaded = false;
   }
 
   private void addAllSquares() {
@@ -210,39 +216,32 @@ public class Mesh extends MenuDrawable implements TextureReloadable {
     setTextures(this.textures);
   }
 
-  public void updateTextures(int x, int y, int bottomLeftTileX, int bottomLeftTileY,
-                             int topRightTileX, int topRightTileY) {
-    updateTextures(x, y, (bottomLeftTileX * 16) / textureMapWidth,
-                         (bottomLeftTileY * 16) / textureMapHeight,
-                         (topRightTileX * 16 + 16) / textureMapWidth,
-                         (topRightTileY * 16 + 16) / textureMapHeight);
+  public void updateTextures(int x, int y, @Nullable TextureMapCoordinates coords) {
+    if (coords == null) coords = new TextureMapCoordinates(0, 0, 0, 0);
+    updateTextures(x, y, (float) coords.offsetX                   / textureMapBitmap.getWidth(),
+                         (float) coords.offsetY                   / textureMapBitmap.getHeight(),
+                         (float) (coords.offsetX + coords.width)  / textureMapBitmap.getWidth(),
+                         (float) (coords.offsetY + coords.height) / textureMapBitmap.getHeight());
   }
 
-  public void updateTextures(int x, int y, int[] coordinates) {
-    updateTextures(x, y, coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
-  }
-
-  public void setTexture(int id) {
-    textureLoaded = false;
-    textureId = id;
-  }
-
-  public void loadGLTexture(int id) {
-    // Get the texture from the renderer.
-    texturePointers[0] = renderer.loadTextureBitmapToPointer(id);
-    textureId = id;
+  private void loadTexture() {
+    texturePointers[0] = renderer.bindTextureAndGeneratePointer(textureMapBitmap);
+    renderer.cacheTextureAndGLPointer(textureMapBitmap, texturePointers[0]);
     textureLoaded = true;
   }
 
   public void reloadTexture() {
-    if (textureId != 0) {
-      texturePointers[0] = renderer.loadTextureBitmapToPointer(textureId);
-    }
+
+  }
+
+  public void recycle() {
+    textureMap.recycle();
+    renderer.recycleGLPointer(texturePointers[0]);
   }
 
   public void draw(GL10 gl, float[] parentColors){
     if (!textureLoaded)
-      loadGLTexture(textureId);
+      loadTexture();
 
     gl.glPushMatrix();
     gl.glTranslatef(getX(originPoint), getY(originPoint), 0);

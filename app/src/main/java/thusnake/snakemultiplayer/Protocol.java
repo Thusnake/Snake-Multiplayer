@@ -2,8 +2,11 @@ package thusnake.snakemultiplayer;
 
 import android.util.Pair;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
 
 /**
  * Created by Nick on 22/02/2018.
@@ -29,14 +32,15 @@ public class Protocol {
   public static final byte SNAKE_UL_SKIN = 21; // Followed by 1 skin byte.
   public static final byte SNAKE_UR_SKIN = 22; // Followed by 1 skin byte.
   public static final byte SNAKE_LR_SKIN = 23; // Followed by 1 skin byte.
-  public static final byte SNAKE_LL_NAME = 40; // Followed by 1 length byte and a string of chars.
-  public static final byte SNAKE_UL_NAME = 41; // Followed by 1 length byte and a string of chars.
-  public static final byte SNAKE_UR_NAME = 42; // Followed by 1 length byte and a string of chars.
-  public static final byte SNAKE_LR_NAME = 43; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_LL_NAME = 24; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_UL_NAME = 25; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_UR_NAME = 26; // Followed by 1 length byte and a string of chars.
+  public static final byte SNAKE_LR_NAME = 27; // Followed by 1 length byte and a string of chars.
   public static final byte SPEED_CHANGED = 50; // Followed by 1 byte.
   public static final byte HOR_SQUARES_CHANGED = 51; // Followed by 1 byte.
   public static final byte VER_SQUARES_CHANGED = 52; // Followed by 1 byte.
   public static final byte STAGE_BORDERS_CHANGED = 53; // Followed by 1 boolean byte.
+  public static final byte NUMBER_OF_APPLES_CHANGED = 54; // Followed by 1 byte.
 
   // Aggregate call codes.
   public static final byte BASIC_AGGREGATE_CALL = 60; // Followed by series of calls and NEXT_CALL bytes.
@@ -48,7 +52,7 @@ public class Protocol {
   public static final byte PING_ANSWER = 69;
 
   // Host codes
-  public static final byte REQUEST_NAME = -1;
+  public static final byte RANDOM_SEED = -1; // Followed by 8 bytes representing the seed.
   public static final byte AVAILABLE_SNAKES_LIST = -2; // Followed by 0-4 snake number bytes.
   public static final byte CONTROLLED_SNAKES_LIST = -3; // Followed by 0-4 snake number bytes.
   public static final byte NUMBER_OF_READY = -4; // Followed by number of ready devices.
@@ -73,8 +77,8 @@ public class Protocol {
   public static final byte DISCONNECT = 65;
 
   // Movement code methods.
-  public static byte getMovementCode(Player.Direction direction1, Player.Direction direction2,
-                                     Player.Direction direction3, Player.Direction direction4) {
+  public static byte getMovementCode(Snake.Direction direction1, Snake.Direction direction2,
+                                     Snake.Direction direction3, Snake.Direction direction4) {
     byte dir1 = encodeDirection(direction1);
     byte dir2 = encodeDirection(direction2);
     byte dir3 = encodeDirection(direction3);
@@ -85,13 +89,13 @@ public class Protocol {
     return (byte) (dir1 | dir2 | dir3 | dir4);
   }
   
-  public static void decodeMovementCode(byte code, Player.Direction[] array) {
+  public static void decodeMovementCode(byte code, Snake.Direction[] array) {
     if (array == null || array.length < 4) return;
     for (int index = 0; index < 4; index++)
       array[index] = decodeDirection((code >> (index * 2)) & 0x3);
   }
 
-  public static byte encodeDirection(Player.Direction direction) {
+  public static byte encodeDirection(Snake.Direction direction) {
     switch (direction) {
       case UP: return 0;
       case DOWN: return 1;
@@ -101,17 +105,17 @@ public class Protocol {
     }
   }
   
-  public static Player.Direction decodeDirection(int code) {
+  public static Snake.Direction decodeDirection(int code) {
     switch (code) {
-      case 0: return Player.Direction.UP;
-      case 1: return Player.Direction.DOWN;
-      case 2: return Player.Direction.LEFT;
-      case 3: return Player.Direction.RIGHT;
+      case 0: return Snake.Direction.UP;
+      case 1: return Snake.Direction.DOWN;
+      case 2: return Snake.Direction.LEFT;
+      case 3: return Snake.Direction.RIGHT;
       default: throw new RuntimeException("Fix your decodeMovementCode function.");
     }
   }
 
-  public static byte encodeCorner(PlayerController.Corner corner) {
+  public static byte encodeCorner(ControllerBuffer.Corner corner) {
     switch (corner) {
       case LOWER_LEFT: return 0;
       case UPPER_LEFT: return 1;
@@ -121,13 +125,13 @@ public class Protocol {
     }
   }
 
-  public static PlayerController.Corner decodeCorner(byte code) {
+  public static ControllerBuffer.Corner decodeCorner(byte code) {
     switch (code) {
-      case 0: return PlayerController.Corner.LOWER_LEFT;
-      case 1: return PlayerController.Corner.UPPER_LEFT;
-      case 2: return PlayerController.Corner.UPPER_RIGHT;
-      case 3: return PlayerController.Corner.LOWER_RIGHT;
-      default: return PlayerController.Corner.LOWER_LEFT;
+      case 0: return ControllerBuffer.Corner.LOWER_LEFT;
+      case 1: return ControllerBuffer.Corner.UPPER_LEFT;
+      case 2: return ControllerBuffer.Corner.UPPER_RIGHT;
+      case 3: return ControllerBuffer.Corner.LOWER_RIGHT;
+      default: return ControllerBuffer.Corner.LOWER_LEFT;
     }
   }
 
@@ -186,5 +190,21 @@ public class Protocol {
     }
 
     return callsList;
+  }
+
+  public static byte[] encodeRandomSeed(long seed) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.SIZE / Byte.SIZE + 1);
+    buffer.put(RANDOM_SEED);
+    buffer.putLong(seed);
+    return buffer.array();
+  }
+
+  public static long decodeRandomSeed(byte[] bytes) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.SIZE / Byte.SIZE);
+    byte[] headless = new byte[bytes.length - 1];
+    System.arraycopy(bytes, 1, headless, 0, headless.length);
+    buffer.put(headless);
+    buffer.flip();//need flip
+    return buffer.getLong();
   }
 }

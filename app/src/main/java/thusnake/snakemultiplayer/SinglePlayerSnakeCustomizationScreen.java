@@ -1,5 +1,7 @@
 package thusnake.snakemultiplayer;
 
+import thusnake.snakemultiplayer.gamemodes.GameMode;
+
 public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizationScreen {
   private final MenuButton nextButton;
 
@@ -23,15 +25,10 @@ public final class SinglePlayerSnakeCustomizationScreen extends SnakeCustomizati
           }
         };
 
+        for (GameMode gameMode : menu.getSetupBuffer().gameModes)
+          setupScreen.addGameModeItem(gameMode);
+
         setupScreen.gameModeCarousel.noBoundaries();
-        setupScreen.addGameModeItem(R.drawable.gamemode_classic, "classic",
-            OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.CLASSIC);
-        setupScreen.addGameModeItem(R.drawable.gamemode_speedy, "speedy",
-            OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.SPEEDY);
-        setupScreen.addGameModeItem(R.drawable.gamemode_placeholder, "vs ai",
-            OptionsBuilder.justDifficulty(renderer), GameSetupBuffer.GameMode.VS_AI);
-        setupScreen.addGameModeItem(R.drawable.gamemode_custom, "custom",
-            OptionsBuilder.defaultOptions(renderer), GameSetupBuffer.GameMode.CUSTOM);
         setupScreen.gameModeCarousel.confirmChoices();
 
         menu.setScreen(setupScreen);

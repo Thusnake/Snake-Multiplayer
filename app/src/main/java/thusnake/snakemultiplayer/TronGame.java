@@ -1,14 +1,15 @@
 package thusnake.snakemultiplayer;
 
 public class TronGame extends Game {
-  public TronGame(GameRenderer renderer, GameSetupBuffer setupBuffer) {
-    super(renderer, setupBuffer);
+  public TronGame(CornerMap cornerMap, int horizontalSquares, int verticalSquares, int speed,
+                  boolean stageBorders) {
+    super(cornerMap, horizontalSquares, verticalSquares, speed, stageBorders, null);
   }
 
   @Override
   protected void performMove() {
-    for (Player player : getPlayers())
-      player.expandBody();
+    for (Snake snake: getAliveSnakes())
+      snake.expandBody();
     super.performMove();
   }
 }

@@ -5,62 +5,99 @@ import android.content.SharedPreferences;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
-final class GameSetupBuffer {
+import thusnake.snakemultiplayer.controllers.BluetoothControllerBuffer;
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.gamemodes.*;
+
+/**
+ * A singleton structure, which keeps information about the game, configured in the menu.
+ */
+public final class GameSetupBuffer {
+  private static GameSetupBuffer singleplayerBuffer, multiplayerBuffer;
+  private static boolean loaded = false;
+
+  /**
+   * Registers all the possible game modes and creates two static instances of GameSetupBuffer - one
+   * for singleplayer and one for multiplayer, assigning the appropriate game modes to both.
+   */
+  private static void load() {
+    // Register all the game modes via the IDGenerator.
+    IDGenerator.registerGameMode(Classic.class);
+    IDGenerator.registerGameMode(Speedy.class);
+    IDGenerator.registerGameMode(Custom.class);
+
+    // Assign game modes to the two buffers.
+    int[] singleplayerGameModes = {IDGenerator.getGameModeID(Classic.class),
+                                   IDGenerator.getGameModeID(Speedy.class),
+                                   IDGenerator.getGameModeID(Custom.class)};
+
+    int[] multiplayerGameModes = {IDGenerator.getGameModeID(Classic.class),
+                                  IDGenerator.getGameModeID(Speedy.class),
+                                  IDGenerator.getGameModeID(Custom.class)};
+
+    // Initialize the buffers.
+    singleplayerBuffer = new GameSetupBuffer(singleplayerGameModes);
+    multiplayerBuffer = new GameSetupBuffer(multiplayerGameModes);
+
+    loaded = true;
+  }
+
+  /**
+   * @return The singleplayer GameSetupBuffer singleton.
+   */
+  public static GameSetupBuffer getSingleplayer() {
+    if (!loaded) load();
+    return singleplayerBuffer;
+  }
+
+  /**
+   * @return The multiplayer GameSetupBuffer singleton.
+   */
+  public static GameSetupBuffer getMultiplayer() {
+    if (!loaded) load();
+    return multiplayerBuffer;
+  }
+
+
   protected String savingPrefix = "";
-
-  protected enum GameMode {CLASSIC, SPEEDY, VS_AI, CUSTOM}
-  protected GameMode gameMode = GameMode.CLASSIC;
-  protected final AtomicInteger horizontalSquares = new AtomicInteger(20),
-      verticalSquares = new AtomicInteger(20), speed = new AtomicInteger(8),
-      numberOfApples = new AtomicInteger(1);
-  protected int difficulty;
   protected final CornerMap cornerMap = new CornerMap();
-  protected boolean stageBorders;
+  protected GameMode gameMode;
+  protected final List<GameMode> gameModes;
+
+  private GameSetupBuffer(int[] gameModesIDs) {
+    gameModes = new LinkedList<>();
+
+    for (int id : gameModesIDs) {
+      try {
+        gameModes.add(IDGenerator.getGameModeClass(id).newInstance());
+      } catch (Exception exception) {
+        System.err.println("Couldn't create an instance of default game mode: "
+            + IDGenerator.getGameModeClass(0));
+      }
+    }
+
+    gameMode = gameModes.get(0);
+
+    loadSettings(OpenGLActivity.current);
+  }
 
   CornerMap getCornerMap() { return cornerMap; }
 
-  public void adjustToDifficultyAndGameMode() {
-    switch(gameMode) {
-
-      case CLASSIC:
-        horizontalSquares.set(10 + difficulty * 5);
-        verticalSquares.set(10 + difficulty * 5);
-        speed.set(6 + difficulty * 3);
-        stageBorders = true;
-        break;
-
-      case SPEEDY:
-        horizontalSquares.set(10 + difficulty * 5);
-        verticalSquares.set(10 + difficulty * 5);
-        speed.set(10 + difficulty * 5);
-        stageBorders = false;
-        break;
-
-      case VS_AI:
-        horizontalSquares.set(20);
-        verticalSquares.set(20);
-        speed.set(10);
-        stageBorders = true;
-        break;
-
-      default:
-        break;
-    }
+  public Game createGame() {
+    Game game = gameMode.generateGame(cornerMap);
+    if (this == singleplayerBuffer)
+      game = game.withScoreSaveKey(gameMode.toString(), gameMode.getDifficulty().index);
+    return game;
   }
 
-  public Game createGame(GameRenderer renderer) {
-    switch(gameMode) {
-      case CLASSIC:
-      case SPEEDY:
-        adjustToDifficultyAndGameMode();
-        return new Game(renderer, this);
-      case CUSTOM:
-        return new Game(renderer, this);
-      default:
-        throw new RuntimeException("This game mode is not supported.");
-    }
+  public boolean setGameMode(Class<? extends GameMode> gameModeClass) {
+    for (GameMode gameMode : gameModes)
+      if (gameModeClass.isInstance(gameMode)) {
+        this.gameMode = gameMode;
+        return true;
+      }
+    return false;
   }
 
   /**
@@ -72,6 +109,8 @@ final class GameSetupBuffer {
 
   public boolean savingIsEnabled() { return !savingPrefix.equals(""); }
 
+  public String getSavingPrefix() { return savingPrefix; }
+
   /** Gets you the player specific saving prefix string from a given saving prefix and player. */
   public String getPlayerSavingPrefix(Player player) {
     return savingPrefix + "-" + player.getControlCorner(this).toString();
@@ -81,14 +120,14 @@ final class GameSetupBuffer {
   public void saveSettings(Context context) {
     if (savingPrefix.equals("")) return;
 
-    // General settings.
+    // Game mode settings.
     SharedPreferences.Editor settings
         = context.getSharedPreferences("settings", Context.MODE_PRIVATE).edit();
-    settings.putInt(savingPrefix + "-gamemode-last", gameMode.ordinal());
-    settings.putInt(savingPrefix + "-difficulty-last", difficulty);
+    settings.putString(savingPrefix + "gamemode-last", gameMode.toString());
+    gameMode.saveSettings(settings, this);
 
     // CornerMap settings.
-    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+    for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
       settings.putBoolean(savingPrefix + "-" + corner.toString() + "-player-enabled",
           cornerMap.getPlayer(corner) != null);
     }
@@ -98,8 +137,8 @@ final class GameSetupBuffer {
       String playerPrefix = getPlayerSavingPrefix(player);
       settings.putString(playerPrefix + "-name", player.getName());
       settings.putInt(playerPrefix + "-skin", player.getSkinIndex());
-      settings.putString(playerPrefix + "-controllerid", player.getPlayerController().identifier());
-      player.getPlayerController().saveSettings(settings, this);
+      settings.putString(playerPrefix + "-controllerid", player.getControllerBuffer().identifier());
+      player.getControllerBuffer().saveSettings(settings, this);
     }
 
     settings.apply();
@@ -110,19 +149,20 @@ final class GameSetupBuffer {
     if (savingPrefix.equals("")) return;
     SharedPreferences settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
 
-    // General settings.
-    int gameModeIndex = settings.getInt(savingPrefix + "gamemode-last", -1);
-    for (int index = 0; index < GameMode.values().length; index++)
-      if (index == gameModeIndex)
-        gameMode = GameMode.values()[index];
+    // Game mode settings.
+    String loadedGameModeName = settings.getString(savingPrefix + "gamemode-last", null);
+    for (GameMode gameMode : gameModes) {
+      gameMode.loadSettings(this);
+      if (gameMode.toString().equals(loadedGameModeName))
+        this.gameMode = gameMode;
+    }
 
-    difficulty = settings.getInt(savingPrefix + "-difficulty-last", difficulty);
 
     // CornerMap settings.
-    for (PlayerController.Corner corner : PlayerController.Corner.values())
+    for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values())
       if (settings.getBoolean(savingPrefix + "-" + corner.toString() + "-player-enabled", false)
           && cornerMap.getPlayer(corner) == null)
-        cornerMap.addPlayer(new Player(((OpenGLES20Activity) context).getRenderer()), corner);
+        cornerMap.addPlayer(new Player(((OpenGLActivity) context).getRenderer()), corner);
       else if (!settings.getBoolean(savingPrefix+"-"+corner.toString() + "-player,enabled", false)
                && cornerMap.getPlayer(corner) != null)
         cornerMap.removePlayer(cornerMap.getPlayer(corner));
@@ -145,15 +185,12 @@ final class GameSetupBuffer {
    */
   public List<byte[]> allInformationCallList(ConnectedThread thread) {
     List<byte[]> calls = new LinkedList<>();
-    // Game calls.
-    calls.add(new byte[] {Protocol.HOR_SQUARES_CHANGED, (byte) horizontalSquares.get()});
-    calls.add(new byte[] {Protocol.VER_SQUARES_CHANGED, (byte) verticalSquares.get()});
-    calls.add(new byte[] {Protocol.SPEED_CHANGED, (byte) speed.get()});
-    calls.add(new byte[] {Protocol.STAGE_BORDERS_CHANGED, (byte) (stageBorders ? 1 : 0)});
-    calls.add(new byte[] {Protocol.GAME_MODE, (byte) gameMode.ordinal()});
+
+    // GameMode calls.
+    calls.addAll(gameMode.getSyncCallList());
 
     // Player calls.
-    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+    for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
       Player player = cornerMap.getPlayer(corner);
       if (player == null) continue;
 
@@ -189,27 +226,17 @@ final class GameSetupBuffer {
     output[0] = Protocol.DETAILED_SNAKES_LIST;
     int outputIndex = 1;
 
-    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+    for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
       Player player = cornerMap.getPlayer(corner);
       if (player == null) output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
-      else if (player.getPlayerController() instanceof BluetoothController
-          && ((BluetoothController) player.getPlayerController()).controllerThread.equals(thread))
+      else if (player.getControllerBuffer() instanceof BluetoothControllerBuffer
+          && ((BluetoothControllerBuffer) player.getControllerBuffer()).controllerThread.equals(thread))
         output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
       else
         output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;
     }
 
     return output;
-  }
-
-  public static String gameModeToString(GameMode gameMode) {
-    switch (gameMode) {
-      case CLASSIC: return "Classic";
-      case SPEEDY: return "Speedy";
-      case VS_AI: return "AI Battle";
-      case CUSTOM: return "Custom";
-      default: return "Error";
-    }
   }
 
   public static String difficultyToString(int difficulty) {

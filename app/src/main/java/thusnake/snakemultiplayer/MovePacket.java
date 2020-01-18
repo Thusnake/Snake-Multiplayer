@@ -7,8 +7,8 @@ public class MovePacket {
   private final byte[] contents;
 
   // Constructor for a outbound snake move packet.
-  public MovePacket(Player.Direction direction1, Player.Direction direction2,
-                    Player.Direction direction3, Player.Direction direction4) {
+  public MovePacket(Snake.Direction direction1, Snake.Direction direction2,
+                    Snake.Direction direction3, Snake.Direction direction4) {
     this.type = Type.SNAKE_MOVE;
     this.contents = new byte[4];
   }

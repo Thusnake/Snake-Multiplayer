@@ -3,7 +3,11 @@ package thusnake.snakemultiplayer;
 import java.util.LinkedList;
 import java.util.List;
 
-import thusnake.snakemultiplayer.PlayerController.Corner;
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.controllers.ControllerBuffer.Corner;
+import thusnake.snakemultiplayer.controllers.CornerLayoutControllerBuffer;
+import thusnake.snakemultiplayer.controllers.GamepadControllerBuffer;
+import thusnake.snakemultiplayer.controllers.SwipeControllerBuffer;
 
 public abstract class SnakeCustomizationScreen extends MenuScreen {
   final Player player;
@@ -33,11 +37,11 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
     snakeSelectionCarousel.notChosenOpacity = 0.5f;
     snakeSelectionCarousel.confirmChoices();
 
+    List<ControllerBuffer> controllerBufferChoices = ControllerBuffer.getControllerChoiceList(player);
     List<String> possibleControlTypes = new LinkedList<>();
-    possibleControlTypes.add("Corner");
-    possibleControlTypes.add("Swipe");
-    possibleControlTypes.add("Gamepad");
-    possibleControlTypes.add("Keyboard");
+    for (ControllerBuffer controllerBuffer : controllerBufferChoices)
+      possibleControlTypes.add(controllerBuffer.identifier());
+
     MenuCustomValue controlType
         = new MenuCustomValue(renderer, possibleControlTypes,
                               renderer.getScreenWidth() / 2f,
@@ -46,24 +50,16 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
       @Override
       public void move(double dt) {
         super.move(dt);
-        setValue(player.getPlayerController().identifier());
+        setValue(player.getControllerBuffer().identifier());
       }
 
       @Override
       public void onValueChange(String newValue) {
         super.onValueChange(newValue);
-        switch(newValue) {
-          case "Corner":
-            player.setController(new CornerLayoutController(renderer, player));
-            break;
-          case "Swipe":
-            player.setController(new SwipeController(renderer, player));
-            break;
-          case "Gamepad":
-            player.setController(new GamepadController(renderer, player));
-            break;
-          default: break;
-        }
+
+        for (ControllerBuffer controllerBuffer : controllerBufferChoices)
+          if (controllerBuffer.identifier().equals(newValue))
+            player.setController(controllerBuffer);
       }
     }.setLabel("Control type:");
 
@@ -177,10 +173,10 @@ public abstract class SnakeCustomizationScreen extends MenuScreen {
       @Override
       public void performAction() {
         menu.setScreen(new SettingsScreen(menu,
-                                          player.getPlayerController().toString() + " Options") {
+                                          player.getControllerBuffer().toString() + " Options") {
           @Override
           public List<MenuDrawable> createListOfOptions() {
-            return player.getPlayerController().optionsList(renderer);
+            return player.getControllerBuffer().optionsList();
           }
 
           @Override

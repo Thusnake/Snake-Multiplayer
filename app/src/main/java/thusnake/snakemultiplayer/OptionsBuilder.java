@@ -2,30 +2,36 @@ package thusnake.snakemultiplayer;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-final class OptionsBuilder {
-  static List<MenuDrawable> defaultOptions(GameRenderer renderer) {
+import thusnake.snakemultiplayer.gamemodes.GameMode;
+
+public final class OptionsBuilder {
+  public static List<MenuDrawable> defaultOptions(GameMode gameMode) {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     List<MenuDrawable> list = new LinkedList<>();
     list.add(MarginSpace.makeHorizontal(renderer, -renderer.getScreenHeight() / 18f, 0));
-    list.add(horizontalSquares(renderer));
-    list.add(verticalSquares(renderer));
-    list.add(speed(renderer));
-    list.add(stageBorders(renderer));
-    list.add(numberOfApples(renderer));
+    list.add(horizontalSquares(gameMode.horizontalSquares));
+    list.add(verticalSquares(gameMode.verticalSquares));
+    list.add(speed(gameMode.speed));
+    list.add(stageBorders(gameMode.stageBorders));
     return list;
   }
 
-  static List<MenuDrawable> justDifficulty(GameRenderer renderer) {
+  public static List<MenuDrawable> justDifficulty() {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     List<MenuDrawable> list = new LinkedList<>();
     list.add(MarginSpace.makeHorizontal(renderer, -renderer.getScreenHeight() / 18f, 0));
-    list.add(difficulty(renderer));
+    list.add(difficulty());
     return list;
   }
 
 
-  static MenuNumericalValue horizontalSquares(GameRenderer renderer) {
+  static MenuNumericalValue horizontalSquares(AtomicInteger mutableValue) {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     MenuNumericalValue value = new MenuNumericalValue(renderer,
-                                              renderer.getMenu().getSetupBuffer().horizontalSquares,
+                                              mutableValue,
                                               renderer.getScreenWidth() - renderer.smallDistance(),
                                               0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 100);
@@ -33,9 +39,10 @@ final class OptionsBuilder {
     return value;
   }
 
-  static MenuNumericalValue verticalSquares(GameRenderer renderer) {
+  static MenuNumericalValue verticalSquares(AtomicInteger mutableValue) {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     MenuNumericalValue value = new MenuNumericalValue(renderer,
-                                              renderer.getMenu().getSetupBuffer().verticalSquares,
+                                              mutableValue,
                                               renderer.getScreenWidth() - renderer.smallDistance(),
                                               0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 100);
@@ -43,9 +50,10 @@ final class OptionsBuilder {
     return value;
   }
 
-  static MenuNumericalValue speed(GameRenderer renderer) {
+  static MenuNumericalValue speed(AtomicInteger mutableValue) {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     MenuNumericalValue value = new MenuNumericalValue(renderer,
-                                              renderer.getMenu().getSetupBuffer().speed,
+                                              mutableValue,
                                               renderer.getScreenWidth() - renderer.smallDistance(),
                                               0, MenuDrawable.EdgePoint.TOP_RIGHT);
     value.setValueBoundaries(1, 64);
@@ -53,28 +61,18 @@ final class OptionsBuilder {
     return value;
   }
 
-  static MenuBooleanValue stageBorders(GameRenderer renderer) {
+  static MenuBooleanValue stageBorders(AtomicBoolean mutableValue) {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     MenuBooleanValue value = new MenuBooleanValue(renderer,
-                                              renderer.getMenu().getSetupBuffer().stageBorders,
+                                              mutableValue,
                                               renderer.getScreenWidth() - renderer.smallDistance(),
-                                              0, MenuDrawable.EdgePoint.TOP_RIGHT) {
-      @Override
-      public void move(double dt) {
-        super.move(dt);
-        setValue(renderer.getMenu().getSetupBuffer().stageBorders);
-      }
-
-      @Override
-      public void onValueChange(boolean newValue) {
-        super.onValueChange(newValue);
-        renderer.getMenu().getSetupBuffer().stageBorders = newValue;
-      }
-    };
+                                              0, MenuDrawable.EdgePoint.TOP_RIGHT);
     addDescriptionItem(value, "Stage Borders");
     return value;
   }
 
-  static MenuCustomValue difficulty(GameRenderer renderer) {
+  static MenuCustomValue difficulty() {
+    GameRenderer renderer = OpenGLActivity.current.getRenderer();
     List<String> strings = new LinkedList<>();
     strings.add(GameSetupBuffer.difficultyToString(0));
     strings.add(GameSetupBuffer.difficultyToString(1));
@@ -86,8 +84,7 @@ final class OptionsBuilder {
       @Override
       public void move(double dt) {
         super.move(dt);
-        setValue(GameSetupBuffer
-                            .difficultyToString(renderer.getMenu().getSetupBuffer().difficulty));
+        setValue(renderer.getMenu().getSetupBuffer().gameMode.getDifficulty().toString());
       }
 
       @Override
@@ -95,38 +92,25 @@ final class OptionsBuilder {
         super.onValueChange(newValue);
         switch(newValue) {
           case "Mild":
-            renderer.getMenu().getSetupBuffer().difficulty = 0; break;
+            renderer.getMenu().getSetupBuffer().gameMode.setDifficulty(GameMode.Difficulty.MILD);
+            break;
           case "Fair":
-            renderer.getMenu().getSetupBuffer().difficulty = 1; break;
+            renderer.getMenu().getSetupBuffer().gameMode.setDifficulty(GameMode.Difficulty.FAIR);
+            break;
           case "Tough":
-            renderer.getMenu().getSetupBuffer().difficulty = 2; break;
+            renderer.getMenu().getSetupBuffer().gameMode.setDifficulty(GameMode.Difficulty.TOUGH);
+            break;
           case "Bonkers":
-            renderer.getMenu().getSetupBuffer().difficulty = 3; break;
+            renderer.getMenu().getSetupBuffer().gameMode.setDifficulty(GameMode.Difficulty.BONKERS);
+            break;
           case "Ultimate":
-            renderer.getMenu().getSetupBuffer().difficulty = 4; break;
+            renderer.getMenu().getSetupBuffer().gameMode.setDifficulty(GameMode.Difficulty.ULTIMATE);
+            break;
         }
       }
     }.setLabel("Difficulty:");
     addDescriptionItem(value, "");
 
-    return value;
-  }
-
-  static MenuNumericalValue numberOfApples(GameRenderer renderer) {
-    MenuNumericalValue value
-        = new MenuNumericalValue(renderer, renderer.getMenu().getSetupBuffer().numberOfApples,
-                                 renderer.getScreenWidth() - renderer.smallDistance(), 0,
-                                 MenuDrawable.EdgePoint.TOP_RIGHT) {
-      @Override
-      public void move(double dt) {
-        super.move(dt);
-        GameSetupBuffer setupBuffer = renderer.getMenu().getSetupBuffer();
-        setValueBoundaries(0,
-            setupBuffer.horizontalSquares.get() * setupBuffer.verticalSquares.get() - 1);
-        setValue(getValue());
-      }
-    };
-    addDescriptionItem(value, "Apples");
     return value;
   }
 

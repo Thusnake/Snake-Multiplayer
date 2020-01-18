@@ -2,6 +2,8 @@ package thusnake.snakemultiplayer;
 
 import java.util.List;
 
+import thusnake.snakemultiplayer.gamemodes.GameMode;
+
 public abstract class GameSetupScreen extends MenuScreen implements TextureReloadable {
   final MenuCarousel gameModeCarousel;
   private MenuListOfItems listOfOptions;
@@ -28,7 +30,7 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
       @Override
       public void performAction() {
         menu.getSetupBuffer().saveSettings(originActivity);
-        renderer.startGame(menu.getSetupBuffer().createGame(renderer));
+        renderer.startGame(menu.getSetupBuffer().createGame());
       }
     }.withBackgroundImage(R.drawable.ready_button);
 
@@ -60,16 +62,15 @@ public abstract class GameSetupScreen extends MenuScreen implements TextureReloa
     drawables.add(listOfOptions);
   }
 
-  public void addGameModeItem(int resourceId, String name, List<MenuDrawable> options,
-                              GameSetupBuffer.GameMode gameMode) {
+  public void addGameModeItem(GameMode gameMode) {
     gameModeCarousel.addChoice(
         new CarouselItem(gameModeCarousel,
-                         CarouselItem.makeFittingImage(gameModeCarousel, resourceId),
-                         name) {
+                         CarouselItem.makeFittingImage(gameModeCarousel,
+                             gameMode.getThumbnailResourceID()), gameMode.toString()) {
           @Override
           public void onChosen() {
             super.onChosen();
-            setListOfOptions(options);
+            setListOfOptions(gameMode.menuOptions());
             menu.getSetupBuffer().gameMode = gameMode;
           }
         });

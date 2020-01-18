@@ -11,9 +11,9 @@ import java.util.UUID;
  */
 public class AcceptThread extends Thread {
   private BluetoothServerSocket serverSocket;
-  private OpenGLES20Activity originActivity;
+  private OpenGLActivity originActivity;
 
-  AcceptThread(OpenGLES20Activity activity) {
+  AcceptThread(OpenGLActivity activity) {
     // Use a temporary object that is later assigned to serverSocket,
     // because serverSocket is final
     BluetoothServerSocket tmp = null;

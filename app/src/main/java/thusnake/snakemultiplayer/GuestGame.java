@@ -2,18 +2,24 @@ package thusnake.snakemultiplayer;
 
 import android.util.Pair;
 
+import java.util.List;
+
 import javax.microedition.khronos.opengles.GL10;
 
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+
 public class GuestGame extends Game {
-  private OpenGLES20Activity originActivity;
+  private OpenGLActivity originActivity;
   private int moveCount = 0;
   private MissedMovesList missedMovesList;
   private final Square readyFillBar;
 
-  public GuestGame(GameRenderer renderer, GameSetupBuffer setupBuffer) {
-    super(renderer, setupBuffer);
+  public GuestGame(CornerMap cornerMap, int horizontalSquares, int verticalSquares, int speed,
+                   boolean stageBorders, List<Class<? extends Entity>> entityBlueprints) {
+    super(cornerMap, horizontalSquares, verticalSquares, speed, stageBorders, entityBlueprints);
 
-    this.originActivity = (OpenGLES20Activity) renderer.getContext();
+    originActivity = OpenGLActivity.current;
+    GameRenderer renderer = originActivity.getRenderer();
 
     // Change the top game over button to the ready button.
     this.getGameOverTopItem().setText("Ready");
@@ -97,13 +103,13 @@ public class GuestGame extends Game {
       case Protocol.GAME_MOVEMENT_OCCURRED:
         byte encodedMove = moveBytes[3];
 
-        Player.Direction[] directions = new Player.Direction[4];
+        Snake.Direction[] directions = new Snake.Direction[4];
         int index = 0;
         Protocol.decodeMovementCode(encodedMove, directions);
-        for (PlayerController.Corner corner : PlayerController.Corner.values()) {
-          Player player;
-          if ((player = cornerMap.getPlayer(corner)) != null)
-            player.changeDirection(directions[index]);
+        for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
+          Snake snake;
+          if ((snake = getSnakeAt(corner)) != null)
+            snake.changeDirection(directions[index]);
 
           index++;
         }
@@ -151,6 +157,9 @@ public class GuestGame extends Game {
 
       case Protocol.GAME_MOVEMENT_MISSING:
         break;
+
+      case Protocol.RANDOM_SEED:
+
 
       default:
         break;

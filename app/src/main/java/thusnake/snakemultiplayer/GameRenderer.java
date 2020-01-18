@@ -26,7 +26,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class GameRenderer implements GLSurfaceView.Renderer {
   private Context context;
-  private OpenGLES20Activity originActivity;
+  private OpenGLActivity originActivity;
   private int fontSize;
   private int screenWidth, screenHeight;
   private GL10 gl;
@@ -46,7 +46,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public GameRenderer(Context context) {
     super();
     this.context = context;
-    this.originActivity = (OpenGLES20Activity) context;
+    this.originActivity = (OpenGLActivity) context;
   }
 
   @Override
@@ -195,7 +195,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     }
   }
 
-  public OpenGLES20Activity getOriginActivity() { return originActivity; }
+  public OpenGLActivity getOriginActivity() { return originActivity; }
   public GL10 getGl() { return this.gl; }
   public GLText getGlText() { return glText; }
   public Context getContext() { return this.context; }
@@ -222,10 +222,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   public float smallDistance() { return screenHeight / 72f; }
 
   public void startGame(Game game) {
-    if (originActivity.isHost())
-      activityStack.push(new OnlineHostGame(this, getMenu().getSetupBuffer()));
-    else
-      activityStack.push(game);
+    activityStack.push(game);
   }
 
   /** Finds the game in the activity stack and replaces it with a new one of the same class. */
@@ -233,13 +230,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     if (game == null || !activityStack.contains(game)) return;
     int gameIndex = activityStack.indexOf(game);
 
-    try {
-      activityStack.setElementAt(game.getClass()
-                                     .getConstructor(GameRenderer.class, GameSetupBuffer.class)
-                                     .newInstance(this, getMenu().getSetupBuffer()), gameIndex);
-    } catch (Exception exception) {
-      System.out.println("Couldn't restart game: " + exception.getMessage());
-    }
+    activityStack.setElementAt(getMenu().getSetupBuffer().createGame(), gameIndex);
   }
 
   public void quitGame() {
@@ -277,18 +268,10 @@ public class GameRenderer implements GLSurfaceView.Renderer {
 
     // If the pointer map doesn't have a pointer for that bitmap then we'll create one.
     if (!glTexturePointerMap.containsValue(bitmap)) {
-      int[] texturePointers = new int[1];
-
-      gl.glGenTextures(1, texturePointers, 0);
-      gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-      gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
-
-      // Use Android GLUtils to specify a two-dimensional texture image from our bitmap.
-      GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+      int pointer = bindTextureAndGeneratePointer(bitmap);
 
       // Cache the texture and pointer for next time.
-      glTexturePointerMap.put(texturePointers[0], bitmap);
+      cacheTextureAndGLPointer(bitmap, pointer);
     }
 
     for (Integer integer : glTexturePointerMap.keySet()) {
@@ -296,6 +279,46 @@ public class GameRenderer implements GLSurfaceView.Renderer {
         return integer;
     }
     return 0;
+  }
+
+  /**
+   * Binds a given Bitmap image to a generated texture pointer.
+   * @param bitmap The Bitmap image to use.
+   * @return The generated pointer.
+   */
+  public int bindTextureAndGeneratePointer(Bitmap bitmap) {
+    int[] texturePointers = new int[1];
+
+    gl.glGenTextures(1, texturePointers, 0);
+    gl.glBindTexture(GL10.GL_TEXTURE_2D, texturePointers[0]);
+    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+    gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
+
+    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+
+    return texturePointers[0];
+  }
+
+  /**
+   * Caches a Bitmap and an OpenGL pointer pair manually.
+   * This pair will be used to refresh textures whenever appropriate.
+   * @param bitmap The texture's bitmap.
+   * @param GLPointer The (already allocated) OpenGL pointer to that texture.
+   */
+  public void cacheTextureAndGLPointer(Bitmap bitmap, int GLPointer) {
+    glTexturePointerMap.put(GLPointer, bitmap);
+  }
+
+  /**
+   * Removes an OpenGL pointer from the cache manually.
+   * @param GLPointer The OpenGL pointer to be removed.
+   */
+  public void recycleGLPointer(int GLPointer) {
+    // Delete the texture binding.
+    gl.glDeleteTextures(1, new int[] {GLPointer}, 0);
+
+    // Remove the pair from the cache.
+    glTexturePointerMap.remove(GLPointer);
   }
 
   /**

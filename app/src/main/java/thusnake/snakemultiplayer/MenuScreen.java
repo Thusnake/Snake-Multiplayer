@@ -2,7 +2,6 @@ package thusnake.snakemultiplayer;
 
 import android.view.MotionEvent;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -12,7 +11,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * same class must be created.
  */
 public abstract class MenuScreen {
-  final OpenGLES20Activity originActivity;
+  final OpenGLActivity originActivity;
   final GameRenderer renderer;
   final Menu menu;
   final Set<MenuDrawable> drawables = new CopyOnWriteArraySet<>();

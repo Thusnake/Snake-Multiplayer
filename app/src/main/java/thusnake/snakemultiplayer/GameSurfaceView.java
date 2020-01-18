@@ -57,9 +57,9 @@ public class GameSurfaceView extends GLSurfaceView {
       ((FullscreenMessage) gameRenderer.getCurrentActivity()).onMotionEvent(e);
     } else if (this.gameRenderer.isInGame()) {
       // Send all the alive players the motion event.
-      for (Player player : gameRenderer.getGame().getPlayers())
-        if (player != null && player.isAlive())
-          player.onMotionEvent(e);
+      for (Snake snake : gameRenderer.getGame().getAliveSnakes())
+        if (snake != null && snake.isAlive())
+          snake.onMotionEvent(e);
 
       // Handle the game over screen inputs.
       if (e.getActionMasked() == MotionEvent.ACTION_UP
@@ -71,29 +71,6 @@ public class GameSurfaceView extends GLSurfaceView {
               item.performAction();
       }
     } else {
-      // Handle the plus/minus buttons.
-//      for (MenuItem menuItem : gameRenderer.getMenu().getCurrentMenuItems())
-//        if (menuItem.getValue() != null && menuItem.getValue().isExpanded())
-//          switch (e.getActionMasked()) {
-//            case ACTION_DOWN:
-//              menuItem.getValue().handleButtonsDown(pointerX[0], pointerY[0]);
-//              break;
-//            case ACTION_MOVE:
-//              menuItem.getValue().handleButtonsMove(pointerX[0], pointerY[0]);
-//              break;
-//            case MotionEvent.ACTION_UP:
-//              menuItem.getValue().handleButtonsUp();
-//          }
-
-      // Handle player menu color and corner squares.
-//      if (gameRenderer.getMenu().getState() == Menu.MenuState.PLAYERSOPTIONS
-//          || gameRenderer.getMenu().getPreviousState() == Menu.MenuState.PLAYERSOPTIONS) {
-//        for (MenuButton square : gameRenderer.getMenu().getColorSelectionSquares())
-//          square.onMotionEvent(e);
-//
-//        for (MenuButton square : gameRenderer.getMenu().getCornerSelectionSquares())
-//          square.onMotionEvent(e);
-//      }
 
       switch (e.getAction()) {
         case ACTION_DOWN:

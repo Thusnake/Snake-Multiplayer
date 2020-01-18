@@ -1,7 +1,9 @@
 package thusnake.snakemultiplayer;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class MenuBooleanValue extends MenuFlexContainer {
-  private boolean value;
+  private AtomicBoolean value;
   private final MenuItem item;
 
   public MenuBooleanValue(GameRenderer renderer, boolean value, float x, float y,
@@ -16,18 +18,25 @@ public class MenuBooleanValue extends MenuFlexContainer {
       }
     };
 
+    this.value = new AtomicBoolean();
     setValue(value);
     addItem(item);
   }
 
+  public MenuBooleanValue(GameRenderer renderer, AtomicBoolean value, float x, float y,
+                          EdgePoint alignPoint) {
+    this(renderer, value.get(), x, y, alignPoint);
+    this.value = value;
+  }
+
   public void switchValue() {
-    value = !value;
-    onValueChange(value);
+    value.set(!value.get());
+    onValueChange(value.get());
   }
 
   public void setValue(boolean newValue) {
-    value = newValue;
-    onValueChange(value);
+    value.set(newValue);
+    onValueChange(value.get());
   }
 
   public void onValueChange(boolean newValue) {

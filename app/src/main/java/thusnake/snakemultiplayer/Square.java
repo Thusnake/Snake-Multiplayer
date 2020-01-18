@@ -22,7 +22,7 @@ public class Square implements TextureReloadable {
   private int textureId;
   private boolean textureLoaded = true;
   private GL10 gl;
-  private OpenGLES20Activity originActivity;
+  private OpenGLActivity originActivity;
 
   public Square(GameRenderer renderer, float x,float y,float width,float height) {
     gl = renderer.getGl();

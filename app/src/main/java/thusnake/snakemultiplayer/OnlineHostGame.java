@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+
 import static thusnake.snakemultiplayer.Protocol.*;
 
 /**
@@ -26,14 +28,16 @@ public class OnlineHostGame extends Game {
   private final Game selfReference = this;
 
   // Constructor.
-  public OnlineHostGame(GameRenderer renderer, GameSetupBuffer setupBuffer){
-    super(renderer, setupBuffer);
+  public OnlineHostGame(CornerMap cornerMap, int horizontalSquares, int verticalSquares, int speed,
+                        boolean stageBorders,
+                        Map<ConnectedThread, List<byte[]>> initializationCalls) {
+    super(cornerMap, horizontalSquares, verticalSquares, speed, stageBorders, null);
 
     // The first move is null, as it's the game's initial state.
     moveCodes.add(null);
     prepare();
 
-    OpenGLES20Activity originActivity = (OpenGLES20Activity) getRenderer().getContext();
+    OpenGLActivity originActivity = (OpenGLActivity) getRenderer().getContext();
 
     // Make everyone not ready for the next game.
     for (ConnectedThread thread : originActivity.connectedThreads)
@@ -45,7 +49,7 @@ public class OnlineHostGame extends Game {
     // Send the initialization call and wait asynchronously for a confirmation from all.
     for (ConnectedThread thread : originActivity.connectedThreads)
       if (thread != null) {
-        List<byte[]> calls = createInitializationCalls(setupBuffer, thread);
+        List<byte[]> calls = createInitializationCalls(initializationCalls.get(thread), thread);
         thread.write(Protocol.encodeSeveralCalls(calls, GAME_START_CALL));
         awaitingAggregateReceive.put(thread, calls);
       }
@@ -104,9 +108,15 @@ public class OnlineHostGame extends Game {
                               (byte) getEntities().get(0).x, (byte) getEntities().get(0).y});
   }
 
-  public List<byte[]> createInitializationCalls(GameSetupBuffer setupBuffer,
-                                                ConnectedThread thread) {
-    List<byte[]> allInformation = new ArrayList<>(setupBuffer.allInformationCallList(thread));
+  /**
+   * @param menuCalls The typical menu-synchronization calls that would normally be periodically
+   *                   sent to the given device.
+   * @param thread The thread establishing a socket connection with the aforementioned device.
+   * @return A list of combined menu and game preparation calls to be synchronously sent to the
+   *          device.
+   */
+  public List<byte[]> createInitializationCalls(List<byte[]> menuCalls, ConnectedThread thread) {
+    List<byte[]> allInformation = new LinkedList<>(menuCalls);
     allInformation.add(moveCodes.get(1));
 
     return allInformation;
@@ -132,7 +142,7 @@ public class OnlineHostGame extends Game {
   @Override
   protected boolean checkGameOver() {
     if (super.checkGameOver()) {
-      Player winner = assessWinner();
+      Snake winner = assessWinner();
       this.sendBytes(new byte[] {Protocol.END_GAME, winner == null ? 0 : Protocol.encodeCorner(winner.getControlCorner())});
       return true;
     }
@@ -144,10 +154,10 @@ public class OnlineHostGame extends Game {
     super.performMove();
     moveCount++;
 
-    List<Player.Direction> directions = new LinkedList<>();
-    for (PlayerController.Corner corner : PlayerController.Corner.values()) {
-      if (cornerMap.getPlayer(corner) == null) directions.add(Player.Direction.UP);
-      else directions.add(cornerMap.getPlayer(corner).getDirection());
+    List<Snake.Direction> directions = new LinkedList<>();
+    for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
+      if (getSnakeAt(corner) == null) directions.add(Snake.Direction.UP);
+      else directions.add(getSnakeAt(corner).getDirection());
     }
 
     this.moveCodes.add(new byte[] {
@@ -200,8 +210,7 @@ public class OnlineHostGame extends Game {
         break;
 
       case Protocol.SNAKE_DIRECTION_CHANGE:
-        cornerMap.getPlayer(decodeCorner(bytes[1]))
-            .changeDirection(Protocol.decodeDirection(bytes[2]));
+        getSnakeAt(decodeCorner(bytes[1])).changeDirection(Protocol.decodeDirection(bytes[2]));
         break;
 
       default:

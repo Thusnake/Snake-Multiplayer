@@ -12,7 +12,7 @@ import java.io.OutputStream;
  */
 public class ConnectedThread extends Thread {
   private final BluetoothSocket socket;
-  final OpenGLES20Activity originActivity;
+  final OpenGLActivity originActivity;
   private final InputStream inStream;
   private final OutputStream outStream;
   final BluetoothDevice device;
@@ -21,7 +21,7 @@ public class ConnectedThread extends Thread {
   private SimpleTimer disconnectRequestTimer = new SimpleTimer(0.0);
   private SimpleTimer lastActivityTimer = new SimpleTimer(0.0);
 
-  public ConnectedThread(OpenGLES20Activity activity, BluetoothSocket socket) {
+  public ConnectedThread(OpenGLActivity activity, BluetoothSocket socket) {
     this.socket = socket;
     this.originActivity = activity;
     this.device = socket.getRemoteDevice();

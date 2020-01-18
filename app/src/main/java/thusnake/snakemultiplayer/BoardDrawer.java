@@ -6,6 +6,13 @@ import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import thusnake.snakemultiplayer.textures.GameTextureMap;
+import thusnake.snakemultiplayer.textures.TextureMap;
+
+/**
+ * Draws the game's board. Really not that useful, as the game is the only class that extends this
+ * and it has to supply some stuff, like the board's Mesh, manually.
+ */
 public abstract class BoardDrawer {
   private final GameRenderer renderer;
   private final GL10 gl;
@@ -13,27 +20,27 @@ public abstract class BoardDrawer {
   private float boardOffsetX, boardOffsetY, squareWidth;
   private int screenWidth, screenHeight;
   private final Square boardOutline, boardFill;
-  private final Mesh boardSquares;
+  private Mesh boardSquares;
   private final float[] boardSquareColors = {0.125f, 0.125f, 0.125f, 1.0f};
 
   public final int horizontalSquares, verticalSquares;
   public final boolean stageBorders;
 
-  public BoardDrawer(GameRenderer renderer, int screenWidth, int screenHeight) {
-    this.renderer = renderer;
-    this.gl = renderer.getGl();
-    this.glText = renderer.getGlText();
+  public BoardDrawer(int horizontalSquares, int verticalSquares, boolean stageBorders) {
+    renderer = OpenGLActivity.current.getRenderer();
+    screenWidth = (int) renderer.getScreenWidth();
+    screenHeight = (int) renderer.getScreenHeight();
+    gl = renderer.getGl();
+    glText = renderer.getGlText();
 
-    this.horizontalSquares = renderer.getMenu().getSetupBuffer().horizontalSquares.get();
-    this.verticalSquares = renderer.getMenu().getSetupBuffer().verticalSquares.get();
-    this.stageBorders = renderer.getMenu().getSetupBuffer().stageBorders;
+    this.horizontalSquares = horizontalSquares;
+    this.verticalSquares = verticalSquares;
+    this.stageBorders = stageBorders;
 
     // TODO Calculate board offset.
     this.boardOffsetY = 10.0f;
     this.boardOffsetX
         = (screenWidth - ((screenHeight - 20f) / this.verticalSquares) * horizontalSquares) / 2f;
-    this.screenWidth = screenWidth;
-    this.screenHeight = screenHeight;
     this.squareWidth
         = (float) ((screenHeight - 20.0) / verticalSquares);
     // Apply offset to some Squares.
@@ -41,10 +48,6 @@ public abstract class BoardDrawer {
         screenWidth - boardOffsetX*2 + 2.0, screenHeight - boardOffsetY*2 + 2.0);
     this.boardFill = new Square(renderer, boardOffsetX, boardOffsetY,
         screenWidth - boardOffsetX*2, screenHeight - boardOffsetY*2);
-
-    // Create the board mesh.
-    boardSquares = new Mesh(renderer, boardOffsetX, boardOffsetY,
-                            MenuDrawable.EdgePoint.BOTTOM_LEFT, squareWidth, this);
 
     this.gl.glEnable(GL10.GL_TEXTURE_2D);
     this.gl.glEnable(GL10.GL_BLEND);
@@ -61,22 +64,11 @@ public abstract class BoardDrawer {
     boardFill.draw(gl);
   }
 
-  public void drawControllerLayout(Player player) {
-    float[] colors = player.getSkin().headColors();
+  public void drawControllerLayout(Snake snake) {
+    float[] colors = snake.getSkin().headColors();
     gl.glColor4f(colors[0], colors[1], colors[2], colors[3]);
 
-    player.getPlayerController().draw();
-  }
-
-  public void drawPlayerSnake(Player player) {
-    for (BodyPart bodyPart : player) {
-      if (!bodyPart.isOutOfBounds() && player.isDrawable())
-        this.getBoardSquares()
-            .updateColors(bodyPart.getX(), bodyPart.getY(), bodyPart.getColors());
-      else if (!bodyPart.isOutOfBounds())
-        this.getBoardSquares()
-            .updateColors(bodyPart.getX(), bodyPart.getY(), this.getBoardSquareColors());
-    }
+    snake.controller.draw();
   }
 
   public void drawCountdownText(SimpleTimer beginTimer) {
@@ -95,6 +87,16 @@ public abstract class BoardDrawer {
   }
 
   public abstract void handleInputBytes(byte[] inputBytes, ConnectedThread source);
+
+  /**
+   * Generates the game mesh used for drawing the square tiles.
+   * This method <b>must</b> be called before attempting to do anything with the boardSquares.
+   * @param meshTextureMap The texture map to bind to the generated Mesh.
+   */
+  public void generateMesh(GameTextureMap meshTextureMap) {
+    boardSquares = new Mesh(renderer, boardOffsetX, boardOffsetY,
+        MenuDrawable.EdgePoint.BOTTOM_LEFT, squareWidth, this, meshTextureMap);
+  }
 
   // Getters.
   public int getScreenWidth() { return this.screenWidth; }

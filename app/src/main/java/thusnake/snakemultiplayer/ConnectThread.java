@@ -12,10 +12,10 @@ import java.util.UUID;
 public class ConnectThread extends Thread {
   private final BluetoothSocket mmSocket;
   private final BluetoothDevice mmDevice;
-  private final OpenGLES20Activity originActivity;
+  private final OpenGLActivity originActivity;
   private final FullscreenMessage loadingMessage;
 
-  public ConnectThread(OpenGLES20Activity activity, BluetoothDevice device,
+  public ConnectThread(OpenGLActivity activity, BluetoothDevice device,
                        FullscreenMessage loadingMessage) {
     // Use a temporary object that is later assigned to mmSocket,
     // because mmSocket is final

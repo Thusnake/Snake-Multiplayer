@@ -19,6 +19,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.microedition.khronos.opengles.GL10;
 
 import thusnake.snakemultiplayer.MenuDrawable.EdgePoint;
+import thusnake.snakemultiplayer.controllers.BluetoothControllerBuffer;
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.controllers.CornerLayoutControllerBuffer;
+import thusnake.snakemultiplayer.textures.GameTextureMap;
 
 /**
  * Created by Nick on 14/12/2017.
@@ -56,7 +60,7 @@ public class Menu implements Activity {
   private SimpleTimer scrollInertia = new SimpleTimer(0.0);
   private SimpleTimer hostUpdatePacketTimer = new SimpleTimer(0.0, 0.5);
 
-  private final OpenGLES20Activity originActivity;
+  private final OpenGLActivity originActivity;
   private MenuScreen currentScreen;
   private MenuScreenAnimation transitionAnimation;
 
@@ -68,7 +72,7 @@ public class Menu implements Activity {
     this.renderer = renderer;
     this.gl = renderer.getGl();
     this.glText = renderer.getGlText();
-    this.originActivity = (OpenGLES20Activity) renderer.getContext();
+    this.originActivity = (OpenGLActivity) renderer.getContext();
 
     this.screenTransformX = new SimpleTimer(0.0);
     this.screenTransformY = new SimpleTimer(0.0);
@@ -215,7 +219,7 @@ public class Menu implements Activity {
 
     // Set functionality for each menuItem.
     this.menuItemsMain[0].setAction((action, origin) -> {
-      OpenGLES20Activity originActivity = (OpenGLES20Activity) renderer.getContext();
+      OpenGLActivity originActivity = (OpenGLActivity) renderer.getContext();
       if (originActivity.isGuest() || originActivity.isHost())
         originActivity.setReady(!originActivity.isReady());
       //else
@@ -465,7 +469,7 @@ public class Menu implements Activity {
   }
 
   /* Sets the currently selected player's control corner to a Corner represented by a corner square.
-  private void onCornerSquareTouch(PlayerController.Corner representedCorner) {
+  private void onCornerSquareTouch(ControllerBuffer.Corner representedCorner) {
     // Only guests have to wait for a signal from somewhere else before setting the corner.
     if (!this.isGuest())
       this.setPlayerCorner(playersOptionsIndex, representedCorner);
@@ -486,7 +490,7 @@ public class Menu implements Activity {
     }
   }*/
 
-//  public void setPlayerCorner(int playerIndex, PlayerController.Corner corner) {
+//  public void setPlayerCorner(int playerIndex, ControllerBuffer.Corner corner) {
 //    // Find the other player that uses the selected corner and set it to the current player's.
 //    for (int index = 0; index < this.players.length; index++)
 //      if (index != playerIndex && this.players[index].getControlCorner() == corner);
@@ -657,7 +661,7 @@ public class Menu implements Activity {
   // Sets up the menu to work as if you're a guest.
   public void beginGuest() {
     // Clear all corners.
-    for (PlayerController.Corner corner : PlayerController.Corner.values())
+    for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values())
       setupBuffer.cornerMap.emptyCorner(corner);
   }
 
@@ -667,18 +671,18 @@ public class Menu implements Activity {
   }
 
   public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
-    Player playerLL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_LEFT);
-    Player playerUL = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_LEFT);
-    Player playerUR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.UPPER_RIGHT);
-    Player playerLR = setupBuffer.cornerMap.getPlayer(PlayerController.Corner.LOWER_RIGHT);
+    Player playerLL = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.LOWER_LEFT);
+    Player playerUL = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.UPPER_LEFT);
+    Player playerUR = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.UPPER_RIGHT);
+    Player playerLR = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.LOWER_RIGHT);
     switch(inputBytes[0]) {
-      case Protocol.HOR_SQUARES_CHANGED: setupBuffer.horizontalSquares.set(inputBytes[1]); break;
-      case Protocol.VER_SQUARES_CHANGED: setupBuffer.verticalSquares.set(inputBytes[1]); break;
-      case Protocol.SPEED_CHANGED: setupBuffer.speed.set(inputBytes[1]); break;
-      case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.stageBorders = inputBytes[1] == 1; break;
+      case Protocol.HOR_SQUARES_CHANGED: setupBuffer.gameMode.horizontalSquares.set(inputBytes[1]); break;
+      case Protocol.VER_SQUARES_CHANGED: setupBuffer.gameMode.verticalSquares.set(inputBytes[1]); break;
+      case Protocol.SPEED_CHANGED: setupBuffer.gameMode.speed.set(inputBytes[1]); break;
+      case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.gameMode.stageBorders.set(inputBytes[1] == 1); break;
 
       case Protocol.GAME_MODE:
-        setupBuffer.gameMode = GameSetupBuffer.GameMode.values()[inputBytes[1]];
+        setupBuffer.setGameMode(IDGenerator.getGameModeClass(inputBytes[1]));
         break;
 
       case Protocol.SNAKE_LL_SKIN:
@@ -718,11 +722,11 @@ public class Menu implements Activity {
       // HOST ONLY
       case Protocol.REQUEST_ADD_SNAKE:
         if (originActivity.isHost()) {
-          PlayerController.Corner requestedCorner = Protocol.decodeCorner(inputBytes[1]);
+          ControllerBuffer.Corner requestedCorner = Protocol.decodeCorner(inputBytes[1]);
           if (setupBuffer.cornerMap.getPlayer(requestedCorner) == null) {
             Player addedSnake = new Player(renderer);
             addedSnake
-                .setControllerForced(new BluetoothController(renderer, addedSnake, sourceThread));
+                .setControllerForced(new BluetoothControllerBuffer(addedSnake, sourceThread));
             addedSnake.setName(sourceThread.device.getName());
             setupBuffer.cornerMap.addPlayer(addedSnake, requestedCorner);
           }
@@ -733,7 +737,7 @@ public class Menu implements Activity {
       case Protocol.DETAILED_SNAKES_LIST:
         if (this.isGuest()) {
           int index = 0;
-          for (PlayerController.Corner corner : PlayerController.Corner.values()) {
+          for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
             index++;
             Player player = setupBuffer.cornerMap.getPlayer(corner);
 
@@ -746,18 +750,17 @@ public class Menu implements Activity {
                   Player playerToBeAdded = new Player(renderer).defaultPreset(setupBuffer);
                   setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
                 } else {
-                  player.setController(new CornerLayoutController(renderer, player));
+                  player.setController(new CornerLayoutControllerBuffer(player));
                 }
                 break;
               case Protocol.DSL_SNAKE_REMOTE:
                 if (player == null) {
                   Player playerToBeAdded = new Player(renderer);
-                  playerToBeAdded.setControllerForced(new BluetoothController(renderer,
-                                                                    playerToBeAdded, sourceThread));
+                  playerToBeAdded.setControllerForced(new BluetoothControllerBuffer(playerToBeAdded,
+                                                                                    sourceThread));
                   setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
                 } else {
-                  player.setControllerForced(new BluetoothController(renderer, player,
-                                                                     sourceThread));
+                  player.setControllerForced(new BluetoothControllerBuffer(player, sourceThread));
                 }
                 break;
               default:
@@ -783,7 +786,13 @@ public class Menu implements Activity {
           renderer.handleInputBytes(inputBytes, sourceThread);
 
           // Start the game.
-          renderer.startGame(new GuestGame(renderer, setupBuffer));
+          renderer.startGame(new GuestGame(setupBuffer.cornerMap,
+                                           setupBuffer.gameMode.horizontalSquares.get(),
+                                           setupBuffer.gameMode.verticalSquares.get(),
+                                           setupBuffer.gameMode.speed.get(),
+                                           setupBuffer.gameMode.stageBorders.get(),
+                                           null // TODO get the entity blueprints somehow
+                                           ));
         }
         break;
 
@@ -835,7 +844,7 @@ public class Menu implements Activity {
   public float getScreenTransformX() { return (float) this.screenTransformX.getTime(); }
   public float getScreenTransformY() { return (float) this.screenTransformY.getTime(); }
   public GameRenderer getRenderer() { return this.renderer; }
-  public OpenGLES20Activity getOriginActivity() { return this.originActivity; }
+  public OpenGLActivity getOriginActivity() { return this.originActivity; }
 
   public GameSetupBuffer getSetupBuffer() { return setupBuffer; }
 
@@ -889,15 +898,20 @@ class BackgroundSnake {
     this.movementTimer = speed;
     this.x = -((size + 1) * length);
 
-    snakeMesh = new Mesh(menu.getRenderer(), x, initialY, EdgePoint.BOTTOM_LEFT, size, length, 1);
+    snakeMesh = new Mesh(menu.getRenderer(), x, initialY, EdgePoint.BOTTOM_LEFT, size, length, 1,
+                         new GameTextureMap(SnakeSkin.white));
     for (int index = 0; index < length - 1; index++) {
       snakeMesh.updateColors(index, 0.25f, 0.25f, 0.25f, 0.5f);
-      snakeMesh.updateTextures(index, 0, SnakeSkin.white.texture(SnakeSkin.TextureType.HEAD,
-                                                                 Player.Direction.DOWN));
+      snakeMesh.updateTextures(index, 0, snakeMesh.textureMap
+                                                  .getTexture(SnakeSkin.white,
+                                                              SnakeSkin.TextureType.BODY,
+                                                              Snake.Direction.UP));
     }
     snakeMesh.updateColors(length - 1, 1f, 1f, 1f, 0.5f);
-    snakeMesh.updateTextures(length - 1, 0, SnakeSkin.white.texture(SnakeSkin.TextureType.HEAD,
-                                                                    Player.Direction.DOWN));
+    snakeMesh.updateTextures(length - 1, 0, snakeMesh.textureMap
+                                                     .getTexture(SnakeSkin.white,
+                                                                 SnakeSkin.TextureType.HEAD,
+                                                                 Snake.Direction.UP));
   }
 
   // Moves the snake whenever it is time to be moved.
@@ -909,8 +923,10 @@ class BackgroundSnake {
         this.x += this.size;
       }
 
-      if (x > menu.getRenderer().getScreenWidth() * 5)
+      if (x > menu.getRenderer().getScreenWidth() * 5) {
         this.dead = true;
+        tidy();
+      }
     }
   }
 
@@ -919,6 +935,10 @@ class BackgroundSnake {
     gl.glTranslatef(x, 0, 0);
     snakeMesh.draw();
     gl.glPopMatrix();
+  }
+
+  private void tidy() {
+    snakeMesh.recycle();
   }
 
   public boolean isDead() { return this.dead; }

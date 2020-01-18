@@ -14,6 +14,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.gamemodes.GameMode;
+import thusnake.snakemultiplayer.textures.GameTextureMap;
+
 public class MultiplayerSnakeOverviewScreen extends MenuScreen {
   private final MenuButton nextButton, readyButton;
   private final MenuButton connectButton;
@@ -40,11 +44,9 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
           }
         };
 
-        setupScreen.addGameModeItem(R.drawable.gamemode_classic, "Classic", null,
-                                    GameSetupBuffer.GameMode.CLASSIC);
-        setupScreen.addGameModeItem(R.drawable.gamemode_custom, "Custom",
-                                    OptionsBuilder.defaultOptions(renderer),
-                                    GameSetupBuffer.GameMode.CUSTOM);
+        for (GameMode gameMode : menu.getSetupBuffer().gameModes)
+          setupScreen.addGameModeItem(gameMode);
+
         setupScreen.gameModeCarousel.noBoundaries();
         setupScreen.gameModeCarousel.confirmChoices();
 
@@ -171,22 +173,22 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
         renderer.getScreenWidth() / 2f - renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
-        MenuDrawable.EdgePoint.TOP_RIGHT, PlayerController.Corner.LOWER_LEFT));
+        MenuDrawable.EdgePoint.TOP_RIGHT, ControllerBuffer.Corner.LOWER_LEFT));
     overviewButtons.add(new SnakeOverviewButton(this,
         renderer.getScreenWidth() / 2f - renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f + renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
-        MenuDrawable.EdgePoint.BOTTOM_RIGHT, PlayerController.Corner.UPPER_LEFT));
+        MenuDrawable.EdgePoint.BOTTOM_RIGHT, ControllerBuffer.Corner.UPPER_LEFT));
     overviewButtons.add(new SnakeOverviewButton(this,
         renderer.getScreenWidth() / 2f + renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f + renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
-        MenuDrawable.EdgePoint.BOTTOM_LEFT, PlayerController.Corner.UPPER_RIGHT));
+        MenuDrawable.EdgePoint.BOTTOM_LEFT, ControllerBuffer.Corner.UPPER_RIGHT));
     overviewButtons.add(new SnakeOverviewButton(this,
         renderer.getScreenWidth() / 2f + renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - renderer.smallDistance()/2,
         backButton.getY(MenuDrawable.EdgePoint.BOTTOM_CENTER) / 2f - 20,
-        MenuDrawable.EdgePoint.TOP_LEFT, PlayerController.Corner.LOWER_RIGHT));
+        MenuDrawable.EdgePoint.TOP_LEFT, ControllerBuffer.Corner.LOWER_RIGHT));
 
     drawables.add(nextButton);
     drawables.add(readyButton);
@@ -272,16 +274,18 @@ public class MultiplayerSnakeOverviewScreen extends MenuScreen {
 
 class SnakeOverviewButton extends MenuButton {
   private MultiplayerSnakeOverviewScreen parentScreen;
-  private PlayerController.Corner corner;
+  private ControllerBuffer.Corner corner;
   private MenuItem nameItem, plusIcon;
   private Mesh skinPreview;
   private boolean isHeld = false;
   private float holdOffsetX = 0, holdOffsetY = 0;
   private Vibrator vibrator = (Vibrator) renderer.getContext()
                                                  .getSystemService(Context.VIBRATOR_SERVICE);
+  private String lastName = null;
+  private SnakeSkin lastSkin = null;
 
   SnakeOverviewButton(MultiplayerSnakeOverviewScreen parentScreen, float x, float y, float height,
-                      EdgePoint alignPoint, PlayerController.Corner corner) {
+                      EdgePoint alignPoint, ControllerBuffer.Corner corner) {
     super(parentScreen.renderer, x, y, height * 1.5f, height, alignPoint);
     this.parentScreen = parentScreen;
     this.corner = corner;
@@ -295,7 +299,8 @@ class SnakeOverviewButton extends MenuButton {
     skinPreview = new Mesh(renderer,
                            getX(EdgePoint.TOP_RIGHT) - renderer.smallDistance(),
                            getY(EdgePoint.TOP_RIGHT) - renderer.smallDistance(),
-                           EdgePoint.TOP_RIGHT, (height - 2 - renderer.smallDistance()*2)/3f, 1, 3);
+                           EdgePoint.TOP_RIGHT, (height - 2 - renderer.smallDistance()*2)/3f, 1, 3,
+                           new GameTextureMap(SnakeSkin.white));
     nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX() - renderer.smallDistance(),
                         getHeight() / 3f);
     plusIcon = new MenuItem(renderer, "+", getX(EdgePoint.CENTER), getY(EdgePoint.CENTER),
@@ -316,19 +321,35 @@ class SnakeOverviewButton extends MenuButton {
     plusIcon.setDrawable(player == null);
     nameItem.setDrawable(player != null);
     skinPreview.setDrawable(player != null);
+
     if (player != null) {
-      nameItem.setText(player.getName());
-      nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX() - renderer.smallDistance(),
-                          getHeight() / 3f);
-      skinPreview.updateColors(0, player.getSkin().headColors());
-      skinPreview.updateColors(1, player.getSkin().tailColors());
-      skinPreview.updateColors(2, player.getSkin().tailColors());
-      skinPreview.updateTextures(0, 0, player.getSkin().texture(SnakeSkin.TextureType.HEAD,
-                                                                Player.Direction.DOWN));
-      skinPreview.updateTextures(0, 1, player.getSkin().texture(SnakeSkin.TextureType.BODY,
-                                                                Player.Direction.DOWN));
-      skinPreview.updateTextures(0, 2, player.getSkin().texture(SnakeSkin.TextureType.TAIL,
-                                                                Player.Direction.DOWN));
+      if (!player.getName().equals(lastName)) {
+        nameItem.setText(player.getName());
+        nameItem.scaleToFit(skinPreview.getLeftX() - nameItem.getLeftX() - renderer.smallDistance(),
+            getHeight() / 3f);
+        lastName = player.getName();
+      }
+
+      if (player.getSkin() != lastSkin) {
+        skinPreview.textureMap.recycle();
+        skinPreview.textureMap.addSnakeSkin(player.getSkin());
+        skinPreview.updateColors(0, player.getSkin().headColors());
+        skinPreview.updateColors(1, player.getSkin().tailColors());
+        skinPreview.updateColors(2, player.getSkin().tailColors());
+        skinPreview.updateTextures(0, 0, skinPreview.textureMap
+            .getTexture(player.getSkin(),
+                SnakeSkin.TextureType.HEAD,
+                Snake.Direction.DOWN));
+        skinPreview.updateTextures(0, 1, skinPreview.textureMap
+            .getTexture(player.getSkin(),
+                SnakeSkin.TextureType.BODY,
+                Snake.Direction.DOWN));
+        skinPreview.updateTextures(0, 2, skinPreview.textureMap
+            .getTexture(player.getSkin(),
+                SnakeSkin.TextureType.TAIL,
+                Snake.Direction.DOWN));
+        lastSkin = player.getSkin();
+      }
     }
   }
 
@@ -460,5 +481,5 @@ class SnakeOverviewButton extends MenuButton {
     return parentScreen.menu.getSetupBuffer().cornerMap.getPlayer(corner);
   }
 
-  public PlayerController.Corner getCorner() { return corner; }
+  public ControllerBuffer.Corner getCorner() { return corner; }
 }

@@ -7,38 +7,35 @@ package thusnake.snakemultiplayer;
 public class BodyPart {
   private int x, y;
   private float[] colors;
-  private final Player player;
+  private final Snake snake;
   private final BodyPart forwardPart;
   private BodyPart backwardPart;
   private final BoardDrawer game;
-  private final Mesh boardSquares;
 
   /** Head constructor. */
-  public BodyPart(Player player, int x, int y) {
+  public BodyPart(Snake snake, int x, int y) {
     forwardPart = null;
-    this.player = player;
-    this.game = player.getGame();
-    this.boardSquares = game.getBoardSquares();
+    this.snake = snake;
+    this.game = snake.getGame();
     this.x = x;
     this.y = y;
-    colors = player.getSkin().headColors();
+    colors = snake.getSkin().headColors();
   }
 
   /** Duplicate tail constructor. */
-  public BodyPart(Player player, BodyPart forwardPart) {
+  public BodyPart(Snake snake, BodyPart forwardPart) {
     forwardPart.setBackwardPart(this);
     this.forwardPart = forwardPart;
-    this.player = player;
-    this.game = player.getGame();
-    this.boardSquares = game.getBoardSquares();
-    this.colors = player.getSkin().tailColors();
+    this.snake = snake;
+    this.game = snake.getGame();
+    this.colors = snake.getSkin().tailColors();
     this.x = forwardPart.getX();
     this.y = forwardPart.getY();
   }
 
   /** Offset tail constructor. */
-  public BodyPart(Player player, BodyPart forwardPart, Player.Direction direction) {
-    this(player, forwardPart);
+  public BodyPart(Snake snake, BodyPart forwardPart, Snake.Direction direction) {
+    this(snake, forwardPart);
     switch (direction) {
       case UP: y++; break;
       case DOWN: y--; break;
@@ -64,7 +61,7 @@ public class BodyPart {
 
     // Then move this one.
     if (isHead()) {
-      switch (this.player.getDirection()) {
+      switch (this.snake.getDirection()) {
         case UP: y++; break;
         case DOWN: y--; break;
         case LEFT: x--; break;
@@ -87,7 +84,7 @@ public class BodyPart {
   }
 
   public void updateColors() {
-    if (!this.isOutOfBounds()) this.boardSquares.updateColors(this.x, this.y, this.colors);
+    if (!this.isOutOfBounds()) game.getBoardSquares().updateColors(this.x, this.y, this.colors);
   }
 
   public int getX() { return this.x; }
@@ -106,13 +103,13 @@ public class BodyPart {
    * @return The direction that other part is relative to this part. Null if the other part is not
    * actually adjacent or is equivalent.
    */
-  public Player.Direction adjacentDirection(BodyPart otherPart) {
+  public Snake.Direction adjacentDirection(BodyPart otherPart) {
     if (otherPart.getX() == getX() && otherPart.getY() == getY())
       return null;
     else if (otherPart.getX() == getX())
-      return otherPart.getY() > getY() ? Player.Direction.UP : Player.Direction.DOWN;
+      return otherPart.getY() > getY() ? Snake.Direction.UP : Snake.Direction.DOWN;
     else if (otherPart.getY() == getY())
-      return otherPart.getX() > getX() ? Player.Direction.RIGHT : Player.Direction.LEFT;
+      return otherPart.getX() > getX() ? Snake.Direction.RIGHT : Snake.Direction.LEFT;
     else
       return null;
   }

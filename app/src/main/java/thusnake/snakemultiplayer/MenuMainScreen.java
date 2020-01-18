@@ -1,6 +1,6 @@
 package thusnake.snakemultiplayer;
 
-import thusnake.snakemultiplayer.PlayerController.Corner;
+import thusnake.snakemultiplayer.controllers.ControllerBuffer.Corner;
 
 public final class MenuMainScreen extends MenuScreen {
   private final MenuButton singleplayerButton, multiplayerButton, videoAdButton, optionsButton;
@@ -11,11 +11,11 @@ public final class MenuMainScreen extends MenuScreen {
   public MenuMainScreen(Menu menu) {
     super(menu);
 
-    singleplayerSetupBuffer = new GameSetupBuffer();
+    singleplayerSetupBuffer = GameSetupBuffer.getSingleplayer();
     menu.setupBuffer = singleplayerSetupBuffer;
     singleplayerSetupBuffer.enableSaving("singleplayer");
 
-    multiplayerSetupBuffer = new GameSetupBuffer();
+    multiplayerSetupBuffer = GameSetupBuffer.getMultiplayer();
 
     singleplayerButton = new MenuButton(renderer,
                                         renderer.getScreenWidth() / 2f - renderer.getScreenWidth() / 40f,
