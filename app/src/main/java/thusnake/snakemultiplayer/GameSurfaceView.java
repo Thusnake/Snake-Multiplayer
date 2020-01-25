@@ -2,9 +2,13 @@ package thusnake.snakemultiplayer;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.view.InputDevice;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import com.android.texample.GLText;
+
+import thusnake.snakemultiplayer.controllers.GamepadController;
 
 import static android.view.MotionEvent.ACTION_DOWN;
 import static android.view.MotionEvent.ACTION_MOVE;
@@ -133,6 +137,28 @@ public class GameSurfaceView extends GLSurfaceView {
       }
     }
     return true;
+  }
+
+  @Override
+  public boolean onGenericMotionEvent(MotionEvent event) {
+    if (((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        || (event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) && this.gameRenderer.isInGame()) {
+      for (Snake snake : gameRenderer.getGame().getAliveSnakes())
+        if (snake.player == GamepadManager.getInstance().getAssociatedPlayer(event.getDeviceId())
+            && snake.controller instanceof GamepadController)
+          snake.onMotionEvent(event);
+    }
+    return super.onGenericMotionEvent(event);
+  }
+
+  public void onKeyEvent(KeyEvent event) {
+    if (((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        || (event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) && this.gameRenderer.isInGame()) {
+      for (Snake snake : gameRenderer.getGame().getAliveSnakes())
+        if (snake.player == GamepadManager.getInstance().getAssociatedPlayer(event.getDeviceId())
+            && snake.controller instanceof GamepadController)
+          ((GamepadController) snake.controller).onKeyEvent(event);
+    }
   }
 
   public GameRenderer getGameRenderer() { return this.gameRenderer; }

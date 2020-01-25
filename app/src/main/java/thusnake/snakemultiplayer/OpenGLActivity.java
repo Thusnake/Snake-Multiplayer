@@ -11,6 +11,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -168,6 +171,22 @@ public class OpenGLActivity extends Activity implements RewardedVideoAdListener 
     if (!getRenderer().isInGame()) {
       getRenderer().getMenu().goBack();
     }
+  }
+
+  @Override
+  public boolean dispatchGenericMotionEvent(MotionEvent ev) {
+    if ((ev.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        || (ev.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK)
+      gameView.onGenericMotionEvent(ev);
+    return super.dispatchGenericMotionEvent(ev);
+  }
+
+  @Override
+  public boolean dispatchKeyEvent(KeyEvent event) {
+    if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        || (event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK)
+      gameView.onKeyEvent(event);
+    return super.dispatchKeyEvent(event);
   }
 
   public GameRenderer getRenderer() {return this.gameView.getGameRenderer(); }
