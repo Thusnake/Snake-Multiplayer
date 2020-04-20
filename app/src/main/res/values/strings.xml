@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Snake Multiplayer</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="gamestate">menu</string>
+
+    <string name="app_id">ca-app-pub-9061735490968625~8728167333</string>
+    <string name="volunteer_video_ad_id">ca-app-pub-9061735490968625/9563586917</string>
+
+    <string name="test_video_ad_id">ca-app-pub-3940256099942544/5224354917</string>
+</resources>
