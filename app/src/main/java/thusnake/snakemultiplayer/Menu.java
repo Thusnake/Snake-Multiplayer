@@ -721,27 +721,6 @@ public class Menu implements Activity {
   public OpenGLActivity getOriginActivity() { return this.originActivity; }
 
   public GameSetupBuffer getSetupBuffer() { return setupBuffer; }
-
-  // Protocol simplifier getters.
-  public boolean isGuest() { return originActivity.isGuest(); }
-
-//  public byte[] getDetailedSnakesList(ConnectedThread thread) {
-//    byte[] output = new byte[5];
-//    output[0] = Protocol.DETAILED_SNAKES_LIST;
-//    int outputIndex = 1;
-//
-//    for (Player player : players) {
-//      if (player == null || player.getControlType().equals(Player.ControlType.OFF))
-//        output[outputIndex++] = Protocol.DSL_SNAKE_OFF;
-//      else if (player.getControlType().equals(Player.ControlType.BLUETOOTH)
-//            && player.getControllerThread().equals(thread))
-//        output[outputIndex++] = Protocol.DSL_SNAKE_LOCAL;
-//      else
-//        output[outputIndex++] = Protocol.DSL_SNAKE_REMOTE;
-//    }
-//
-//    return output;
-//  }
 }
 
 

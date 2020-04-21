@@ -17,7 +17,6 @@ import thusnake.snakemultiplayer.controllers.ControllerBuffer;
  */
 public abstract class ConnectedThread extends Thread {
   private final BluetoothSocket socket;
-  final OpenGLActivity originActivity;
   private final InputStream inStream;
   private final OutputStream outStream;
   public final BluetoothDevice device;
@@ -25,9 +24,8 @@ public abstract class ConnectedThread extends Thread {
   private boolean isReady = false;
   protected double lastActivityTime;
 
-  public ConnectedThread(OpenGLActivity activity, BluetoothSocket socket) {
+  public ConnectedThread(BluetoothSocket socket) {
     this.socket = socket;
-    this.originActivity = activity;
     this.device = socket.getRemoteDevice();
     InputStream tmpIn = null;
     OutputStream tmpOut = null;
@@ -46,8 +44,7 @@ public abstract class ConnectedThread extends Thread {
   public void start() {
     super.start();
     // Call the method for setting up the guest menu.
-    if (originActivity.getRenderer().getMenu().isGuest())
-      originActivity.getRenderer().getMenu().beginGuest();
+    OpenGLActivity.current.getRenderer().getMenu().beginGuest();
   }
 
   @Override
@@ -97,43 +94,43 @@ public abstract class ConnectedThread extends Thread {
         break;
 
       case Protocol.SNAKE_LL_SKIN:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
 
       case Protocol.SNAKE_UL_SKIN:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
 
       case Protocol.SNAKE_UR_SKIN:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
 
       case Protocol.SNAKE_LR_SKIN:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT).setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
         break;
 
       case Protocol.SNAKE_LL_NAME:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT).setName(new String(inputBytes, 1, inputBytes.length - 1));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_LEFT).setName(new String(inputBytes, 1, inputBytes.length - 1));
         break;
 
       case Protocol.SNAKE_UL_NAME:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT).setName(new String(inputBytes, 1, inputBytes.length - 1));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_LEFT).setName(new String(inputBytes, 1, inputBytes.length - 1));
         break;
 
       case Protocol.SNAKE_UR_NAME:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT).setName(new String(inputBytes, 1, inputBytes.length - 1));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.UPPER_RIGHT).setName(new String(inputBytes, 1, inputBytes.length - 1));
         break;
 
       case Protocol.SNAKE_LR_NAME:
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT) != null)
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT).setName(new String(inputBytes, 1, inputBytes.length - 1));
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT) != null)
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(ControllerBuffer.Corner.LOWER_RIGHT).setName(new String(inputBytes, 1, inputBytes.length - 1));
         break;
 
       default:
@@ -175,7 +172,7 @@ public abstract class ConnectedThread extends Thread {
         if (thread.isReady) readyDevices++;
       }
 
-    if (originActivity.isReady()) readyDevices++;
+    if (originActivity.netplayModule.isReady()) readyDevices++;
 
     // Tell everyone how many devices are ready and if they are ready themselves.
     for (ConnectedThread thread : originActivity.connectedThreads)

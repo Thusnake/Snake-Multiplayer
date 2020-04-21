@@ -3,9 +3,6 @@ package thusnake.snakemultiplayer.netplay;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import thusnake.snakemultiplayer.IDGenerator;
 import thusnake.snakemultiplayer.OpenGLActivity;
 import thusnake.snakemultiplayer.Player;
@@ -20,35 +17,31 @@ public class HostThread extends ConnectedThread {
   private static final double PING_WORRY_INTERVAL_SECONDS = 5;
   private static final double DISCONNECT_TIMEOUT = 5;
 
+  private final NetplayHostModule parentModule;
   private final Thread pingThread;
   private final Thread autoDisconnectThread;
 
-  public HostThread(OpenGLActivity activity, BluetoothSocket socket) {
-    super(activity, socket);
+  public HostThread(NetplayHostModule parentModule, BluetoothSocket socket) {
+    super(socket);
+    this.parentModule = parentModule;
 
-    final ConnectedThread threadToDisconnect = this;
     autoDisconnectThread = new Thread(() -> {
-      try {
-        Thread.sleep((long) (1000 * DISCONNECT_TIMEOUT));
-      }
+      try { Thread.sleep((long) (1000 * DISCONNECT_TIMEOUT)); }
       catch(InterruptedException ignored) {}
 
-      originActivity.closeConnectedGuestThread(threadToDisconnect);
+      this.cancel();
     });
     autoDisconnectThread.setDaemon(true);
 
     pingThread = new Thread(() -> {
       while(true) {
         // Update the last activity trackers and ping threads which have been inactive.
-        for (ConnectedThread thread : originActivity.connectedThreads)
-          if (thread != null) {
-            if (System.nanoTime() - thread.lastActivityTime > 10)
-              // If a thread has been inactive for too long - disconnect it.
-              originActivity.closeConnectedGuestThread(thread);
-            else if (System.nanoTime() - thread.lastActivityTime > 5)
-              // If a thread has been inactive for a bit - ping it to force activity.
-              thread.write(new byte[] {Protocol.PING});
-          }
+        if (System.nanoTime() - this.lastActivityTime > 10)
+          // If a thread has been inactive for too long - disconnect it.
+          this.cancel();
+        else if (System.nanoTime() - this.lastActivityTime > 5)
+          // If a thread has been inactive for a bit - ping it to force activity.
+          write(new byte[] {Protocol.PING});
 
         try {
           Thread.sleep((long) (1000 * PING_WORRY_INTERVAL_SECONDS));
@@ -88,32 +81,32 @@ public class HostThread extends ConnectedThread {
         break;
         
       case Protocol.HOR_SQUARES_CHANGED:
-        originActivity.getRenderer().getMenu().setupBuffer.getGameMode().horizontalSquares.set(inputBytes[1]);
+        OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getGameMode().horizontalSquares.set(inputBytes[1]);
         break;
 
       case Protocol.VER_SQUARES_CHANGED:
-        originActivity.getRenderer().getMenu().setupBuffer.getGameMode().verticalSquares.set(inputBytes[1]);
+        OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getGameMode().verticalSquares.set(inputBytes[1]);
         break;
 
       case Protocol.SPEED_CHANGED:
-        originActivity.getRenderer().getMenu().setupBuffer.getGameMode().speed.set(inputBytes[1]);
+        OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getGameMode().speed.set(inputBytes[1]);
         break;
 
       case Protocol.STAGE_BORDERS_CHANGED:
-        originActivity.getRenderer().getMenu().setupBuffer.getGameMode().stageBorders.set(inputBytes[1] == 1);
+        OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getGameMode().stageBorders.set(inputBytes[1] == 1);
         break;
 
       case Protocol.GAME_MODE:
-        originActivity.getRenderer().getMenu().setupBuffer.setGameMode(IDGenerator.getGameModeClass(inputBytes[1]));
+        OpenGLActivity.current.getRenderer().getMenu().setupBuffer.setGameMode(IDGenerator.getGameModeClass(inputBytes[1]));
         break;
 
       case Protocol.REQUEST_ADD_SNAKE:
         ControllerBuffer.Corner requestedCorner = Protocol.decodeCorner(inputBytes[1]);
-        if (originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(requestedCorner) == null) {
-          Player addedSnake = new Player(originActivity.getRenderer());
+        if (OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().getPlayer(requestedCorner) == null) {
+          Player addedSnake = new Player(OpenGLActivity.current.getRenderer());
           addedSnake.setControllerForced(new BluetoothControllerBuffer(addedSnake, this));
           addedSnake.setName(this.device.getName());
-          originActivity.getRenderer().getMenu().setupBuffer.getCornerMap().addPlayer(addedSnake, requestedCorner);
+          OpenGLActivity.current.getRenderer().getMenu().setupBuffer.getCornerMap().addPlayer(addedSnake, requestedCorner);
         }
         break;
         
@@ -122,7 +115,13 @@ public class HostThread extends ConnectedThread {
     }
 
     // Pass to the game.
-    if (originActivity.getRenderer().getGame() != null)
-      originActivity.getRenderer().getGame().handleInputBytes(inputBytes, this);
+    if (OpenGLActivity.current.getRenderer().getGame() != null)
+      OpenGLActivity.current.getRenderer().getGame().handleInputBytes(inputBytes, this);
+  }
+
+  @Override
+  public void cancel() {
+    super.cancel();
+    this.parentModule.onGuestInterfaceThreadDisconnected(this);
   }
 }

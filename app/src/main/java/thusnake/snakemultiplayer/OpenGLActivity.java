@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import thusnake.snakemultiplayer.netplay.AcceptThread;
 import thusnake.snakemultiplayer.netplay.ConnectThread;
 import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.NetplayModule;
 import thusnake.snakemultiplayer.netplay.Protocol;
 
 /**
@@ -48,12 +49,11 @@ public class OpenGLActivity extends Activity implements RewardedVideoAdListener 
   public ConnectedThread[] connectedThreads = new ConnectedThread[3];
   public BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
   public final int REQUEST_ENABLE_BT = 1;
-  public ArrayList<String> arrayAdapter = new ArrayList<>();
   public ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
+  public NetplayModule netplayModule = null;
+  private boolean discoveryStarted = false;
 
-  // Guest-only
-  public int numberOfRemoteDevices = 0;
-  public int numberOfReadyRemoteDevices = 0;
+  public boolean discoveryStarted() { return discoveryStarted; }
 
   // Advertisements
   private RewardedVideoAd videoAd;
@@ -71,7 +71,6 @@ public class OpenGLActivity extends Activity implements RewardedVideoAdListener 
         BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
         if (!bluetoothDevices.contains(device)) bluetoothDevices.add(device);
         // Add the name and address to an array adapter to show in a ListView
-        arrayAdapter.add(device.getName() + "\n" + device.getAddress());
         gameView.getGameRenderer().getMenu().addFoundDevice(device);
       } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
         discoveryStarted = true;
@@ -83,17 +82,12 @@ public class OpenGLActivity extends Activity implements RewardedVideoAdListener 
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-    switch (requestCode) {
-      case 1: {
-        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          bluetoothAdapter.cancelDiscovery();
-          for (int i=this.connectedThreads.length; i<arrayAdapter.size(); i++) {
-            arrayAdapter.remove(i);
-          }
-          bluetoothAdapter.startDiscovery();
-        } else {
-          bluetoothAdapter.cancelDiscovery();
-        }
+    if (requestCode == 1) {
+      if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        bluetoothAdapter.cancelDiscovery();
+        bluetoothAdapter.startDiscovery();
+      } else {
+        bluetoothAdapter.cancelDiscovery();
       }
     }
   }
