@@ -1,21 +1,18 @@
 package thusnake.snakemultiplayer.gamemodes;
 
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import thusnake.snakemultiplayer.CornerMap;
-import thusnake.snakemultiplayer.Entity;
 import thusnake.snakemultiplayer.Game;
 import thusnake.snakemultiplayer.GameSetupBuffer;
 import thusnake.snakemultiplayer.IDGenerator;
 import thusnake.snakemultiplayer.MenuDrawable;
-import thusnake.snakemultiplayer.Protocol;
+import thusnake.snakemultiplayer.netplay.Protocol;
 
 public abstract class GameMode {
   public enum Difficulty {

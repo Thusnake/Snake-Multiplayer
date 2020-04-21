@@ -3,7 +3,7 @@ package thusnake.snakemultiplayer.controllers;
 import android.content.Context;
 import android.view.MotionEvent;
 
-import thusnake.snakemultiplayer.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
 import thusnake.snakemultiplayer.Game;
 import thusnake.snakemultiplayer.Snake;
 

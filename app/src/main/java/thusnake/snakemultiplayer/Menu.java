@@ -22,6 +22,10 @@ import thusnake.snakemultiplayer.MenuDrawable.EdgePoint;
 import thusnake.snakemultiplayer.controllers.BluetoothControllerBuffer;
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
 import thusnake.snakemultiplayer.controllers.CornerLayoutControllerBuffer;
+import thusnake.snakemultiplayer.netplay.AcceptThread;
+import thusnake.snakemultiplayer.netplay.ConnectThread;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
 import thusnake.snakemultiplayer.textures.GameTextureMap;
 
 /**
@@ -65,7 +69,7 @@ public class Menu implements Activity {
   private MenuScreenAnimation transitionAnimation;
 
   // Menu variables
-  GameSetupBuffer setupBuffer = null;
+  public GameSetupBuffer setupBuffer = null;
 
   // Constructor.
   public Menu(GameRenderer renderer, float screenWidth, float screenHeight) {
@@ -668,136 +672,6 @@ public class Menu implements Activity {
   // Sets up the menu to work as if you're not a guest anymore.
   public void endGuest() {
     // Turn all players back to off (except the first one). TODO Make it revert to saved.
-  }
-
-  public void handleInputBytes(byte[] inputBytes, ConnectedThread sourceThread) {
-    Player playerLL = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.LOWER_LEFT);
-    Player playerUL = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.UPPER_LEFT);
-    Player playerUR = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.UPPER_RIGHT);
-    Player playerLR = setupBuffer.cornerMap.getPlayer(ControllerBuffer.Corner.LOWER_RIGHT);
-    switch(inputBytes[0]) {
-      case Protocol.HOR_SQUARES_CHANGED: setupBuffer.gameMode.horizontalSquares.set(inputBytes[1]); break;
-      case Protocol.VER_SQUARES_CHANGED: setupBuffer.gameMode.verticalSquares.set(inputBytes[1]); break;
-      case Protocol.SPEED_CHANGED: setupBuffer.gameMode.speed.set(inputBytes[1]); break;
-      case Protocol.STAGE_BORDERS_CHANGED: setupBuffer.gameMode.stageBorders.set(inputBytes[1] == 1); break;
-
-      case Protocol.GAME_MODE:
-        setupBuffer.setGameMode(IDGenerator.getGameModeClass(inputBytes[1]));
-        break;
-
-      case Protocol.SNAKE_LL_SKIN:
-        if (playerLL != null)
-          playerLL.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
-        break;
-      case Protocol.SNAKE_UL_SKIN:
-        if (playerUL != null)
-          playerUL.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
-        break;
-      case Protocol.SNAKE_UR_SKIN:
-        if (playerUR != null)
-          playerUR.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
-        break;
-      case Protocol.SNAKE_LR_SKIN:
-        if (playerLR != null)
-          playerLR.setSkin(SnakeSkin.allSkins.get(inputBytes[1]));
-        break;
-
-      case Protocol.SNAKE_LL_NAME:
-        if (playerLL != null)
-          playerLL.setName(new String(inputBytes, 1, inputBytes.length - 1));
-        break;
-      case Protocol.SNAKE_UL_NAME:
-        if (playerUL != null)
-          playerUL.setName(new String(inputBytes, 1, inputBytes.length - 1));
-        break;
-      case Protocol.SNAKE_UR_NAME:
-        if (playerUR != null)
-          playerUR.setName(new String(inputBytes, 1, inputBytes.length - 1));
-        break;
-      case Protocol.SNAKE_LR_NAME:
-        if (playerLR != null)
-          playerLR.setName(new String(inputBytes, 1, inputBytes.length - 1));
-        break;
-
-      // HOST ONLY
-      case Protocol.REQUEST_ADD_SNAKE:
-        if (originActivity.isHost()) {
-          ControllerBuffer.Corner requestedCorner = Protocol.decodeCorner(inputBytes[1]);
-          if (setupBuffer.cornerMap.getPlayer(requestedCorner) == null) {
-            Player addedSnake = new Player(renderer);
-            addedSnake
-                .setControllerForced(new BluetoothControllerBuffer(addedSnake, sourceThread));
-            addedSnake.setName(sourceThread.device.getName());
-            setupBuffer.cornerMap.addPlayer(addedSnake, requestedCorner);
-          }
-        }
-        break;
-
-      // GUEST ONLY
-      case Protocol.DETAILED_SNAKES_LIST:
-        if (this.isGuest()) {
-          int index = 0;
-          for (ControllerBuffer.Corner corner : ControllerBuffer.Corner.values()) {
-            index++;
-            Player player = setupBuffer.cornerMap.getPlayer(corner);
-
-            switch (inputBytes[index]) {
-              case Protocol.DSL_SNAKE_OFF:
-                setupBuffer.cornerMap.emptyCorner(corner);
-                break;
-              case Protocol.DSL_SNAKE_LOCAL:
-                if (player == null) {
-                  Player playerToBeAdded = new Player(renderer).defaultPreset(setupBuffer);
-                  setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
-                } else {
-                  player.setController(new CornerLayoutControllerBuffer(player));
-                }
-                break;
-              case Protocol.DSL_SNAKE_REMOTE:
-                if (player == null) {
-                  Player playerToBeAdded = new Player(renderer);
-                  playerToBeAdded.setControllerForced(new BluetoothControllerBuffer(playerToBeAdded,
-                                                                                    sourceThread));
-                  setupBuffer.cornerMap.addPlayer(playerToBeAdded, corner);
-                } else {
-                  player.setControllerForced(new BluetoothControllerBuffer(player, sourceThread));
-                }
-                break;
-              default:
-                break;
-            }
-          }
-        }
-        break;
-
-      case Protocol.BASIC_AGGREGATE_CALL:
-        for (byte[] call : Protocol.decodeSeveralCalls(inputBytes))
-          if (call.length > 0)
-            renderer.handleInputBytes(call, sourceThread);
-        break;
-
-      case Protocol.GAME_START_CALL:
-        if (this.isGuest()) {
-          // Tell the host you've received the aggregate call.
-          sourceThread.write(new byte[] {Protocol.GAME_START_RECEIVED});
-
-          // Decode all calls and execute them.
-          inputBytes[0] = Protocol.BASIC_AGGREGATE_CALL;
-          renderer.handleInputBytes(inputBytes, sourceThread);
-
-          // Start the game.
-          renderer.startGame(new GuestGame(setupBuffer.cornerMap,
-                                           setupBuffer.gameMode.horizontalSquares.get(),
-                                           setupBuffer.gameMode.verticalSquares.get(),
-                                           setupBuffer.gameMode.speed.get(),
-                                           setupBuffer.gameMode.stageBorders.get(),
-                                           null // TODO get the entity blueprints somehow
-                                           ));
-        }
-        break;
-
-      default: break;
-    }
   }
 
   // Takes a color index and returns the whole corresponding color as rgba.

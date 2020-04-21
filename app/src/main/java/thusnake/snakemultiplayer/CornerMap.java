@@ -26,7 +26,7 @@ public class CornerMap {
    * @return Whether the player was successfully added. This will return false only if the corner
    * had been previously occupied or the player is already in the game.
    */
-  boolean addPlayer(Player player, ControllerBuffer.Corner corner) {
+  public boolean addPlayer(Player player, ControllerBuffer.Corner corner) {
     if (map.get(corner) == null && !map.containsValue(player)) {
       map.put(corner, player);
       return true;
@@ -49,7 +49,7 @@ public class CornerMap {
    * Empties a corner from the corner map, removing the snake in it.
    * @param corner The corner to be emptied.
    */
-  void emptyCorner(ControllerBuffer.Corner corner) {
+  public void emptyCorner(ControllerBuffer.Corner corner) {
     map.put(corner, null);
   }
 
@@ -89,7 +89,7 @@ public class CornerMap {
   }
 
   /** Returns the player occupying a given corner or null if that corner is empty */
-  Player getPlayer(ControllerBuffer.Corner corner) {
+  public Player getPlayer(ControllerBuffer.Corner corner) {
     return map.get(corner);
   }
 

@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import thusnake.snakemultiplayer.SnakeSkin.TextureType;
 import thusnake.snakemultiplayer.controllers.Controller;
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.netplay.Protocol;
 import thusnake.snakemultiplayer.textures.TextureMapCoordinates;
 
 import static thusnake.snakemultiplayer.controllers.ControllerBuffer.Corner.UPPER_LEFT;

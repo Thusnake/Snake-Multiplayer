@@ -20,6 +20,9 @@ import java.util.Stack;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
+
 /**
  * Created by Nick on 22/12/2017.
  */
@@ -74,47 +77,6 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     double dt = deltaTimeLong / 1000000000.0;
 
     if (this.pointerIsDown) this.pointerDownTime += dt;
-
-    // Online host routines independent of game and menu.
-    if (originActivity.isHost()) {
-      // Update the awaiting disconnect list.
-      for (ConnectedThread thread : originActivity.awaitingDisconnectThreads)
-        if (thread != null)
-          if (thread.getDisconnectRequestTimer().getTime() > 5) {
-            // If the thread still hasn't disconnected - manually disconnect it and remove it
-            // from the list.
-            originActivity.awaitingDisconnectThreads.remove(thread);
-            originActivity.closeConnectedGuestThread(thread);
-          }
-          else
-            thread.getDisconnectRequestTimer().countUp(dt);
-
-      // Update the last activity trackers and ping threads which have been inactive.
-      for (ConnectedThread thread : originActivity.connectedThreads)
-        if (thread != null) {
-          thread.getLastActivityTimer().countUp(dt);
-
-          if (thread.getLastActivityTimer().getTime() > 10)
-            // If a thread has been inactive for too long - disconnect it.
-            originActivity.closeConnectedGuestThread(thread);
-          else if (thread.getLastActivityTimer().getTime() > 5)
-            // If a thread has been inactive for a bit - ping it to force activity.
-            thread.write(new byte[]{Protocol.PING});
-        }
-    } else if (originActivity.isGuest()) {
-      // Update the last activity tracker and ping the host if it's been inactive.
-      if (originActivity.connectedThread != null) {
-        originActivity.connectedThread.getLastActivityTimer().countUp(dt);
-
-        if (originActivity.connectedThread.getLastActivityTimer().getTime() > 10) {
-          originActivity.connectedThread.cancel();
-          originActivity.connectedThread = null;
-          getMenu().endGuest();
-        }
-        else if (originActivity.connectedThread.getLastActivityTimer().getTime() > 5)
-          originActivity.connectedThread.write(new byte[]{Protocol.PING});
-      }
-    }
 
     gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
     gl.glMatrixMode(GL10.GL_MODELVIEW);
@@ -380,106 +342,4 @@ public class GameRenderer implements GLSurfaceView.Renderer {
   }
 
   public Activity getCurrentActivity() { return activityStack.peek(); }
-
-  public void handleInputBytes(byte[] bytes, ConnectedThread sourceThread) {
-    // Universal input byte handlers.
-    switch (bytes[0]) {
-      case Protocol.DISCONNECT_REQUEST:
-        if (originActivity.isHost()) {
-          // Approve the request.
-          sourceThread.write(new byte[] {Protocol.DISCONNECT});
-
-          // Add the thread to the awaiting disconnect list in case it doesn't answer anymore.
-          originActivity.awaitingDisconnectThreads.add(sourceThread);
-        }
-        break;
-      case Protocol.DISCONNECT:
-        if (originActivity.isGuest()) {
-          // Answer the call first.
-          originActivity.writeBytesAuto(new byte[] {Protocol.WILL_DISCONNECT});
-
-          // Disconnect afterwards.
-          originActivity.connectedThread.cancel();
-          originActivity.connectedThread = null;
-          quitGame();
-          getMenu().endGuest();
-        }
-        break;
-      case Protocol.WILL_DISCONNECT:
-        if (originActivity.isHost()) {
-          // Remove it from the awaiting disconnect list.
-          originActivity.awaitingDisconnectThreads.remove(sourceThread);
-
-          // Stop and remove the thread.
-          originActivity.closeConnectedGuestThread(sourceThread);
-        }
-        break;
-      case Protocol.REQUEST_NUMBER_OF_DEVICES:
-        sourceThread.write(new byte[]
-            {Protocol.NUMBER_OF_DEVICES, (byte) originActivity.getNumberOfRemoteDevices()});
-        break;
-      case Protocol.REQUEST_NUMBER_OF_READY:
-        sourceThread.write(new byte[]
-            {Protocol.NUMBER_OF_READY, (byte) originActivity.getNumberOfReadyRemoteDevices()});
-        break;
-      case Protocol.IS_READY:
-        if (!originActivity.isGuest())
-          sourceThread.setReady(true);
-        break;
-      case Protocol.IS_NOT_READY:
-        if (!originActivity.isGuest())
-          sourceThread.setReady(false);
-        break;
-
-      case Protocol.NUMBER_OF_READY:
-        if (originActivity.isGuest()) {
-          originActivity.numberOfReadyRemoteDevices = bytes[1];
-        }
-        break;
-      case Protocol.NUMBER_OF_DEVICES:
-        if (originActivity.isGuest()) {
-          originActivity.numberOfRemoteDevices = bytes[1];
-        }
-        break;
-      case Protocol.READY_STATUS:
-        if (originActivity.isGuest()) {
-          boolean receivedReady = bytes[1] == (byte) 1;
-
-          // Set the ready status without requesting anything further.
-          originActivity.forceSetReady(receivedReady);
-        }
-        break;
-      case Protocol.NUM_DEVICES_AND_READY_WITH_STATUS:
-        if (originActivity.isGuest()) {
-          originActivity.numberOfRemoteDevices = bytes[1];
-          originActivity.numberOfReadyRemoteDevices = bytes[2];
-          originActivity.forceSetReady(bytes[3] == 1);
-
-          if (bytes[3] == 1 && getGame() == null) {
-            setInterruptingMessage(new FullscreenMessage(this, "Waiting for "
-                + originActivity.connectedThread.device.getName() + " to start the game...") {
-              @Override
-              public void onCancel() {
-                originActivity.writeBytesAuto(new byte[] {Protocol.IS_NOT_READY});
-              }
-
-              @Override
-              public void run(double dt) {
-                super.run(dt);
-                if (!originActivity.isReady() || !originActivity.isGuest())
-                  cancelActivity(this);
-              }
-            });
-          }
-        }
-        break;
-      case Protocol.PING:
-        sourceThread.write(new byte[] {Protocol.PING_ANSWER});
-        break;
-    }
-
-    // Pass to the menu and game.
-    getMenu().handleInputBytes(bytes, sourceThread);
-    if (getGame() != null) getGame().handleInputBytes(bytes, sourceThread);
-  }
 }

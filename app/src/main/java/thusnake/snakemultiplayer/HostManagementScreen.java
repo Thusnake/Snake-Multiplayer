@@ -1,5 +1,8 @@
 package thusnake.snakemultiplayer;
 
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
+
 public class HostManagementScreen extends MenuScreen {
   private final DeviceOverviewItem[] deviceOverviewItems;
   public HostManagementScreen(Menu menu) {

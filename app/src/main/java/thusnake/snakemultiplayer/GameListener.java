@@ -1,5 +1,7 @@
 package thusnake.snakemultiplayer;
 
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+
 /**
  * Listens for signals sent from a Game and handles them.
  */

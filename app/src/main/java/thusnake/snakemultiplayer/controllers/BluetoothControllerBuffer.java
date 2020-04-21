@@ -2,14 +2,12 @@ package thusnake.snakemultiplayer.controllers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.view.MotionEvent;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import thusnake.snakemultiplayer.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
 import thusnake.snakemultiplayer.Game;
-import thusnake.snakemultiplayer.GameRenderer;
 import thusnake.snakemultiplayer.GameSetupBuffer;
 import thusnake.snakemultiplayer.MenuDrawable;
 import thusnake.snakemultiplayer.Player;

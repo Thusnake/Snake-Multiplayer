@@ -11,8 +11,10 @@ import java.util.Map;
 import javax.microedition.khronos.opengles.GL10;
 
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
 
-import static thusnake.snakemultiplayer.Protocol.*;
+import static thusnake.snakemultiplayer.netplay.Protocol.*;
 
 /**
  * Created by Nick on 24/02/2018.

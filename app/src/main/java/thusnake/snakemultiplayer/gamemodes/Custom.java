@@ -13,12 +13,11 @@ import thusnake.snakemultiplayer.Entity;
 import thusnake.snakemultiplayer.Game;
 import thusnake.snakemultiplayer.GameRenderer;
 import thusnake.snakemultiplayer.GameSetupBuffer;
-import thusnake.snakemultiplayer.IDGenerator;
 import thusnake.snakemultiplayer.MenuDrawable;
 import thusnake.snakemultiplayer.MenuNumericalValue;
 import thusnake.snakemultiplayer.OpenGLActivity;
 import thusnake.snakemultiplayer.OptionsBuilder;
-import thusnake.snakemultiplayer.Protocol;
+import thusnake.snakemultiplayer.netplay.Protocol;
 import thusnake.snakemultiplayer.R;
 
 public class Custom extends GameMode {

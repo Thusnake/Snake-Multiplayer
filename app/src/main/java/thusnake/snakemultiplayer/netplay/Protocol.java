@@ -1,4 +1,4 @@
-package thusnake.snakemultiplayer;
+package thusnake.snakemultiplayer.netplay;
 
 import android.util.Pair;
 
@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import thusnake.snakemultiplayer.Snake;
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
 
 /**

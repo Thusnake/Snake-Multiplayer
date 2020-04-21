@@ -16,6 +16,8 @@ import java.util.Objects;
 
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
 import thusnake.snakemultiplayer.gamemodes.GameMode;
+import thusnake.snakemultiplayer.netplay.AcceptThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
 import thusnake.snakemultiplayer.textures.GameTextureMap;
 
 public class MultiplayerSnakeOverviewScreen extends MenuScreen {

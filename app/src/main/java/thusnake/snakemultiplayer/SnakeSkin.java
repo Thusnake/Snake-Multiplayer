@@ -183,6 +183,6 @@ public class SnakeSkin {
   static SnakeSkin oldSchool = new SnakeSkin(new float[] {1f, 1f, 1f, 1f}, R.drawable.snake_classic, 16);
 
 
-  static List<SnakeSkin> allSkins = Arrays.asList(white, red, orange, yellow, green, teal, blue,
+  public static List<SnakeSkin> allSkins = Arrays.asList(white, red, orange, yellow, green, teal, blue,
                                                   purple, coral, oldSchool);
 }

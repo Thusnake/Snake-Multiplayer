@@ -9,6 +9,8 @@ import java.util.List;
 import thusnake.snakemultiplayer.controllers.BluetoothControllerBuffer;
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
 import thusnake.snakemultiplayer.gamemodes.*;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
 
 /**
  * A singleton structure, which keeps information about the game, configured in the menu.
@@ -82,7 +84,7 @@ public final class GameSetupBuffer {
     loadSettings(OpenGLActivity.current);
   }
 
-  CornerMap getCornerMap() { return cornerMap; }
+  public CornerMap getCornerMap() { return cornerMap; }
 
   public Game createGame() {
     Game game = gameMode.generateGame(cornerMap);
@@ -99,6 +101,8 @@ public final class GameSetupBuffer {
       }
     return false;
   }
+
+  public GameMode getGameMode() { return this.gameMode; }
 
   /**
    * Turns settings saving and loading on.

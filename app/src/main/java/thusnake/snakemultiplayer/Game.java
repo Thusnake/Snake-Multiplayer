@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.microedition.khronos.opengles.GL10;
 
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
 import thusnake.snakemultiplayer.textures.GameTextureMap;
 
 /**

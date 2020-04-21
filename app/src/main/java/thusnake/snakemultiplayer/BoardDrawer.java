@@ -6,8 +6,8 @@ import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
 import thusnake.snakemultiplayer.textures.GameTextureMap;
-import thusnake.snakemultiplayer.textures.TextureMap;
 
 /**
  * Draws the game's board. Really not that useful, as the game is the only class that extends this

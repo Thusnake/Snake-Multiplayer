@@ -7,9 +7,12 @@ import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import static thusnake.snakemultiplayer.Protocol.GAME_START_CALL;
-import static thusnake.snakemultiplayer.Protocol.GAME_START_RECEIVED;
-import static thusnake.snakemultiplayer.Protocol.decodeCorner;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
+
+import static thusnake.snakemultiplayer.netplay.Protocol.GAME_START_CALL;
+import static thusnake.snakemultiplayer.netplay.Protocol.GAME_START_RECEIVED;
+import static thusnake.snakemultiplayer.netplay.Protocol.decodeCorner;
 
 public class OnlineHostListener extends Thread implements GameListener {
   private Game game;

@@ -7,6 +7,8 @@ import java.util.List;
 import javax.microedition.khronos.opengles.GL10;
 
 import thusnake.snakemultiplayer.controllers.ControllerBuffer;
+import thusnake.snakemultiplayer.netplay.ConnectedThread;
+import thusnake.snakemultiplayer.netplay.Protocol;
 
 public class GuestGame extends Game {
   private OpenGLActivity originActivity;
